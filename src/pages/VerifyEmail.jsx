@@ -1,0 +1,81 @@
+import React, { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import Card from '../components/common/Card'
+import Button from '../components/common/Button'
+import Input from '../components/common/Input'
+import { verifyEmail } from '../features/auth/authAPI'
+import useAuth from '../hooks/useAuth'
+
+export default function VerifyEmail() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { login } = useAuth()
+  const email = location.state?.email || ''
+  const [otp, setOtp] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setMessage('')
+
+    if (!otp) {
+      setError('Please enter the OTP')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await verifyEmail({ email, otp })
+      login(response.data.user, response.data.token)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Verification failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <Card className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Verify Email</h1>
+          <p className="text-text-secondary">Enter the OTP sent to {email}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">OTP</label>
+            <Input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="6-digit OTP"
+              required
+            />
+          </div>
+
+          {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+          {message && <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">{message}</div>}
+
+          <Button variant="primary" className="w-full" type="submit" disabled={loading}>
+            {loading ? 'Verifying...' : 'Verify Email'}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-text-secondary">
+            Didn't receive OTP?{' '}
+            <button className="text-primary hover:text-accent font-medium" onClick={() => window.location.reload()}>
+              Resend
+            </button>
+          </p>
+        </div>
+      </Card>
+    </div>
+  )
+}

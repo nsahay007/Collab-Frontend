@@ -1,0 +1,78 @@
+import React from 'react'
+import { Link } from 'react-router-dom'
+import Card from '../components/common/Card'
+import Button from '../components/common/Button'
+import Badge from '../components/common/Badge'
+import { motion } from 'framer-motion'
+
+function ProjectCard({ id, title, description, roles, teamSize, status }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ y: -4 }}
+    >
+      <Card>
+        <div className="flex flex-col h-full">
+          <div className="flex-1">
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
+              <Badge variant={status === 'Active' ? 'primary' : 'default'}>
+                {status}
+              </Badge>
+            </div>
+            <p className="text-text-secondary text-sm mb-4 line-clamp-2">{description}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {roles.map((role, i) => (
+                <Badge key={i} variant="default">{role}</Badge>
+              ))}
+            </div>
+            <div className="text-sm text-text-muted">
+              {teamSize} team member{teamSize !== 1 ? 's' : ''}
+            </div>
+          </div>
+          <Link to={`/project/${id}`}>
+            <Button variant="secondary" className="w-full mt-4">View Project</Button>
+          </Link>
+        </div>
+      </Card>
+    </motion.div>
+  )
+}
+
+export default function Dashboard() {
+  const projects = []
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
+          <p className="text-text-secondary mt-1">Discover and join exciting projects</p>
+        </div>
+        <Link to="/create">
+          <Button variant="primary">Create Project</Button>
+        </Link>
+      </div>
+
+      {projects.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border-default bg-bg-secondary p-10 text-center">
+          <h2 className="text-xl font-semibold text-text-primary mb-3">No projects yet</h2>
+          <p className="text-text-secondary mb-6">
+            You're starting with a completely clean workspace. Create the first project to begin.
+          </p>
+          <Link to="/create">
+            <Button variant="primary">Create Your First Project</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} {...project} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
