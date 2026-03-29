@@ -12,6 +12,7 @@ export default function Register() {
   const { login } = useAuth()
   const [colleges, setColleges] = useState([])
   const [customSkill, setCustomSkill] = useState('')
+  const [showCustomSkill, setShowCustomSkill] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ export default function Register() {
     confirmPassword: '',
     college_id: '',
     customCollegeName: '',
+    phone: '',
     course: '',
     yearOfStudy: '',
     skills: [],
@@ -65,7 +67,10 @@ export default function Register() {
       try {
         const data = await getAllColleges()
         if (Array.isArray(data)) {
-          const cleaned = data.filter((college) => !/test/i.test(college.name || ''))
+          const cleaned = data.filter((college) => {
+            const name = college.name || ''
+            return !/test/i.test(name) && !/^others?$/i.test(name)
+          })
           setColleges(cleaned)
         } else {
           setColleges([])
@@ -89,6 +94,7 @@ export default function Register() {
   const handleSkillChange = (e) => {
     const value = e.target.value
     if (value === '__other__') {
+      setShowCustomSkill(true)
       e.target.value = ''
       return
     }
@@ -98,6 +104,7 @@ export default function Register() {
         skills: [...prev.skills, value]
       }))
     }
+    setShowCustomSkill(false)
     e.target.value = ''
   }
 
@@ -113,6 +120,7 @@ export default function Register() {
       skills: [...prev.skills, trimmed]
     }))
     setCustomSkill('')
+    setShowCustomSkill(false)
   }
 
   const removeSkill = (skillToRemove) => {
@@ -194,6 +202,19 @@ export default function Register() {
                 required
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              Phone Number
+            </label>
+            <Input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -360,17 +381,19 @@ export default function Register() {
                   <option value="__other__">Other</option>
                 </select>
               </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  value={customSkill}
-                  onChange={(e) => setCustomSkill(e.target.value)}
-                  placeholder="Add other skill"
-                />
-                <Button type="button" variant="secondary" onClick={addCustomSkill}>
-                  Add
-                </Button>
-              </div>
+              {showCustomSkill && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    placeholder="Add other skill"
+                  />
+                  <Button type="button" variant="secondary" onClick={addCustomSkill}>
+                    Add
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

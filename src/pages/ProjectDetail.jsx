@@ -19,6 +19,7 @@ import {
 } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
 import checkIcon from '../assets/icons/check.svg'
+import { uploadsBaseUrl } from '../config/api'
 
 export default function ProjectDetail() {
   const { id } = useParams()
@@ -88,11 +89,16 @@ export default function ProjectDetail() {
   const maxTeamMembers = (project?.numberOfTeammates || 0) + 1
   const teamCount = project?.teamMembers?.length || 0
   const teamFull = teamCount >= maxTeamMembers
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001'
-  const uploadsBase = apiBase.replace(/\/api\/?$/, '')
   const validationData = project?.validation || {}
   const validationReviewCount = validationData.currentReviews || validationData.reviews?.length || 0
   const validationRequired = validationData.reviewsRequired || 30
+  const canSeeOnlineStatus = Boolean(isOwner || isTeamMember)
+  const isOnline = (member) => {
+    if (!member?.lastActive) return false
+    const lastActive = new Date(member.lastActive).getTime()
+    if (!lastActive) return false
+    return Date.now() - lastActive <= 5 * 60 * 1000
+  }
 
   const handleInterest = async () => {
     if (!userId) return
@@ -350,8 +356,19 @@ export default function ProjectDetail() {
                     className="flex flex-col gap-3 border border-border-default rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <div className="font-medium text-text-primary">{member.name || 'Unknown'}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-text-primary">{member.name || 'Unknown'}</div>
+                        {canSeeOnlineStatus && isOnline(member) && (
+                          <span className="inline-flex items-center gap-1 text-xs text-success">
+                            <span className="h-2 w-2 rounded-full bg-success" />
+                            Online
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-text-muted">{member.email || 'No email provided'}</div>
+                      {isOwner && member.phone && (
+                        <div className="text-sm text-text-muted">Phone: {member.phone}</div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       {isLead && <Badge variant="primary">Lead</Badge>}
@@ -470,7 +487,7 @@ export default function ProjectDetail() {
                           className="flex flex-col gap-1 rounded-lg border border-border-default bg-bg-card/70 p-2"
                         >
                           <a
-                            href={`${uploadsBase}/uploads/${file.filename}`}
+                            href={`${uploadsBaseUrl}/uploads/${file.filename}`}
                             className="text-sm font-medium text-primary hover:text-primary-hover"
                             target="_blank"
                             rel="noreferrer"
@@ -620,6 +637,9 @@ export default function ProjectDetail() {
                     <div>
                       <div className="font-medium text-text-primary">{interested.name || 'Unknown'}</div>
                       <div className="text-sm text-text-muted">{interested.email || 'No email provided'}</div>
+                      {isOwner && interested.phone && (
+                        <div className="text-sm text-text-muted">Phone: {interested.phone}</div>
+                      )}
                     </div>
                     {isOwner ? (
                       <div className="flex items-center gap-2">

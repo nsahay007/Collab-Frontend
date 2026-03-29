@@ -1,8 +1,9 @@
 {
-  "name": "student-startup-client",
+  "name": "collab-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "start": "vite",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

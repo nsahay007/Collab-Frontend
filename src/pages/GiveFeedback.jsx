@@ -5,9 +5,7 @@ import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import { getProjectById } from '../features/project/projectAPI'
 import { submitValidation } from '../features/validation/validationAPI'
-
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5001'
-const uploadsBase = apiBase.replace(/\/api\/?$/, '')
+import { uploadsBaseUrl } from '../config/api'
 
 export default function GiveFeedback() {
   const { id } = useParams()
@@ -135,7 +133,7 @@ export default function GiveFeedback() {
                     className="flex flex-col gap-1 rounded-lg border border-border-default bg-bg-secondary/60 p-3"
                   >
                     <a
-                      href={`${uploadsBase}/uploads/${file.filename}`}
+                      href={`${uploadsBaseUrl}/uploads/${file.filename}`}
                       className="text-sm font-medium text-primary hover:text-primary-hover"
                       target="_blank"
                       rel="noreferrer"
