@@ -16,7 +16,8 @@ import {
   uploadProjectFile,
   sendProjectToValidation,
   markReviewHelpful,
-  updateProjectRequirements
+  updateProjectRequirements,
+  updateProjectDetails
 } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
 import checkIcon from '../assets/icons/check.svg'
@@ -58,6 +59,16 @@ export default function ProjectDetail() {
     skillsRequired: '',
     numberOfTeammates: 1,
     visibility: 'college'
+  })
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsSaving, setDetailsSaving] = useState(false)
+  const [detailsError, setDetailsError] = useState('')
+  const [detailsForm, setDetailsForm] = useState({
+    title: '',
+    shortPitch: '',
+    description: '',
+    tags: '',
+    executionPlan: ''
   })
 
   const loadProject = useCallback(async () => {
@@ -188,6 +199,48 @@ export default function ProjectDetail() {
       visibility: project?.visibility || 'college'
     })
     setEditOpen(true)
+  }
+
+  const openEditDetails = () => {
+    setDetailsError('')
+    setDetailsForm({
+      title: project?.title || '',
+      shortPitch: project?.shortPitch || '',
+      description: project?.description || '',
+      tags: (project?.tags || []).join(', '),
+      executionPlan: project?.executionPlan || ''
+    })
+    setDetailsOpen(true)
+  }
+
+  const closeEditDetails = () => {
+    setDetailsOpen(false)
+    setDetailsError('')
+  }
+
+  const handleDetailsSave = async () => {
+    try {
+      setDetailsSaving(true)
+      setDetailsError('')
+      const payload = {
+        title: detailsForm.title,
+        shortPitch: detailsForm.shortPitch,
+        description: detailsForm.description,
+        tags: detailsForm.tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+        executionPlan: detailsForm.executionPlan
+      }
+      await updateProjectDetails(id, payload)
+      await loadProject()
+      setDetailsOpen(false)
+    } catch (err) {
+      console.error(err)
+      setDetailsError(err?.response?.data?.message || 'Unable to update project details.')
+    } finally {
+      setDetailsSaving(false)
+    }
   }
 
   const closeEditRequirements = () => {
@@ -383,6 +436,11 @@ export default function ProjectDetail() {
           )}
           {isTeamMember && <Badge variant="primary">Joined</Badge>}
           {isOwner && <Badge variant="primary">Team Lead</Badge>}
+          {isOwner && (
+            <Button variant="secondary" size="sm" onClick={openEditDetails}>
+              Edit Details
+            </Button>
+          )}
           {isOwner && (
             <Button variant="danger" size="sm" onClick={openDeleteModal}>
               Delete Project
@@ -831,6 +889,78 @@ export default function ProjectDetail() {
             disabled={editSaving}
           >
             {editSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={detailsOpen} onClose={closeEditDetails} size="sm">
+        <h3 className="text-lg font-semibold text-text-primary">Update Project Details</h3>
+        <p className="text-sm text-text-secondary mt-2">
+          Edit the project title, pitch, description, tags, or execution plan.
+        </p>
+        <div className="space-y-4 mt-4">
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Title</label>
+            <Input
+              type="text"
+              value={detailsForm.title}
+              onChange={(e) => setDetailsForm((prev) => ({ ...prev, title: e.target.value }))}
+              placeholder="Project title"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Short Pitch</label>
+            <textarea
+              value={detailsForm.shortPitch}
+              onChange={(e) => setDetailsForm((prev) => ({ ...prev, shortPitch: e.target.value }))}
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              placeholder="One‑line pitch"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Description</label>
+            <textarea
+              value={detailsForm.description}
+              onChange={(e) => setDetailsForm((prev) => ({ ...prev, description: e.target.value }))}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              placeholder="Describe the project"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Tags (comma separated)</label>
+            <Input
+              type="text"
+              value={detailsForm.tags}
+              onChange={(e) => setDetailsForm((prev) => ({ ...prev, tags: e.target.value }))}
+              placeholder="Example: Fintech, Campus, Mobile"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Execution Plan</label>
+            <textarea
+              value={detailsForm.executionPlan}
+              onChange={(e) => setDetailsForm((prev) => ({ ...prev, executionPlan: e.target.value }))}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              placeholder="What will you complete in 14 days?"
+            />
+          </div>
+        </div>
+        {detailsError && <p className="text-xs text-error mt-3">{detailsError}</p>}
+        <div className="flex flex-col gap-2 mt-5 sm:flex-row sm:justify-end">
+          <Button variant="secondary" size="sm" onClick={closeEditDetails}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className="disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={handleDetailsSave}
+            disabled={detailsSaving}
+          >
+            {detailsSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </Modal>

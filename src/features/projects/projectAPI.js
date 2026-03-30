@@ -47,3 +47,6 @@ export const markReviewHelpful = (projectId, reviewId) =>
 
 export const updateProjectRequirements = (projectId, payload) =>
   axios.put(`/projects/${projectId}/requirements`, payload)
+
+export const updateProjectDetails = (projectId, payload) =>
+  axios.put(`/projects/${projectId}/details`, payload)

@@ -63,9 +63,14 @@ export default function Validation() {
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Validation Playground</h1>
-        <p className="text-text-secondary">Test your ideas and get feedback from real users</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Validation Playground</h1>
+          <p className="text-text-secondary">Test your ideas and get feedback from real users</p>
+        </div>
+        <Link to="/dashboard">
+          <Button variant="secondary">Back to Dashboard</Button>
+        </Link>
       </div>
 
       {loading ? (
