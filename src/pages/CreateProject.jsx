@@ -4,7 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import useAuth from '../hooks/useAuth'
-import { createProject } from '../features/project/projectAPI'
+import { createProject, fetchProjectOptions } from '../features/projects/projectAPI'
 import { getAllColleges } from '../features/college/collegeAPI'
 
 export default function CreateProject() {
@@ -18,6 +18,8 @@ export default function CreateProject() {
   const [customSkillInput, setCustomSkillInput] = useState('')
   const [showCustomRole, setShowCustomRole] = useState(false)
   const [showCustomSkill, setShowCustomSkill] = useState(false)
+  const [roleOptions, setRoleOptions] = useState([])
+  const [skillOptions, setSkillOptions] = useState([])
   
   const [formData, setFormData] = useState({
     title: '',
@@ -80,6 +82,27 @@ export default function CreateProject() {
     'Business Development', 'Project Management', 'Data Analysis'
   ]
 
+  const normalizeLabel = (value) => {
+    if (typeof value !== 'string') return ''
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+    return trimmed
+      .split(/\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
+  const normalizeLabelList = (items) => {
+    const list = Array.isArray(items) ? items : items ? [items] : []
+    const normalized = list.map((item) => normalizeLabel(item)).filter(Boolean)
+    return [...new Set(normalized)]
+  }
+
+  const mergeOptions = (base, extra) => {
+    const merged = [...base, ...(extra || [])].map((item) => normalizeLabel(item)).filter(Boolean)
+    return [...new Set(merged)]
+  }
+
   useEffect(() => {
     const fetchColleges = async () => {
       try {
@@ -90,6 +113,34 @@ export default function CreateProject() {
       }
     }
     fetchColleges()
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    const loadOptions = async () => {
+      if (isMounted) {
+        setRoleOptions(mergeOptions(commonRoles, []))
+        setSkillOptions(mergeOptions(commonSkills, []))
+      }
+      try {
+        const response = await fetchProjectOptions()
+        const roles = response?.data?.roles || response?.roles || []
+        const skills = response?.data?.skills || response?.skills || []
+        if (!isMounted) return
+        setRoleOptions(mergeOptions(commonRoles, roles))
+        setSkillOptions(mergeOptions(commonSkills, skills))
+      } catch (err) {
+        console.error('Failed to fetch project options:', err)
+        if (isMounted) {
+          setRoleOptions(mergeOptions(commonRoles, []))
+          setSkillOptions(mergeOptions(commonSkills, []))
+        }
+      }
+    }
+    loadOptions()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   useEffect(() => {
@@ -147,8 +198,9 @@ export default function CreateProject() {
       e.target.value = ''
       return
     }
-    if (value && !formData.skillsRequired.includes(value)) {
-      handleArrayChange('skillsRequired', [...formData.skillsRequired, value])
+    const normalizedValue = normalizeLabel(value)
+    if (normalizedValue && !formData.skillsRequired.includes(normalizedValue)) {
+      handleArrayChange('skillsRequired', [...formData.skillsRequired, normalizedValue])
     }
     setShowCustomSkill(false)
   }
@@ -161,8 +213,9 @@ export default function CreateProject() {
       e.target.value = ''
       return
     }
-    if (value && !formData.rolesNeeded.includes(value)) {
-      handleArrayChange('rolesNeeded', [...formData.rolesNeeded, value])
+    const normalizedValue = normalizeLabel(value)
+    if (normalizedValue && !formData.rolesNeeded.includes(normalizedValue)) {
+      handleArrayChange('rolesNeeded', [...formData.rolesNeeded, normalizedValue])
     }
     setShowCustomRole(false)
   }
@@ -180,21 +233,23 @@ export default function CreateProject() {
   }
 
   const commitCustomRole = () => {
-    const value = customRoleInput.trim()
+    const value = normalizeLabel(customRoleInput)
     if (!value) return
     if (!formData.rolesNeeded.includes(value)) {
       handleArrayChange('rolesNeeded', [...formData.rolesNeeded, value])
     }
+    setRoleOptions((prev) => mergeOptions(prev, [value]))
     setCustomRoleInput('')
     setShowCustomRole(false)
   }
 
   const commitCustomSkill = () => {
-    const value = customSkillInput.trim()
+    const value = normalizeLabel(customSkillInput)
     if (!value) return
     if (!formData.skillsRequired.includes(value)) {
       handleArrayChange('skillsRequired', [...formData.skillsRequired, value])
     }
+    setSkillOptions((prev) => mergeOptions(prev, [value]))
     setCustomSkillInput('')
     setShowCustomSkill(false)
   }
@@ -232,8 +287,8 @@ export default function CreateProject() {
         description: formData.description?.trim() || formData.shortPitch?.trim() || formData.title?.trim() || '',
         category: formData.category || '',
         tags: formData.tags || [],
-        rolesNeeded: formData.rolesNeeded || [],
-        skillsRequired: formData.skillsRequired || [],
+        rolesNeeded: normalizeLabelList(formData.rolesNeeded || []),
+        skillsRequired: normalizeLabelList(formData.skillsRequired || []),
         numberOfTeammates: parseInt(formData.numberOfTeammates) || 1,
         visibility: formData.visibility || 'college',
         executionPlan: formData.executionPlan?.trim() || '',
@@ -355,7 +410,7 @@ export default function CreateProject() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">
-                  Number of Teammates Required (excluding you) *
+                  Total Team Size (including you) *
                 </label>
                 <Input
                   type="number"
@@ -680,7 +735,7 @@ export default function CreateProject() {
                     className="px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="">Select a role to add</option>
-                    {commonRoles.filter((role) => !formData.rolesNeeded.includes(role)).map((role) => (
+                    {roleOptions.filter((role) => !formData.rolesNeeded.includes(role)).map((role) => (
                       <option key={role} value={role}>{role}</option>
                     ))}
                     <option value="__other__">Other</option>
@@ -745,7 +800,7 @@ export default function CreateProject() {
                     className="px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="">Select a skill to add</option>
-                    {commonSkills.filter((skill) => !formData.skillsRequired.includes(skill)).map((skill) => (
+                    {skillOptions.filter((skill) => !formData.skillsRequired.includes(skill)).map((skill) => (
                       <option key={skill} value={skill}>{skill}</option>
                     ))}
                     <option value="__other__">Other</option>
@@ -836,7 +891,7 @@ export default function CreateProject() {
                 <div className="space-y-2 text-sm">
                   <p><strong>Title:</strong> {formData.title}</p>
                   <p><strong>Category:</strong> {formData.category}</p>
-                  <p><strong>Teammates Required:</strong> {formData.numberOfTeammates}</p>
+                  <p><strong>Total Team Size (including you):</strong> {formData.numberOfTeammates}</p>
                   <p><strong>Visibility:</strong> {formData.visibility === 'college' ? 'College Only' : 'Global'}</p>
                   <p><strong>Short Pitch:</strong> {formData.shortPitch}</p>
                 </div>

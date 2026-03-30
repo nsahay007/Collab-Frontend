@@ -15,7 +15,8 @@ import {
   deleteProject,
   uploadProjectFile,
   sendProjectToValidation,
-  markReviewHelpful
+  markReviewHelpful,
+  updateProjectRequirements
 } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
 import checkIcon from '../assets/icons/check.svg'
@@ -49,6 +50,15 @@ export default function ProjectDetail() {
   const [sharedFileIds, setSharedFileIds] = useState([])
   const [timeLeft, setTimeLeft] = useState('')
   const [timeExpired, setTimeExpired] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [requirementsForm, setRequirementsForm] = useState({
+    rolesNeeded: '',
+    skillsRequired: '',
+    numberOfTeammates: 1,
+    visibility: 'college'
+  })
 
   const loadProject = useCallback(async () => {
     try {
@@ -86,7 +96,7 @@ export default function ProjectDetail() {
   const hasInterest = project?.interestedUsers?.some((u) => (u._id === userId || u.id === userId))
   const isTeamMember = project?.teamMembers?.some((u) => (u._id === userId || u.id === userId))
   const canChat = Boolean(isTeamMember)
-  const maxTeamMembers = (project?.numberOfTeammates || 0) + 1
+  const maxTeamMembers = project?.numberOfTeammates || 1
   const teamCount = project?.teamMembers?.length || 0
   const teamFull = teamCount >= maxTeamMembers
   const validationData = project?.validation || {}
@@ -98,6 +108,24 @@ export default function ProjectDetail() {
     const lastActive = new Date(member.lastActive).getTime()
     if (!lastActive) return false
     return Date.now() - lastActive <= 5 * 60 * 1000
+  }
+
+  const normalizeLabel = (value) => {
+    if (typeof value !== 'string') return ''
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+    return trimmed
+      .split(/\\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
+  const normalizeList = (value) => {
+    if (!value) return []
+    return value
+      .split(',')
+      .map((item) => normalizeLabel(item))
+      .filter(Boolean)
   }
 
   const handleInterest = async () => {
@@ -149,6 +177,43 @@ export default function ProjectDetail() {
     setRemoveError('')
     setRemoveTarget(member)
     setRemoveOpen(true)
+  }
+
+  const openEditRequirements = () => {
+    setEditError('')
+    setRequirementsForm({
+      rolesNeeded: (project?.rolesNeeded || []).join(', '),
+      skillsRequired: (project?.skillsRequired || []).join(', '),
+      numberOfTeammates: project?.numberOfTeammates || 1,
+      visibility: project?.visibility || 'college'
+    })
+    setEditOpen(true)
+  }
+
+  const closeEditRequirements = () => {
+    setEditOpen(false)
+    setEditError('')
+  }
+
+  const handleRequirementsSave = async () => {
+    try {
+      setEditSaving(true)
+      setEditError('')
+      const payload = {
+        rolesNeeded: normalizeList(requirementsForm.rolesNeeded),
+        skillsRequired: normalizeList(requirementsForm.skillsRequired),
+        numberOfTeammates: parseInt(requirementsForm.numberOfTeammates, 10) || 1,
+        visibility: requirementsForm.visibility
+      }
+      await updateProjectRequirements(id, payload)
+      await loadProject()
+      setEditOpen(false)
+    } catch (err) {
+      console.error(err)
+      setEditError(err?.response?.data?.message || 'Unable to update requirements right now.')
+    } finally {
+      setEditSaving(false)
+    }
   }
 
   const closeRemoveModal = () => {
@@ -334,11 +399,42 @@ export default function ProjectDetail() {
           </Card>
 
           <Card>
-            <h2 className="text-xl font-bold text-text-primary mb-3">Roles Required</h2>
-            <div className="flex flex-wrap gap-2">
-              {(project.rolesNeeded || []).map((role) => (
-                <Badge variant="default" key={role}>{role}</Badge>
-              ))}
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-text-primary">Requirements</h2>
+              {isOwner && (
+                <Button variant="secondary" size="sm" onClick={openEditRequirements}>
+                  Edit Requirements
+                </Button>
+              )}
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-medium text-text-primary mb-2">Roles Needed</div>
+                <div className="flex flex-wrap gap-2">
+                  {(project.rolesNeeded || []).length ? (
+                    project.rolesNeeded.map((role) => (
+                      <Badge variant="default" key={role}>{role}</Badge>
+                    ))
+                  ) : (
+                    <span className="text-xs text-text-muted">No roles listed</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-text-primary mb-2">Skills Required</div>
+                <div className="flex flex-wrap gap-2">
+                  {(project.skillsRequired || []).length ? (
+                    project.skillsRequired.map((skill) => (
+                      <Badge variant="default" key={skill}>{skill}</Badge>
+                    ))
+                  ) : (
+                    <span className="text-xs text-text-muted">No skills listed</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-text-muted">
+                Team size (including lead): {maxTeamMembers} · Visibility: {project.visibility || 'college'}
+              </div>
             </div>
           </Card>
 
@@ -673,6 +769,71 @@ export default function ProjectDetail() {
           </Card>
         </div>
       </div>
+
+      <Modal open={editOpen} onClose={closeEditRequirements} size="sm">
+        <h3 className="text-lg font-semibold text-text-primary">Update Requirements</h3>
+        <p className="text-sm text-text-secondary mt-2">
+          Edit roles, skills, team size, or visibility without deleting the project.
+        </p>
+        <div className="space-y-4 mt-4">
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Roles Needed (comma separated)</label>
+            <Input
+              type="text"
+              value={requirementsForm.rolesNeeded}
+              onChange={(e) => setRequirementsForm((prev) => ({ ...prev, rolesNeeded: e.target.value }))}
+              placeholder="Example: Frontend, Backend, Designer"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-text-muted mb-2">Skills Required (comma separated)</label>
+            <Input
+              type="text"
+              value={requirementsForm.skillsRequired}
+              onChange={(e) => setRequirementsForm((prev) => ({ ...prev, skillsRequired: e.target.value }))}
+              placeholder="Example: React, Node.js, Figma"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-text-muted mb-2">Team Size (including you)</label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={requirementsForm.numberOfTeammates}
+                onChange={(e) => setRequirementsForm((prev) => ({ ...prev, numberOfTeammates: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-text-muted mb-2">Visibility</label>
+              <select
+                value={requirementsForm.visibility}
+                onChange={(e) => setRequirementsForm((prev) => ({ ...prev, visibility: e.target.value }))}
+                className="w-full px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="college">College Only</option>
+                <option value="global">Global</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        {editError && <p className="text-xs text-error mt-3">{editError}</p>}
+        <div className="flex flex-col gap-2 mt-5 sm:flex-row sm:justify-end">
+          <Button variant="secondary" size="sm" onClick={closeEditRequirements}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className="disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={handleRequirementsSave}
+            disabled={editSaving}
+          >
+            {editSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal open={removeOpen} onClose={closeRemoveModal} size="sm">
         <h3 className="text-lg font-semibold text-text-primary">Remove Team Member</h3>

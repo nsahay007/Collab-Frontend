@@ -15,6 +15,7 @@ export const fetchProjects = (filters = {}) => {
   return axios.get(`/projects${query ? `?${query}` : ''}`)
 }
 export const fetchProject = (id) => axios.get(`/projects/${id}`)
+export const fetchProjectOptions = () => axios.get('/projects/options')
 export const createProject = (payload) => axios.post('/projects', payload)
 export const expressInterest = (projectId, userId) =>
   axios.post(`/projects/${projectId}/join`, { userId })
@@ -43,3 +44,6 @@ export const updateActivity = (projectId) =>
 
 export const markReviewHelpful = (projectId, reviewId) =>
   axios.put(`/projects/${projectId}/reviews/${reviewId}/helpful`)
+
+export const updateProjectRequirements = (projectId, payload) =>
+  axios.put(`/projects/${projectId}/requirements`, payload)

@@ -390,6 +390,14 @@ export default function Profile() {
         </div>
       </Card>
 
+      <Card className="space-y-3">
+        <h2 className="text-xl font-semibold text-text-primary">Contact Us</h2>
+        <p className="text-sm text-text-secondary">
+          Need help or have feedback? Reach us at
+          <span className="text-text-primary font-medium"> helpdesk.collab@gmail.com</span>.
+        </p>
+      </Card>
+
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">

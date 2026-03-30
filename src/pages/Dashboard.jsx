@@ -4,7 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import { motion } from 'framer-motion'
-import { fetchProjects, expressInterest } from '../features/projects/projectAPI'
+import { fetchProjects, expressInterest, fetchProjectOptions } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
 import { getAllColleges } from '../features/college/collegeAPI'
 import checkIcon from '../assets/icons/check.svg'
@@ -127,17 +127,35 @@ export default function Dashboard() {
 
   const statusOptions = ['all', 'planning', 'building', 'validation', 'validated', 'completed']
 
-  const skillOptions = [
+  const baseSkillOptions = [
     'JavaScript', 'Python', 'React', 'Node.js', 'MongoDB', 'Express',
     'HTML', 'CSS', 'TypeScript', 'Vue.js', 'Angular', 'Docker',
     'Git', 'AWS', 'Figma', 'Adobe Creative Suite', 'Marketing',
     'Business Development', 'Project Management', 'Data Analysis'
   ]
 
-  const roleOptions = [
+  const baseRoleOptions = [
     'Frontend', 'Backend', 'Full Stack', 'Designer', 'Product', 'Marketing',
     'Content', 'Sales', 'Operations', 'Data', 'AI/ML'
   ]
+
+  const normalizeLabel = (value) => {
+    if (typeof value !== 'string') return ''
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+    return trimmed
+      .split(/\\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
+  const mergeOptions = (base, extra) => {
+    const merged = [...base, ...(extra || [])].map((item) => normalizeLabel(item)).filter(Boolean)
+    return [...new Set(merged)]
+  }
+
+  const [roleOptions, setRoleOptions] = useState(mergeOptions(baseRoleOptions, []))
+  const [skillOptions, setSkillOptions] = useState(mergeOptions(baseSkillOptions, []))
 
 
   const loadProjects = async (nextFilters = filters) => {
@@ -186,6 +204,26 @@ export default function Dashboard() {
       }
     }
     fetchColleges()
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    const loadOptions = async () => {
+      try {
+        const response = await fetchProjectOptions()
+        const roles = response?.data?.roles || response?.roles || []
+        const skills = response?.data?.skills || response?.skills || []
+        if (!mounted) return
+        setRoleOptions(mergeOptions(baseRoleOptions, roles))
+        setSkillOptions(mergeOptions(baseSkillOptions, skills))
+      } catch (err) {
+        console.error('Failed to load role/skill options:', err)
+      }
+    }
+    loadOptions()
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const handleFilterChange = (e) => {

@@ -5,28 +5,24 @@ import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import Badge from '../components/common/Badge'
 import api from '../services/api'
-import ideaIcon from '../assets/icons/idea.svg'
-import teamIcon from '../assets/icons/team.svg'
-import validateIcon from '../assets/icons/validate.svg'
-
 const steps = [
   {
     title: 'Post Idea',
     description: 'Share your startup concept with clear goals and roles needed.',
-    icon: ideaIcon,
-    iconAlt: 'Idea icon'
+    icon: 'idea',
+    accent: 'from-primary/20 to-primary-accent/30'
   },
   {
     title: 'Build Team',
     description: 'Invite skilled collaborators and align on a 14‑day plan.',
-    icon: teamIcon,
-    iconAlt: 'Team icon'
+    icon: 'team',
+    accent: 'from-primary/20 to-success/30'
   },
   {
     title: 'Validate Project',
     description: 'Get feedback from real users and improve faster.',
-    icon: validateIcon,
-    iconAlt: 'Validation icon'
+    icon: 'validate',
+    accent: 'from-warning/20 to-primary-accent/30'
   }
 ]
 
@@ -82,9 +78,9 @@ function SectionHeader({ title, subtitle, align = 'center' }) {
 function StepCard({ step }) {
   return (
     <Card className="text-left h-full">
-        <div className="flex items-start gap-4">
-        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <img src={step.icon} alt={step.iconAlt} className="h-7 w-7" />
+      <div className="flex items-start gap-4">
+        <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${step.accent} flex items-center justify-center border border-border`}>
+          <StepIcon type={step.icon} />
         </div>
         <div>
           <h3 className="text-lg font-semibold text-text-primary mb-2">{step.title}</h3>
@@ -92,6 +88,31 @@ function StepCard({ step }) {
         </div>
       </div>
     </Card>
+  )
+}
+
+function StepIcon({ type }) {
+  if (type === 'team') {
+    return (
+      <svg className="h-6 w-6 text-text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 11a3 3 0 100-6 3 3 0 000 6zM17 11a3 3 0 100-6 3 3 0 000 6z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 20a4 4 0 014-4h2M15 16h2a4 4 0 014 4" />
+      </svg>
+    )
+  }
+  if (type === 'validate') {
+    return (
+      <svg className="h-6 w-6 text-text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+      </svg>
+    )
+  }
+  return (
+    <svg className="h-6 w-6 text-text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a6 6 0 00-3 11.2V17a1 1 0 001 1h4a1 1 0 001-1v-2.8A6 6 0 0012 3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 21h6" />
+    </svg>
   )
 }
 
