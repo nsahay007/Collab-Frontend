@@ -31,31 +31,36 @@ const featureSections = [
     title: 'Smart Team Formation',
     description: 'Match with builders who complement your skills and keep teams focused.',
     bullets: ['Role‑based matching', 'Instant join requests', 'Private team chat'],
-    accent: 'from-primary/20 to-primary-accent/10'
+    accent: 'from-primary/20 to-primary-accent/10',
+    widget: 'team'
   },
   {
     title: '14‑Day Build System',
     description: 'Turn ideas into MVPs with a time‑boxed plan and accountability.',
     bullets: ['Automated countdown', 'Activity tracking', 'Milestone focus'],
-    accent: 'from-warning/20 to-primary/10'
+    accent: 'from-warning/20 to-primary/10',
+    widget: 'build'
   },
   {
     title: 'Validation by Real Users',
     description: 'Launch into validation with structured feedback and ratings.',
     bullets: ['Minimum 30 reviews', 'Avg rating threshold', 'Actionable insights'],
-    accent: 'from-success/20 to-primary/10'
+    accent: 'from-success/20 to-primary/10',
+    widget: 'validation'
   },
   {
     title: 'Cross‑College Collaboration',
     description: 'Find the best teammates beyond your campus while staying relevant.',
     bullets: ['College filters', 'Global visibility', 'Trusted profiles'],
-    accent: 'from-primary-accent/20 to-primary/10'
+    accent: 'from-primary-accent/20 to-primary/10',
+    widget: 'collab'
   },
   {
     title: 'Gamified Progress System',
     description: 'Earn points, badges, and leaderboard rank as you build.',
     bullets: ['Points for progress', 'Badges that matter', 'Public leaderboard'],
-    accent: 'from-primary/20 to-success/10'
+    accent: 'from-primary/20 to-success/10',
+    widget: 'gamified'
   }
 ]
 
@@ -116,34 +121,109 @@ function StepIcon({ type }) {
   )
 }
 
-function FeatureMock({ accent }) {
+function GlowWidgetCard({ title, meta, accent, children }) {
   return (
-    <div className={`rounded-3xl border border-border bg-gradient-to-br ${accent} p-6 shadow-card`}>
-      <div className="space-y-4">
+    <div className="relative rounded-2xl border border-border bg-bg-card/80 p-4 shadow-card overflow-hidden">
+      <div className={`absolute -top-12 -right-12 h-28 w-28 rounded-full bg-gradient-to-br ${accent} opacity-30 blur-2xl`} />
+      <div className="relative space-y-3">
         <div className="flex items-center justify-between">
-          <div className="h-3 w-24 rounded-full bg-bg-card/80" />
-          <div className="h-3 w-10 rounded-full bg-bg-card/70" />
+          <div className="text-sm font-semibold text-text-primary">{title}</div>
+          {meta && <div className="text-xs text-text-muted">{meta}</div>}
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-2xl bg-bg-card/90 p-4">
-            <div className="h-2 w-16 rounded-full bg-primary/40 mb-3" />
-            <div className="h-2 w-24 rounded-full bg-border mb-2" />
-            <div className="h-2 w-20 rounded-full bg-border" />
-          </div>
-          <div className="rounded-2xl bg-bg-card/90 p-4">
-            <div className="h-2 w-14 rounded-full bg-primary/40 mb-3" />
-            <div className="h-2 w-20 rounded-full bg-border mb-2" />
-            <div className="h-2 w-16 rounded-full bg-border" />
-          </div>
-        </div>
-        <div className="rounded-2xl bg-bg-card/90 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="h-2 w-28 rounded-full bg-primary/40" />
-            <div className="h-2 w-10 rounded-full bg-success/60" />
-          </div>
-          <div className="h-2 w-full rounded-full bg-border" />
-        </div>
+        {children}
       </div>
+    </div>
+  )
+}
+
+function GlowWidgets({ type }) {
+  if (type === 'team') {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <GlowWidgetCard title="Role Match" meta="4 matches" accent="from-primary to-primary-accent">
+          <div className="h-2 w-24 rounded-full bg-primary/60" />
+          <div className="h-2 w-36 rounded-full bg-border" />
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <span className="h-2 w-2 rounded-full bg-success" /> Active
+          </div>
+        </GlowWidgetCard>
+        <GlowWidgetCard title="Join Requests" meta="2 pending" accent="from-success to-primary">
+          <div className="space-y-2">
+            <div className="h-2 w-28 rounded-full bg-border" />
+            <div className="h-2 w-40 rounded-full bg-border" />
+          </div>
+        </GlowWidgetCard>
+      </div>
+    )
+  }
+  if (type === 'build') {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <GlowWidgetCard title="14‑Day Countdown" meta="Day 5" accent="from-warning to-primary">
+          <div className="text-2xl font-semibold text-primary">09:14:22</div>
+          <div className="h-2 w-full rounded-full bg-border">
+            <div className="h-2 w-2/3 rounded-full bg-warning" />
+          </div>
+        </GlowWidgetCard>
+        <GlowWidgetCard title="Milestones" meta="3/5 done" accent="from-primary to-primary-accent">
+          <div className="space-y-2">
+            <div className="h-2 w-24 rounded-full bg-success/70" />
+            <div className="h-2 w-32 rounded-full bg-success/40" />
+            <div className="h-2 w-28 rounded-full bg-border" />
+          </div>
+        </GlowWidgetCard>
+      </div>
+    )
+  }
+  if (type === 'validation') {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <GlowWidgetCard title="Live Ratings" meta="Avg 4.3" accent="from-warning to-success">
+          <div className="text-2xl font-semibold text-warning">4.3</div>
+          <div className="h-2 w-full rounded-full bg-border">
+            <div className="h-2 w-4/5 rounded-full bg-success" />
+          </div>
+        </GlowWidgetCard>
+        <GlowWidgetCard title="Recent Feedback" meta="2 new" accent="from-primary-accent to-primary">
+          <div className="space-y-2 text-xs text-text-muted">
+            <div className="rounded-lg bg-bg-secondary/60 p-2">“Clear value prop.”</div>
+            <div className="rounded-lg bg-bg-secondary/60 p-2">“Tested with users.”</div>
+          </div>
+        </GlowWidgetCard>
+      </div>
+    )
+  }
+  if (type === 'collab') {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <GlowWidgetCard title="College Filter" meta="Same campus" accent="from-primary to-primary-accent">
+          <div className="space-y-2">
+            <div className="h-2 w-24 rounded-full bg-border" />
+            <div className="h-2 w-32 rounded-full bg-border" />
+          </div>
+        </GlowWidgetCard>
+        <GlowWidgetCard title="Global Reach" meta="Open to all" accent="from-success to-primary">
+          <div className="flex items-center gap-2 text-xs text-text-muted">
+            <span className="h-2 w-2 rounded-full bg-success" /> 18 colleges
+          </div>
+          <div className="h-2 w-36 rounded-full bg-border mt-2" />
+        </GlowWidgetCard>
+      </div>
+    )
+  }
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <GlowWidgetCard title="Points" meta="+15" accent="from-primary to-primary-accent">
+        <div className="text-2xl font-semibold text-primary">128</div>
+        <div className="text-xs text-text-muted">Total points</div>
+      </GlowWidgetCard>
+      <GlowWidgetCard title="Badges" meta="3 earned" accent="from-success to-primary">
+        <div className="flex gap-2">
+          <span className="h-8 w-8 rounded-lg bg-primary/20 border border-primary/30" />
+          <span className="h-8 w-8 rounded-lg bg-success/20 border border-success/30" />
+          <span className="h-8 w-8 rounded-lg bg-warning/20 border border-warning/30" />
+        </div>
+      </GlowWidgetCard>
     </div>
   )
 }
@@ -320,8 +400,9 @@ export default function Landing() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
+                className="w-full"
               >
-                <FeatureMock accent={feature.accent} />
+                <GlowWidgets type={feature.widget} />
               </motion.div>
             </div>
           ))}
