@@ -36,6 +36,8 @@ export const uploadProjectFile = (projectId, file) => {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+export const deleteProjectFile = (projectId, fileId) =>
+  axios.delete(`/projects/${projectId}/files/${fileId}`)
 export const sendProjectToValidation = (projectId, payload = {}) =>
   axios.post(`/projects/${projectId}/validate`, payload)
 

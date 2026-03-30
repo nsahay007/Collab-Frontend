@@ -17,7 +17,8 @@ import {
   sendProjectToValidation,
   markReviewHelpful,
   updateProjectRequirements,
-  updateProjectDetails
+  updateProjectDetails,
+  deleteProjectFile
 } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
 import checkIcon from '../assets/icons/check.svg'
@@ -42,6 +43,8 @@ export default function ProjectDetail() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [removeFileId, setRemoveFileId] = useState(null)
+  const [removeFileError, setRemoveFileError] = useState('')
   const [validating, setValidating] = useState(false)
   const [validationError, setValidationError] = useState('')
   const [helpfulError, setHelpfulError] = useState('')
@@ -374,6 +377,23 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleRemoveFile = async (file) => {
+    if (!file) return
+    const fileId = file._id || file.filename
+    if (!fileId) return
+    try {
+      setRemoveFileError('')
+      setRemoveFileId(fileId)
+      await deleteProjectFile(id, fileId)
+      await loadProject()
+    } catch (err) {
+      console.error(err)
+      setRemoveFileError(err?.response?.data?.message || 'Unable to remove file.')
+    } finally {
+      setRemoveFileId(null)
+    }
+  }
+
   const handleSendToValidation = async () => {
     try {
       setValidating(true)
@@ -635,28 +655,47 @@ export default function ProjectDetail() {
                   {uploadError && <p className="text-xs text-error">{uploadError}</p>}
                   <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                     {(project.files || []).length > 0 ? (
-                      project.files.map((file) => (
-                        <div
-                          key={file._id || file.filename}
-                          className="flex flex-col gap-1 rounded-lg border border-border-default bg-bg-card/70 p-2"
-                        >
-                          <a
-                            href={`${uploadsBaseUrl}/uploads/${file.filename}`}
-                            className="text-sm font-medium text-primary hover:text-primary-hover"
-                            target="_blank"
-                            rel="noreferrer"
+                      project.files.map((file) => {
+                        const fileKey = file._id || file.filename
+                        const uploadedById = file.uploadedBy?._id || file.uploadedBy?.id
+                        const canRemoveFile = Boolean(isOwner || (userId && uploadedById && uploadedById === userId))
+                        return (
+                          <div
+                            key={fileKey}
+                            className="flex flex-col gap-2 rounded-lg border border-border-default bg-bg-card/70 p-2"
                           >
-                            {file.originalName}
-                          </a>
-                          <div className="text-xs text-text-muted">
-                            {file.uploadedBy?.name || 'Team member'} · {(file.size / 1024).toFixed(1)} KB
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <a
+                                href={`${uploadsBaseUrl}/uploads/${file.filename}`}
+                                className="text-sm font-medium text-primary hover:text-primary-hover break-all"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {file.originalName}
+                              </a>
+                              {canRemoveFile && (
+                                <Button
+                                  variant="ghost"
+                                  size="xs"
+                                  className="text-error w-full sm:w-auto"
+                                  onClick={() => handleRemoveFile(file)}
+                                  disabled={removeFileId === fileKey}
+                                >
+                                  {removeFileId === fileKey ? 'Removing...' : 'Remove'}
+                                </Button>
+                              )}
+                            </div>
+                            <div className="text-xs text-text-muted">
+                              {file.uploadedBy?.name || 'Team member'} · {(file.size / 1024).toFixed(1)} KB
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        )
+                      })
                     ) : (
                       <p className="text-sm text-text-muted">No files uploaded yet.</p>
                     )}
                   </div>
+                  {removeFileError && <p className="text-xs text-error">{removeFileError}</p>}
                 </div>
 
                 <div className="rounded-xl border border-border-default bg-bg-secondary/50 p-4 space-y-3">
