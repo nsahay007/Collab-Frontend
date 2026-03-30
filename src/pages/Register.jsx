@@ -157,7 +157,7 @@ export default function Register() {
       }
       const response = await registerAPI(payload)
       // Redirect to OTP verification instead of direct login
-      navigate('/verify-email', { state: { email: formData.email } })
+      navigate('/verify-email', { state: { email: formData.email, message: response?.data?.message } })
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.')
     } finally {

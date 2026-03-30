@@ -10,11 +10,13 @@ export default function VerifyEmail() {
   const location = useLocation()
   const navigate = useNavigate()
   const { login } = useAuth()
-  const email = location.state?.email || ''
+  const queryEmail = new URLSearchParams(location.search).get('email') || ''
+  const email = location.state?.email || queryEmail
+  const initialMessage = location.state?.message || ''
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(initialMessage)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
