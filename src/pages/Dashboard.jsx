@@ -379,9 +379,9 @@ export default function Dashboard() {
             </select>
           </div>
         </div>
-        <div className="flex gap-3 mt-4">
-          <Button variant="primary" onClick={applyFilters}>Apply Filters</Button>
-          <Button variant="secondary" onClick={clearFilters}>Clear</Button>
+        <div className="flex flex-col gap-3 mt-4 sm:flex-row">
+          <Button variant="primary" className="w-full sm:w-auto" onClick={applyFilters}>Apply Filters</Button>
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={clearFilters}>Clear</Button>
         </div>
       </Card>
 

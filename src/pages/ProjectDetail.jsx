@@ -424,25 +424,25 @@ export default function ProjectDetail() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
           <p className="text-text-secondary">{project.description}</p>
           <div className="text-sm text-text-muted">Owner: {project.owner?.name || 'Unknown'}</div>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {!isOwner && !isTeamMember && !hasInterest && (
-            <Button onClick={handleInterest}>Show Interest</Button>
+            <Button className="w-full sm:w-auto" onClick={handleInterest}>Show Interest</Button>
           )}
           {isTeamMember && <Badge variant="primary">Joined</Badge>}
           {isOwner && <Badge variant="primary">Team Lead</Badge>}
           {isOwner && (
-            <Button variant="secondary" size="sm" onClick={openEditDetails}>
+            <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={openEditDetails}>
               Edit Details
             </Button>
           )}
           {isOwner && (
-            <Button variant="danger" size="sm" onClick={openDeleteModal}>
+            <Button variant="danger" size="sm" className="w-full sm:w-auto" onClick={openDeleteModal}>
               Delete Project
             </Button>
           )}
@@ -761,7 +761,7 @@ export default function ProjectDetail() {
                 )}
 
                 {isOwner && !timeExpired && (
-                  <div className="flex flex-col gap-2 items-end">
+                  <div className="flex flex-col gap-2 items-stretch sm:items-end">
                     {validationError && <p className="text-xs text-error">{validationError}</p>}
                     <Button
                       variant="secondary"
@@ -796,11 +796,11 @@ export default function ProjectDetail() {
                       )}
                     </div>
                     {isOwner ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
                         <Button
                           variant="primary"
                           size="xs"
-                          className="whitespace-nowrap"
+                          className="w-full sm:w-auto whitespace-nowrap"
                           onClick={() => handleAddMember(interested._id)}
                           disabled={teamFull}
                         >
@@ -809,7 +809,7 @@ export default function ProjectDetail() {
                         <Button
                           variant="ghost"
                           size="xs"
-                          className="whitespace-nowrap text-error"
+                          className="w-full sm:w-auto whitespace-nowrap text-error"
                           onClick={() => handleRejectMember(interested._id)}
                         >
                           Reject

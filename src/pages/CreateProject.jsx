@@ -732,7 +732,7 @@ export default function CreateProject() {
                 <div className="space-y-2">
                   <select
                     onChange={handleRoleSelect}
-                    className="px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="">Select a role to add</option>
                     {roleOptions.filter((role) => !formData.rolesNeeded.includes(role)).map((role) => (
@@ -759,7 +759,7 @@ export default function CreateProject() {
                         variant="secondary"
                         onClick={commitCustomRole}
                         disabled={!customRoleInput.trim()}
-                        className="whitespace-nowrap"
+                        className="w-full sm:w-auto whitespace-nowrap"
                       >
                         Add Other
                       </Button>
@@ -797,7 +797,7 @@ export default function CreateProject() {
                 <div className="space-y-2">
                   <select
                     onChange={handleSkillChange}
-                    className="px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="">Select a skill to add</option>
                     {skillOptions.filter((skill) => !formData.skillsRequired.includes(skill)).map((skill) => (
@@ -824,7 +824,7 @@ export default function CreateProject() {
                         variant="secondary"
                         onClick={commitCustomSkill}
                         disabled={!customSkillInput.trim()}
-                        className="whitespace-nowrap"
+                        className="w-full sm:w-auto whitespace-nowrap"
                       >
                         Add Other
                       </Button>
@@ -908,11 +908,12 @@ export default function CreateProject() {
                 </div>
               )}
 
-              <div className="flex gap-4 mt-6">
+              <div className="flex flex-col gap-3 mt-6 sm:flex-row">
                 <Button
                   variant="secondary"
                   onClick={prevStep}
                   disabled={loading}
+                  className="w-full sm:w-auto"
                 >
                   Previous
                 </Button>
@@ -921,6 +922,7 @@ export default function CreateProject() {
                   variant="primary"
                   onClick={handleSubmit}
                   disabled={loading}
+                  className="w-full sm:w-auto"
                 >
                   {loading ? 'Publishing...' : 'Publish Project'}
                 </Button>
@@ -938,9 +940,9 @@ export default function CreateProject() {
     <div className="min-h-screen bg-bg-main py-8">
       <div className="max-w-4xl mx-auto px-6">
         <Card className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
             <h1 className="text-2xl font-bold text-text-primary">Create Project</h1>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5].map(step => (
                 <div
                   key={step}
@@ -956,11 +958,12 @@ export default function CreateProject() {
 
           {renderStep()}
 
-          <div className="flex justify-between mt-6">
+          <div className="flex flex-col gap-3 mt-6 sm:flex-row sm:justify-between">
             <Button
               variant="secondary"
               onClick={prevStep}
               disabled={currentStep === 1}
+              className="w-full sm:w-auto"
             >
               Previous
             </Button>
@@ -969,6 +972,7 @@ export default function CreateProject() {
               <Button
                 variant="primary"
                 onClick={nextStep}
+                className="w-full sm:w-auto"
               >
                 Next
               </Button>

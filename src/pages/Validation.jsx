@@ -25,7 +25,7 @@ function ValidationCard({ project, index }) {
               {project.validation?.currentReviews || 0}/{project.validation?.reviewsRequired || 30} reviews · Avg {project.validation?.averageRating || 0}
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Link to={`/project/${project._id}`} className="flex-1">
               <Button variant="primary" className="w-full">View Project</Button>
             </Link>
