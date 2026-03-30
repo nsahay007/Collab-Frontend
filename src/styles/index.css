@@ -103,9 +103,9 @@ html, body, #root {
 
   .collab-logo-text {
     font-family: 'Cinzel Decorative', 'Cormorant Garamond', 'Times New Roman', serif;
-    font-size: 1.9rem;
+    font-size: clamp(1.35rem, 4.2vw, 1.9rem);
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     line-height: 1;
   }
 

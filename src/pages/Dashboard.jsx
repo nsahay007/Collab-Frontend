@@ -268,7 +268,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
@@ -292,7 +292,7 @@ export default function Dashboard() {
           transition={{ delay: 0.2 }}
         >
           <Link to="/create">
-            <Button variant="primary">
+            <Button variant="primary" className="w-full sm:w-auto text-sm px-4 py-2 sm:text-base sm:px-6 sm:py-3">
               Create Project
             </Button>
           </Link>

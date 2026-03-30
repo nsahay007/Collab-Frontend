@@ -4,9 +4,10 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import { motion } from 'framer-motion'
-import { fetchValidations } from '../features/validation/validationAPI'
+import { fetchValidations, removeValidationProject } from '../features/validation/validationAPI'
+import useAuth from '../hooks/useAuth'
 
-function ValidationCard({ project, index }) {
+function ValidationCard({ project, index, isOwner, onRemove, removing }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -21,10 +22,10 @@ function ValidationCard({ project, index }) {
             <h3 className="text-lg font-semibold text-text-primary mb-3">{project.title}</h3>
             <p className="text-text-secondary text-sm mb-3">{project.shortPitch || project.description}</p>
             <div className="text-xs text-text-muted">Owner: {project.owner?.name || 'Unknown'}</div>
-            <div className="mt-2 text-xs text-text-muted">
-              {project.validation?.currentReviews || 0}/{project.validation?.reviewsRequired || 30} reviews · Avg {project.validation?.averageRating || 0}
-            </div>
+          <div className="mt-2 text-xs text-text-muted">
+            {project.validation?.currentReviews || 0}/{project.validation?.reviewsRequired || 30} reviews · Avg {project.validation?.averageRating || 0}
           </div>
+        </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link to={`/project/${project._id}`} className="flex-1">
               <Button variant="primary" className="w-full">View Project</Button>
@@ -32,6 +33,16 @@ function ValidationCard({ project, index }) {
             <Link to={`/validation/${project._id}/feedback`} className="flex-1">
               <Button variant="secondary" className="w-full">Give Feedback</Button>
             </Link>
+            {isOwner && (
+              <Button
+                variant="danger"
+                className="w-full sm:w-auto"
+                onClick={() => onRemove(project._id)}
+                disabled={removing}
+              >
+                {removing ? 'Removing...' : 'Remove'}
+              </Button>
+            )}
           </div>
         </div>
       </Card>
@@ -40,9 +51,12 @@ function ValidationCard({ project, index }) {
 }
 
 export default function Validation() {
+  const { user } = useAuth()
+  const userId = user?._id || user?.id
   const [validations, setValidations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [removingId, setRemovingId] = useState(null)
 
   useEffect(() => {
     const loadValidations = async () => {
@@ -60,6 +74,20 @@ export default function Validation() {
 
     loadValidations()
   }, [])
+
+  const handleRemove = async (projectId) => {
+    if (!projectId) return
+    try {
+      setRemovingId(projectId)
+      await removeValidationProject(projectId)
+      setValidations((prev) => prev.filter((project) => project._id !== projectId))
+    } catch (err) {
+      console.error('Failed to remove from validation', err)
+      setError(err?.response?.data?.message || 'Unable to remove project from validation.')
+    } finally {
+      setRemovingId(null)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -94,7 +122,14 @@ export default function Validation() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {validations.map((project, index) => (
-            <ValidationCard key={project._id || index} project={project} index={index} />
+            <ValidationCard
+              key={project._id || index}
+              project={project}
+              index={index}
+              isOwner={Boolean(userId && project.owner?._id && project.owner._id === userId)}
+              onRemove={handleRemove}
+              removing={removingId === project._id}
+            />
           ))}
         </div>
       )}
