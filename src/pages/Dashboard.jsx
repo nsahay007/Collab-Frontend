@@ -105,6 +105,7 @@ function ProjectCard({ project, isMine, onInterest }) {
 export default function Dashboard() {
   const { user } = useAuth()
   const userId = user?._id || user?.id
+  const currentYear = new Date().getFullYear()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -432,6 +433,10 @@ export default function Dashboard() {
           ))}
         </div>
       )}
+
+      <div className="pt-6 text-center text-xs text-text-muted">
+        © {currentYear} Collab. All rights reserved.
+      </div>
     </div>
   )
 }

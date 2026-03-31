@@ -42,6 +42,7 @@ function ProjectCard({ title, description, status, roles }) {
 
 export default function Profile() {
   const navigate = useNavigate()
+  const currentYear = new Date().getFullYear()
   const [user, setUser] = useState(null)
   const [editMode, setEditMode] = useState(false)
   const [formData, setFormData] = useState({
@@ -546,6 +547,10 @@ export default function Profile() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="pt-6 text-center text-xs text-text-muted">
+        © {currentYear} Collab. All rights reserved.
       </div>
     </div>
   )

@@ -235,6 +235,7 @@ export default function Landing() {
     activeUsersWindowDays: 30
   })
   const [statsError, setStatsError] = useState(false)
+  const currentYear = new Date().getFullYear()
 
   useEffect(() => {
     let mounted = true
@@ -584,6 +585,12 @@ export default function Landing() {
           </motion.div>
         </div>
       </section>
+
+      <footer className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-xs text-text-muted">
+          © {currentYear} Collab. All rights reserved.
+        </div>
+      </footer>
     </div>
   )
 }
