@@ -335,7 +335,7 @@ export default function CreateProject() {
       console.log('Submitting cleaned data:', cleanedData) // Debug
       
       const response = await createProject(cleanedData)
-      const projectId = response?.project?._id
+      const projectId = response?.data?.project?._id || response?.data?._id || response?.project?._id
       if (!projectId) {
         throw new Error('Invalid project response')
       }
