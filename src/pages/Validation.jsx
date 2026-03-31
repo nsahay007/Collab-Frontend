@@ -96,8 +96,8 @@ export default function Validation() {
           <h1 className="text-3xl font-bold text-text-primary mb-2">Validation Playground</h1>
           <p className="text-text-secondary">Test your ideas and get feedback from real users</p>
         </div>
-        <Link to="/dashboard">
-          <Button variant="secondary">Back to Dashboard</Button>
+        <Link to="/dashboard" className="w-full sm:w-auto">
+          <Button variant="secondary" className="w-full sm:w-auto">Back to Dashboard</Button>
         </Link>
       </div>
 

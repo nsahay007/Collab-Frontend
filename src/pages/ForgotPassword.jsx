@@ -35,11 +35,12 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text-primary mb-2">Forgot Password</h1>
           <p className="text-text-secondary">We’ll send an OTP to your email</p>
+          <p className="text-xs text-text-muted mt-2">Check your Spam/Junk folder if you don’t see the OTP.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -46,7 +46,7 @@ html, body, #root {
 
 @layer base {
   body {
-    @apply relative text-text-primary font-sans antialiased;
+    @apply relative text-text-primary font-sans antialiased overflow-x-hidden;
     background: var(--bg-main);
     transition: background-color 0.3s ease, color 0.3s ease;
   }

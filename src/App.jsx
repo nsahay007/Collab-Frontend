@@ -75,7 +75,7 @@ function Layout({ children }) {
     <div className="relative min-h-screen bg-bg-main overflow-hidden">
       <div className="cursor-glow" />
       <Navbar />
-      <main className="max-w-7xl mx-auto px-6 py-8 relative">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
         {children}
       </main>
     </div>

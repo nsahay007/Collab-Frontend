@@ -277,7 +277,7 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary-accent/10" />
         <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl animate-pulse" />
         <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-primary-accent/20 blur-3xl animate-pulse" />
-        <div className="max-w-7xl mx-auto px-6 py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -352,7 +352,7 @@ export default function Landing() {
 
       {/* How it works */}
       <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
             title="How It Works"
             subtitle="From idea to validated project in three focused steps."
@@ -374,7 +374,7 @@ export default function Landing() {
 
       {/* Feature zig-zag */}
       <section className="py-20 bg-bg-secondary/50">
-        <div className="max-w-7xl mx-auto px-6 space-y-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-16">
           {featureSections.map((feature, index) => (
             <div
               key={feature.title}
@@ -411,7 +411,7 @@ export default function Landing() {
 
       {/* Live platform preview */}
       <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
             title="Live Platform Preview"
             subtitle="A quick look at what your workspace feels like once you’re inside."
@@ -479,7 +479,7 @@ export default function Landing() {
 
       {/* Validation highlight */}
       <section className="py-20 bg-bg-secondary/50">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
             title="Validation by Real Users"
             subtitle="Every project is tested by real students who give candid feedback."
@@ -529,7 +529,7 @@ export default function Landing() {
 
       {/* Social proof */}
       <section className="py-20">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
             title="Used by students across colleges"
             subtitle="A growing community of builders, designers, and validators."
@@ -561,7 +561,7 @@ export default function Landing() {
       {/* Final CTA */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-accent to-primary" />
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center relative">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center relative">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}

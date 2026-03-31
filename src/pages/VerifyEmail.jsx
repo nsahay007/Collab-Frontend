@@ -42,7 +42,7 @@ export default function VerifyEmail() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
       <Card className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text-primary mb-2">Verify Email</h1>
@@ -59,6 +59,7 @@ export default function VerifyEmail() {
               placeholder="6-digit OTP"
               required
             />
+            <p className="mt-2 text-xs text-text-muted">Check your Spam/Junk folder if you don’t see the OTP.</p>
           </div>
 
           {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}

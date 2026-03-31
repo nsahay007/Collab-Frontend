@@ -10,7 +10,7 @@ export default function Card({ children, className = '', hover = true, ...props 
   return (
     <motion.div
       {...hoverProps}
-      className={`bg-bg-card border border-border rounded-xl shadow-card p-6 ${hover ? 'card-hover' : ''} ${className}`}
+      className={`bg-bg-card border border-border rounded-xl shadow-card p-4 sm:p-6 ${hover ? 'card-hover' : ''} ${className}`}
       {...props}
     >
       {children}

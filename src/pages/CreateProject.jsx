@@ -938,7 +938,7 @@ export default function CreateProject() {
 
   return (
     <div className="min-h-screen bg-bg-main py-8">
-      <div className="max-w-4xl mx-auto px-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <Card className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
             <h1 className="text-2xl font-bold text-text-primary">Create Project</h1>

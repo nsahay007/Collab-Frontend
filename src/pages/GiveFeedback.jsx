@@ -94,7 +94,7 @@ export default function GiveFeedback() {
           <h1 className="text-3xl font-bold text-text-primary">Give Feedback</h1>
           <p className="text-text-secondary">Help this team refine their idea with honest, constructive input.</p>
         </div>
-        <Button variant="secondary" onClick={() => navigate('/validation')}>Back to Validation</Button>
+        <Button variant="secondary" className="w-full sm:w-auto" onClick={() => navigate('/validation')}>Back to Validation</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
