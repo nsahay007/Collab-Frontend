@@ -6,15 +6,11 @@
     </linearGradient>
   </defs>
   <circle cx="256" cy="256" r="220" fill="#0F172A"/>
-  <circle
-    cx="256"
-    cy="256"
-    r="112"
+  <path
+    d="M336 176 A 112 112 0 1 0 336 336"
     stroke="url(#collabC)"
     stroke-width="46"
     stroke-linecap="round"
     fill="none"
-    stroke-dasharray="520 220"
-    stroke-dashoffset="110"
   />
 </svg>
