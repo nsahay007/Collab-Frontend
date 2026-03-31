@@ -126,7 +126,7 @@ export default function Navbar() {
                     )}
                   </button>
                   {showNotifications && (
-                    <div className="absolute right-0 mt-3 w-80 rounded-xl border border-border bg-bg-card shadow-card p-3 z-50">
+                    <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-3 w-[min(90vw,20rem)] sm:w-80 max-w-[90vw] rounded-xl border border-border bg-bg-card shadow-card p-3 z-50">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-text-primary">Notifications</span>
                         <button
