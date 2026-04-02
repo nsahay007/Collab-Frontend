@@ -35,3 +35,23 @@ export const getAdminStats = async () => {
   const response = await axios.get('/users/admin-stats')
   return response.data
 }
+
+export const getUserById = async (userId) => {
+  const response = await axios.get(`/users/${userId}`)
+  return response.data
+}
+
+export const createUserByAdmin = async (payload) => {
+  const response = await axios.post('/users', payload)
+  return response.data
+}
+
+export const updateUserByAdmin = async (userId, payload) => {
+  const response = await axios.patch(`/users/${userId}`, payload)
+  return response.data
+}
+
+export const deleteUserByAdmin = async (userId) => {
+  const response = await axios.delete(`/users/${userId}`)
+  return response.data
+}
