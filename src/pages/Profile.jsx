@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -65,6 +65,8 @@ export default function Profile() {
   const [notificationsError, setNotificationsError] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(true)
+  const [saveStatus, setSaveStatus] = useState(null)
+  const editSectionRef = useRef(null)
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -177,8 +179,17 @@ export default function Profile() {
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
   }
 
+  const openEdit = () => {
+    setSaveStatus(null)
+    setEditMode(true)
+    requestAnimationFrame(() => {
+      editSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
   const saveProfile = async () => {
     try {
+      setSaveStatus(null)
       const parsedSkills = skillsInput
         .split(',')
         .map((skill) => skill.trim())
@@ -197,12 +208,18 @@ export default function Profile() {
       setFormData((prev) => ({ ...prev, skills: parsedSkills }))
       localStorage.setItem('user', JSON.stringify(updated))
       setEditMode(false)
+      setSaveStatus({ type: 'success', message: 'Profile updated successfully.' })
     } catch (err) {
       console.error('Failed to update profile', err)
+      setSaveStatus({
+        type: 'error',
+        message: err?.response?.data?.message || 'Unable to update profile right now.'
+      })
     }
   }
 
   const cancelEdit = () => {
+    setSaveStatus(null)
     setFormData({
       name: user.name || '',
       email: user.email || '',
@@ -253,7 +270,7 @@ export default function Profile() {
                 <Button variant="primary" onClick={saveProfile}>Save</Button>
               </>
             ) : (
-              <Button variant="secondary" onClick={() => setEditMode(true)}>
+              <Button variant="secondary" onClick={openEdit}>
                 Edit Profile
               </Button>
             )}
@@ -322,8 +339,19 @@ export default function Profile() {
       </Card>
 
       {editMode && (
-        <Card className="space-y-4">
+        <Card ref={editSectionRef} className="space-y-4">
           <h2 className="text-xl font-semibold text-text-primary">Edit profile</h2>
+          {saveStatus && (
+            <div
+              className={`rounded-xl border p-3 text-sm ${
+                saveStatus.type === 'success'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                  : 'border-error/40 bg-error/10 text-error'
+              }`}
+            >
+              {saveStatus.message}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-primary">Name</label>
