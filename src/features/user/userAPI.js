@@ -30,3 +30,8 @@ export const getUserActivity = async (activeWithin) => {
   const response = await axios.get(`/users/activity${query}`)
   return response.data
 }
+
+export const getAdminStats = async () => {
+  const response = await axios.get('/users/admin-stats')
+  return response.data
+}

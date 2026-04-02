@@ -3,7 +3,8 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import { getAllUsers } from '../features/auth/authAPI'
-import { getUserActivity } from '../features/user/userAPI'
+import { getAdminStats, getUserActivity } from '../features/user/userAPI'
+import useAuth from '../hooks/useAuth'
 
 function UserRow({ user }) {
   return (
@@ -40,6 +41,7 @@ function UserRow({ user }) {
 }
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
   const [users, setUsers] = useState([])
   const [activityUsers, setActivityUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,19 +49,50 @@ export default function AdminDashboard() {
   const [error, setError] = useState('')
   const [activityError, setActivityError] = useState('')
   const [activeWithin, setActiveWithin] = useState('')
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeProjects: 0,
+    validationsRun: 0,
+    newSignups: 0,
+    signupWindowDays: 7
+  })
+  const [statsError, setStatsError] = useState('')
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getAllUsers()
+      const list = Array.isArray(response?.data) ? response.data : response?.data?.users || []
+      setUsers(list)
+      setError('')
+    } catch (err) {
+      console.error('Failed to fetch users:', err)
+      const message = err?.response?.status === 403 ? 'Admin access required' : 'Failed to load users'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadStats = async () => {
+    try {
+      const response = await getAdminStats()
+      const payload = response?.stats || response?.data?.stats || {}
+      setStats({
+        totalUsers: payload.totalUsers ?? 0,
+        activeProjects: payload.activeProjects ?? 0,
+        validationsRun: payload.validationsRun ?? 0,
+        newSignups: payload.newSignups ?? 0,
+        signupWindowDays: payload.signupWindowDays ?? 7
+      })
+      setStatsError('')
+    } catch (err) {
+      console.error('Failed to fetch admin stats:', err)
+      const message = err?.response?.status === 403 ? 'Admin access required' : 'Failed to load stats'
+      setStatsError(message)
+    }
+  }
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getAllUsers()
-        setUsers(response.data)
-      } catch (err) {
-        console.error('Failed to fetch users:', err)
-        setError('Failed to load users')
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchUsers()
   }, [])
 
@@ -78,23 +111,43 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    loadActivity()
-  }, [])
+    loadActivity(activeWithin ? Number(activeWithin) : undefined)
+    loadStats()
+    const interval = setInterval(() => {
+      fetchUsers()
+      loadActivity(activeWithin ? Number(activeWithin) : undefined)
+      loadStats()
+    }, 20000)
+    return () => clearInterval(interval)
+  }, [activeWithin])
 
   const handleActivityFilter = () => {
     const minutes = activeWithin.trim()
     loadActivity(minutes ? Number(minutes) : undefined)
   }
 
-  const stats = [
-    { label: 'Total Users', value: users.length.toString(), change: '+12%' },
-    { label: 'Active Projects', value: '89', change: '+5%' },
-    { label: 'Validations Run', value: '456', change: '+23%' },
-    { label: 'New Signups', value: '67', change: '+18%' }
+  const statCards = [
+    { label: 'Total Users', value: stats.totalUsers.toString() },
+    { label: 'Active Projects', value: stats.activeProjects.toString() },
+    { label: 'Validations Run', value: stats.validationsRun.toString() },
+    { label: `New Signups (${stats.signupWindowDays}d)`, value: stats.newSignups.toString() }
   ]
 
   if (loading) {
     return <div>Loading users...</div>
+  }
+
+  if (user && user.role !== 'admin') {
+    return (
+      <div className="space-y-6">
+        <Card className="text-center">
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Admin access required</h2>
+          <p className="text-sm text-text-secondary">
+            This page is only available to admin accounts.
+          </p>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -105,11 +158,13 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.label} className="text-center">
             <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
             <div className="text-text-secondary text-sm mb-2">{stat.label}</div>
-            <div className="text-xs text-green-600 font-medium">{stat.change}</div>
+            <div className="text-xs text-text-muted">
+              {statsError ? statsError : 'Live'}
+            </div>
           </Card>
         ))}
       </div>
