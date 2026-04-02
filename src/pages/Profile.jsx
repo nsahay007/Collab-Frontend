@@ -182,9 +182,9 @@ export default function Profile() {
   const openEdit = () => {
     setSaveStatus(null)
     setEditMode(true)
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       editSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
+    }, 50)
   }
 
   const saveProfile = async () => {
@@ -276,6 +276,11 @@ export default function Profile() {
             )}
           </div>
         </div>
+        {editMode && (
+          <p className="mt-3 text-sm text-white/80">
+            Edit mode enabled. Scroll down to update your details.
+          </p>
+        )}
       </Card>
 
       <Card className="space-y-4">
@@ -339,75 +344,77 @@ export default function Profile() {
       </Card>
 
       {editMode && (
-        <Card ref={editSectionRef} className="space-y-4">
-          <h2 className="text-xl font-semibold text-text-primary">Edit profile</h2>
-          {saveStatus && (
-            <div
-              className={`rounded-xl border p-3 text-sm ${
-                saveStatus.type === 'success'
-                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                  : 'border-error/40 bg-error/10 text-error'
-              }`}
-            >
-              {saveStatus.message}
+        <div ref={editSectionRef}>
+          <Card className="space-y-4">
+            <h2 className="text-xl font-semibold text-text-primary">Edit profile</h2>
+            {saveStatus && (
+              <div
+                className={`rounded-xl border p-3 text-sm ${
+                  saveStatus.type === 'success'
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                    : 'border-error/40 bg-error/10 text-error'
+                }`}
+              >
+                {saveStatus.message}
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Name</label>
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Email</label>
+                <input
+                  name="email"
+                  value={formData.email}
+                  disabled
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-muted"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Course</label>
+                <input
+                  name="course"
+                  value={formData.course}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Year of Study</label>
+                <input
+                  name="yearOfStudy"
+                  value={formData.yearOfStudy}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Primary Interest</label>
+                <input
+                  name="primaryCategory"
+                  value={formData.primaryCategory}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Skills (comma separated)</label>
+                <input
+                  value={skillsInput}
+                  onChange={(event) => setSkillsInput(event.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+              </div>
             </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-primary">Name</label>
-              <input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary">Email</label>
-              <input
-                name="email"
-                value={formData.email}
-                disabled
-                className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-muted"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary">Course</label>
-              <input
-                name="course"
-                value={formData.course}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary">Year of Study</label>
-              <input
-                name="yearOfStudy"
-                value={formData.yearOfStudy}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary">Primary Interest</label>
-              <input
-                name="primaryCategory"
-                value={formData.primaryCategory}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary">Skills (comma separated)</label>
-              <input
-                value={skillsInput}
-                onChange={(event) => setSkillsInput(event.target.value)}
-                className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
-              />
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       )}
       
       <Card className="space-y-6">
