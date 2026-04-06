@@ -435,7 +435,13 @@ export default function Dashboard() {
       )}
 
       <div className="pt-6 text-center text-xs text-text-muted">
-        © {currentYear} Collab. All rights reserved.
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span>© {currentYear} Collab. All rights reserved.</span>
+          <span className="hidden sm:inline">•</span>
+          <Link to="/legal" className="hover:text-text-primary transition-colors">
+            Legal & Policies
+          </Link>
+        </div>
       </div>
     </div>
   )

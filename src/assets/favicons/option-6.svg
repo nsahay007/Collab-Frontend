@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ringGrad" x1="120" y1="120" x2="392" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6C63FF"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#ringGrad)" stroke-width="28"/>
+  <path
+    d="M322 188 A 68 68 0 1 0 322 324"
+    stroke="#6C63FF"
+    stroke-width="36"
+    stroke-linecap="round"
+  />
+  <path
+    d="M292 192 V 324 H 352"
+    stroke="#A78BFA"
+    stroke-width="36"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

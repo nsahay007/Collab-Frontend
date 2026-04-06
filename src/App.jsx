@@ -19,6 +19,8 @@ import AdminDashboard from './pages/AdminDashboard'
 import VerifyEmail from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import Legal from './pages/Legal'
+import LegalDoc from './pages/LegalDoc'
 
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v))
@@ -99,6 +101,8 @@ function AppRoutes() {
       <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
       <Route path="/forgot" element={<PublicRoute><Layout><ForgotPassword /></Layout></PublicRoute>} />
       <Route path="/reset" element={<PublicRoute><Layout><ResetPassword /></Layout></PublicRoute>} />
+      <Route path="/legal" element={<Layout><Legal /></Layout>} />
+      <Route path="/legal/:slug" element={<Layout><LegalDoc /></Layout>} />
       <Route
         path="*"
         element={(

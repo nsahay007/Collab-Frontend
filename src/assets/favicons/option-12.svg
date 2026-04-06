@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shield12" x1="120" y1="80" x2="400" y2="432" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6C63FF"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M256 60 L424 132 V 256 C 424 348 360 412 256 452 C 152 412 88 348 88 256 V 132 Z"
+    fill="url(#shield12)"
+  />
+  <path
+    d="M316 188 A 70 70 0 1 0 316 324"
+    stroke="#0F172A"
+    stroke-width="38"
+    stroke-linecap="round"
+  />
+  <path
+    d="M288 192 V 324 H 350"
+    stroke="#F8FAFC"
+    stroke-width="38"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

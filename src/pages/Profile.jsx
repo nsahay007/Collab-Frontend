@@ -584,8 +584,33 @@ export default function Profile() {
         )}
       </div>
 
+      <Card className="mt-10">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-text-primary">Legal & Policies</h3>
+            <p className="text-sm text-text-secondary mt-1">
+              Your ownership and privacy are protected by clear platform policies.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <Link to="/legal/terms-of-service" className="text-primary hover:underline">Terms</Link>
+            <Link to="/legal/privacy-policy" className="text-primary hover:underline">Privacy</Link>
+            <Link to="/legal/ip-ownership-policy" className="text-primary hover:underline">IP & Ownership</Link>
+            <Link to="/legal/security-policy" className="text-primary hover:underline">Security</Link>
+            <Link to="/legal/community-guidelines" className="text-primary hover:underline">Guidelines</Link>
+            <Link to="/legal/dispute-resolution" className="text-primary hover:underline">Disputes</Link>
+          </div>
+        </div>
+      </Card>
+
       <div className="pt-6 text-center text-xs text-text-muted">
-        © {currentYear} Collab. All rights reserved.
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span>© {currentYear} Collab. All rights reserved.</span>
+          <span className="hidden sm:inline">•</span>
+          <Link to="/legal" className="hover:text-text-primary transition-colors">
+            Legal & Policies
+          </Link>
+        </div>
       </div>
     </div>
   )

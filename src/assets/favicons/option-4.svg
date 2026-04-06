@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradCL" x1="120" y1="120" x2="392" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6C63FF"/>
+      <stop offset="1" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="220" fill="#0F172A"/>
+  <path
+    d="M330 176 A 80 80 0 1 0 330 336"
+    stroke="url(#gradCL)"
+    stroke-width="44"
+    stroke-linecap="round"
+  />
+  <path
+    d="M300 182 V 330 H 370"
+    stroke="url(#gradCL)"
+    stroke-width="44"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
