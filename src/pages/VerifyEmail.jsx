@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
-import { verifyEmail } from '../features/auth/authAPI'
+import { verifyEmail, resendVerificationOTP } from '../features/auth/authAPI'
 import useAuth from '../hooks/useAuth'
 
 export default function VerifyEmail() {
@@ -15,6 +15,7 @@ export default function VerifyEmail() {
   const initialMessage = location.state?.message || ''
   const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState(initialMessage)
 
@@ -38,6 +39,24 @@ export default function VerifyEmail() {
       setError(err.response?.data?.message || 'Verification failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (!email) {
+      setError('Email is missing. Please go back and register again.')
+      return
+    }
+    setError('')
+    setMessage('')
+    setResending(true)
+    try {
+      const response = await resendVerificationOTP({ email })
+      setMessage(response.data?.message || 'OTP resent. Please check your email.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -73,8 +92,12 @@ export default function VerifyEmail() {
         <div className="mt-6 text-center">
           <p className="text-text-secondary">
             Didn't receive OTP?{' '}
-            <button className="text-primary hover:text-accent font-medium" onClick={() => window.location.reload()}>
-              Resend
+            <button
+              className="text-primary hover:text-accent font-medium"
+              onClick={handleResend}
+              disabled={resending}
+            >
+              {resending ? 'Resending…' : 'Resend'}
             </button>
           </p>
         </div>
