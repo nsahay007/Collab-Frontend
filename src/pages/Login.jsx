@@ -32,10 +32,10 @@ export default function Login() {
     
     try {
       const response = await loginAPI(formData)
-      if (!response?.data?.token || !response?.data?.user) {
+      if (!response?.data?.user) {
         throw new Error('Invalid login response')
       }
-      login(response.data.user, response.data.token)
+      login(response.data.user)
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.')

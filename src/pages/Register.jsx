@@ -6,6 +6,7 @@ import Input from '../components/common/Input'
 import useAuth from '../hooks/useAuth'
 import { register as registerAPI } from '../features/auth/authAPI'
 import { getAllColleges } from '../features/college/collegeAPI'
+import { sanitizeText, sanitizeList } from '../utils/sanitize'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -153,6 +154,13 @@ export default function Register() {
     try {
       const payload = {
         ...formData,
+        name: sanitizeText(formData.name),
+        email: sanitizeText(formData.email),
+        course: sanitizeText(formData.course),
+        yearOfStudy: sanitizeText(formData.yearOfStudy),
+        primaryCategory: sanitizeText(formData.primaryCategory),
+        phone: sanitizeText(formData.phone || ''),
+        skills: sanitizeList(formData.skills),
         customCollegeName: formData.college_id === 'others'
           ? toTitleCase(formData.customCollegeName)
           : formData.customCollegeName

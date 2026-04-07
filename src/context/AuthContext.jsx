@@ -10,34 +10,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let isMounted = true
     const bootstrap = async () => {
-      const token = localStorage.getItem('token')
-      const userData = localStorage.getItem('user')
-
-      if (token) {
-        axios.defaults.headers.common.Authorization = `Bearer ${token}`
-      }
-
-      if (token && userData) {
-        try {
-          if (isMounted) {
-            setUser(JSON.parse(userData))
-          }
-        } catch (err) {
-          console.error('Failed to parse user data:', err)
-          localStorage.removeItem('user')
-          localStorage.removeItem('token')
+      try {
+        const response = await axios.get('/users/me')
+        if (response?.data && isMounted) {
+          setUser(response.data)
         }
-      } else if (token && !userData) {
-        try {
-          const response = await axios.get('/users/me')
-          if (response?.data && isMounted) {
-            setUser(response.data)
-            localStorage.setItem('user', JSON.stringify(response.data))
-          }
-        } catch (err) {
-          console.error('Failed to load user profile:', err)
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
+      } catch (err) {
+        if (isMounted) {
+          setUser(null)
         }
       }
 
@@ -52,22 +32,20 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = (userData, token) => {
-    if (token) {
-      axios.defaults.headers.common.Authorization = `Bearer ${token}`
-      localStorage.setItem('token', token)
-    }
+  const login = (userData) => {
     if (userData) {
       setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null)
     localStorage.removeItem('user')
-    localStorage.removeItem('token')
-    delete axios.defaults.headers.common.Authorization
+    try {
+      await axios.post('/auth/logout')
+    } catch (err) {
+      // ignore
+    }
   }
 
   return (

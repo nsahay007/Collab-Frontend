@@ -32,7 +32,7 @@ export default function VerifyEmail() {
 
     try {
       const response = await verifyEmail({ email, otp })
-      login(response.data.user, response.data.token)
+      login(response.data.user)
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Verification failed')
