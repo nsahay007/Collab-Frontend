@@ -4,7 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import useAuth from '../hooks/useAuth'
-import { login as loginAPI } from '../features/auth/authAPI'
+import { login as loginAPI, verifyAdminTwoFactor } from '../features/auth/authAPI'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -16,6 +16,9 @@ export default function Login() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false)
+  const [twoFactorToken, setTwoFactorToken] = useState('')
+  const [twoFactorCode, setTwoFactorCode] = useState('')
 
   const handleChange = (e) => {
     setFormData({
@@ -31,7 +34,23 @@ export default function Login() {
     setError('')
     
     try {
+      if (twoFactorRequired) {
+        const response = await verifyAdminTwoFactor({ token: twoFactorToken, code: twoFactorCode })
+        if (!response?.data?.user) {
+          throw new Error('Invalid 2FA response')
+        }
+        login(response.data.user)
+        navigate('/dashboard')
+        return
+      }
+
       const response = await loginAPI(formData)
+      if (response?.data?.twoFactorRequired) {
+        setTwoFactorRequired(true)
+        setTwoFactorToken(response.data.twoFactorToken)
+        setError('')
+        return
+      }
       if (!response?.data?.user) {
         throw new Error('Invalid login response')
       }
@@ -64,6 +83,7 @@ export default function Login() {
               onChange={handleChange}
               placeholder="Enter your email"
               required
+              disabled={twoFactorRequired}
             />
           </div>
 
@@ -80,6 +100,7 @@ export default function Login() {
                 placeholder="Enter your password"
                 className="pr-12"
                 required
+                disabled={twoFactorRequired}
               />
               <button
                 type="button"
@@ -104,6 +125,24 @@ export default function Login() {
             </div>
           </div>
 
+          {twoFactorRequired && (
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                Admin 2FA Code
+              </label>
+              <Input
+                type="text"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                placeholder="6-digit code"
+                required
+              />
+              <p className="mt-2 text-xs text-text-muted">
+                Enter the code from your authenticator app to finish sign in.
+              </p>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 bg-error/10 border border-error/30 rounded-lg text-error text-sm">
               {error}
@@ -116,7 +155,7 @@ export default function Login() {
             type="submit"
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : (twoFactorRequired ? 'Verify 2FA' : 'Sign In')}
           </Button>
         </form>
 

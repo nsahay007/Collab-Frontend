@@ -5,6 +5,7 @@ import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import ThemeSwitch from '../components/common/ThemeSwitch'
 import { getUserProjects, getProfile, updateProfile, getRank } from '../features/user/userAPI'
+import { setupAdminTwoFactor, confirmAdminTwoFactor, disableAdminTwoFactor } from '../features/auth/authAPI'
 import {
   getNotifications,
   markNotificationRead,
@@ -66,6 +67,13 @@ export default function Profile() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(true)
   const [saveStatus, setSaveStatus] = useState(null)
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [twoFactorPending, setTwoFactorPending] = useState(false)
+  const [twoFactorQr, setTwoFactorQr] = useState('')
+  const [twoFactorCode, setTwoFactorCode] = useState('')
+  const [twoFactorMessage, setTwoFactorMessage] = useState('')
+  const [twoFactorError, setTwoFactorError] = useState('')
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false)
   const editSectionRef = useRef(null)
 
   useEffect(() => {
@@ -84,6 +92,8 @@ export default function Profile() {
           showContactToTeam: Boolean(data.showContactToTeam)
         })
         setSkillsInput((data.skills || []).join(', '))
+        setTwoFactorEnabled(Boolean(data.twoFactorEnabled))
+        setTwoFactorPending(Boolean(data.twoFactorPending))
         localStorage.setItem('user', JSON.stringify(data))
       } catch (err) {
         console.error('Failed to load profile', err)
@@ -215,6 +225,68 @@ export default function Profile() {
         type: 'error',
         message: err?.response?.data?.message || 'Unable to update profile right now.'
       })
+    }
+  }
+
+  const handleTwoFactorSetup = async () => {
+    setTwoFactorError('')
+    setTwoFactorMessage('')
+    setTwoFactorLoading(true)
+    try {
+      const response = await setupAdminTwoFactor()
+      setTwoFactorQr(response.data?.qrCodeDataUrl || '')
+      setTwoFactorPending(true)
+      setTwoFactorMessage(response.data?.message || 'Scan the QR code and confirm the code below.')
+    } catch (err) {
+      setTwoFactorError(err?.response?.data?.message || 'Unable to start 2FA setup.')
+    } finally {
+      setTwoFactorLoading(false)
+    }
+  }
+
+  const handleTwoFactorConfirm = async () => {
+    if (!twoFactorCode) {
+      setTwoFactorError('Enter the code from your authenticator app.')
+      return
+    }
+    setTwoFactorError('')
+    setTwoFactorMessage('')
+    setTwoFactorLoading(true)
+    try {
+      const response = await confirmAdminTwoFactor({ code: twoFactorCode })
+      setTwoFactorEnabled(true)
+      setTwoFactorPending(false)
+      setTwoFactorQr('')
+      setTwoFactorCode('')
+      setTwoFactorMessage(response.data?.message || 'Two-factor authentication enabled.')
+      setUser((prev) => ({ ...prev, twoFactorEnabled: true, twoFactorPending: false }))
+    } catch (err) {
+      setTwoFactorError(err?.response?.data?.message || 'Unable to confirm 2FA.')
+    } finally {
+      setTwoFactorLoading(false)
+    }
+  }
+
+  const handleTwoFactorDisable = async () => {
+    if (!twoFactorCode) {
+      setTwoFactorError('Enter the code from your authenticator app.')
+      return
+    }
+    setTwoFactorError('')
+    setTwoFactorMessage('')
+    setTwoFactorLoading(true)
+    try {
+      const response = await disableAdminTwoFactor({ code: twoFactorCode })
+      setTwoFactorEnabled(false)
+      setTwoFactorPending(false)
+      setTwoFactorQr('')
+      setTwoFactorCode('')
+      setTwoFactorMessage(response.data?.message || 'Two-factor authentication disabled.')
+      setUser((prev) => ({ ...prev, twoFactorEnabled: false, twoFactorPending: false }))
+    } catch (err) {
+      setTwoFactorError(err?.response?.data?.message || 'Unable to disable 2FA.')
+    } finally {
+      setTwoFactorLoading(false)
     }
   }
 
@@ -425,6 +497,112 @@ export default function Profile() {
           </div>
         </div>
       </Card>
+
+      {user.role === 'admin' && (
+        <Card className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-text-primary">Admin Security</h2>
+              <p className="text-sm text-text-secondary">
+                Protect your admin account with two-factor authentication (2FA).
+              </p>
+            </div>
+            <Badge variant={twoFactorEnabled ? 'success' : twoFactorPending ? 'primary' : 'default'}>
+              {twoFactorEnabled ? '2FA Enabled' : twoFactorPending ? 'Setup Pending' : 'Not Enabled'}
+            </Badge>
+          </div>
+
+          {(twoFactorError || twoFactorMessage) && (
+            <div
+              className={`rounded-xl border p-3 text-sm ${
+                twoFactorError
+                  ? 'border-error/40 bg-error/10 text-error'
+                  : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+              }`}
+            >
+              {twoFactorError || twoFactorMessage}
+            </div>
+          )}
+
+          {!twoFactorEnabled && (
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-text-secondary">
+                  Step 1: Scan the QR code with Google Authenticator, Authy, or any TOTP app.
+                  Step 2: Enter the 6‑digit code to confirm.
+                </p>
+                {!twoFactorQr ? (
+                  <Button
+                    variant="primary"
+                    onClick={handleTwoFactorSetup}
+                    disabled={twoFactorLoading}
+                  >
+                    {twoFactorPending ? 'Regenerate QR' : 'Enable 2FA'}
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-border bg-bg-secondary p-4 inline-flex">
+                      <img
+                        src={twoFactorQr}
+                        alt="2FA QR code"
+                        className="h-40 w-40 object-contain"
+                      />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        type="text"
+                        value={twoFactorCode}
+                        onChange={(e) => setTwoFactorCode(e.target.value)}
+                        placeholder="Enter 6-digit code"
+                        className="flex-1 rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                      />
+                      <Button
+                        variant="primary"
+                        onClick={handleTwoFactorConfirm}
+                        disabled={twoFactorLoading}
+                      >
+                        Confirm 2FA
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 rounded-xl border border-border bg-bg-secondary p-4 text-sm text-text-secondary">
+                <p className="font-semibold text-text-primary mb-2">Why this matters</p>
+                <ul className="list-disc ml-5 space-y-2">
+                  <li>Stops account takeovers even if a password leaks.</li>
+                  <li>Protects admin actions and user data.</li>
+                  <li>Required for all admin accounts going forward.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {twoFactorEnabled && (
+            <div className="space-y-3">
+              <p className="text-sm text-text-secondary">
+                2FA is active on your admin account. Use your authenticator app to sign in.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                  placeholder="Enter 6-digit code to disable"
+                  className="flex-1 rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+                <Button
+                  variant="secondary"
+                  onClick={handleTwoFactorDisable}
+                  disabled={twoFactorLoading}
+                >
+                  Disable 2FA
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
 
       <Card className="space-y-3">
         <h2 className="text-xl font-semibold text-text-primary">Contact Us</h2>
