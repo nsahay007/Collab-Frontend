@@ -29,7 +29,7 @@ function ValidationCard({ project, index, isOwner, onRemove, removing }) {
               {project.validation?.currentReviews || 0}/{project.validation?.reviewsRequired || 30} reviews · Avg {project.validation?.averageRating || 0}
             </div>
             <div className="mt-1 text-xs text-text-muted">
-              Innovation {project.validation?.criteriaAverages?.innovation || 0}/5 · Usefulness {project.validation?.criteriaAverages?.usefulness || 0}/5 · Execution {project.validation?.criteriaAverages?.execution || 0}/5
+              Problem Fit {project.validation?.criteriaAverages?.solutionFit || 0}/5 · Innovation {project.validation?.criteriaAverages?.innovation || 0}/5 · Usefulness {project.validation?.criteriaAverages?.usefulness || 0}/5
             </div>
         </div>
           <div className="flex flex-col gap-3 sm:flex-row">

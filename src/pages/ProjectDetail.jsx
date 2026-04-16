@@ -605,7 +605,7 @@ export default function ProjectDetail() {
                     {validationReviewCount}/{validationRequired} reviews · Avg {validationData.averageRating || 0}
                   </p>
                   <p className="text-xs text-text-muted mt-1">
-                    Innovation {criteriaAverages.innovation || 0}/5 · Usefulness {criteriaAverages.usefulness || 0}/5 · Execution {criteriaAverages.execution || 0}/5
+                    Problem Fit {criteriaAverages.solutionFit || 0}/5 · Innovation {criteriaAverages.innovation || 0}/5 · Usefulness {criteriaAverages.usefulness || 0}/5 · Execution {criteriaAverages.executionReadiness || 0}/5
                   </p>
                 </div>
                 <Badge variant={validationData.validationStatus === 'passed' ? 'success' : 'default'}>
@@ -630,9 +630,15 @@ export default function ProjectDetail() {
                         <div className="text-xs text-text-muted">Rating: {review.rating}/5</div>
                       </div>
                       <div className="text-xs text-text-muted">
-                        Innovation {review.criteria?.innovation || 0}/5 · Usefulness {review.criteria?.usefulness || 0}/5 · Execution {review.criteria?.execution || 0}/5
+                        Problem Clarity {review.criteria?.problemClarity || 0}/5 · Solution Fit {review.criteria?.solutionFit || 0}/5 · Innovation {review.criteria?.innovation || 0}/5 · Execution {review.criteria?.executionReadiness || 0}/5
                       </div>
                       <p className="text-sm text-text-secondary">{review.feedback}</p>
+                      <div className="text-xs text-text-muted space-y-1">
+                        {review.topStrengths && <p><span className="font-medium text-text-primary">Strengths:</span> {review.topStrengths}</p>}
+                        {review.topGaps && <p><span className="font-medium text-text-primary">Gaps:</span> {review.topGaps}</p>}
+                        {review.biggestRisk && <p><span className="font-medium text-text-primary">Biggest Risk:</span> {review.biggestRisk}</p>}
+                        {review.next7DayAction && <p><span className="font-medium text-text-primary">7-Day Action:</span> {review.next7DayAction}</p>}
+                      </div>
                       {isOwner && (
                         <div className="flex justify-end">
                           <Button
