@@ -64,7 +64,7 @@ export default function ProjectDetail() {
     rolesNeeded: '',
     skillsRequired: '',
     numberOfTeammates: 1,
-    visibility: 'college'
+    visibility: 'private'
   })
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [detailsSaving, setDetailsSaving] = useState(false)
@@ -148,6 +148,19 @@ export default function ProjectDetail() {
       .filter(Boolean)
   }
 
+  const visibilityLabel = (value) => {
+    if (value === 'private') return 'Private (Only Team)'
+    if (value === 'college') return 'College Only'
+    return 'Global'
+  }
+
+  const resolveProjectFileUrl = (file) => {
+    if (!file) return ''
+    if (file.downloadUrl) return file.downloadUrl
+    if (file.filename) return `${uploadsBaseUrl}/uploads/${file.filename}`
+    return ''
+  }
+
   const handleInterest = async () => {
     if (!userId) return
     try {
@@ -205,7 +218,7 @@ export default function ProjectDetail() {
       rolesNeeded: (project?.rolesNeeded || []).join(', '),
       skillsRequired: (project?.skillsRequired || []).join(', '),
       numberOfTeammates: project?.numberOfTeammates || 1,
-      visibility: project?.visibility || 'college'
+      visibility: project?.visibility || 'private'
     })
     setEditOpen(true)
   }
@@ -543,7 +556,7 @@ export default function ProjectDetail() {
                 </div>
               </div>
               <div className="text-xs text-text-muted">
-                Team size (including lead): {maxTeamMembers} · Visibility: {project.visibility || 'college'}
+                Team size (including lead): {maxTeamMembers} · Visibility: {visibilityLabel(project.visibility || 'private')}
               </div>
             </div>
           </Card>
@@ -748,6 +761,7 @@ export default function ProjectDetail() {
                         const fileKey = file._id || file.filename
                         const uploadedById = file.uploadedBy?._id || file.uploadedBy?.id
                         const canRemoveFile = Boolean(isOwner || (userId && uploadedById && uploadedById === userId))
+                        const fileUrl = resolveProjectFileUrl(file)
                         return (
                           <div
                             key={fileKey}
@@ -755,7 +769,7 @@ export default function ProjectDetail() {
                           >
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                               <a
-                                href={`${uploadsBaseUrl}/uploads/${file.filename}`}
+                                href={fileUrl}
                                 className="text-sm font-medium text-primary hover:text-primary-hover break-all"
                                 target="_blank"
                                 rel="noreferrer"
@@ -998,6 +1012,7 @@ export default function ProjectDetail() {
                 onChange={(e) => setRequirementsForm((prev) => ({ ...prev, visibility: e.target.value }))}
                 className="w-full px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
+                <option value="private">Private (Only Team)</option>
                 <option value="college">College Only</option>
                 <option value="global">Global</option>
               </select>

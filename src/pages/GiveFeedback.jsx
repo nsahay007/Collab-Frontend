@@ -124,6 +124,12 @@ export default function GiveFeedback() {
 
   const validation = project.validation || {}
   const files = validation.sharedFiles || []
+  const resolveFileUrl = (file) => {
+    if (!file) return ''
+    if (file.downloadUrl) return file.downloadUrl
+    if (file.filename) return `${uploadsBaseUrl}/uploads/${file.filename}`
+    return ''
+  }
 
   return (
     <div className="space-y-6">
@@ -174,7 +180,7 @@ export default function GiveFeedback() {
                     className="flex flex-col gap-1 rounded-lg border border-border-default bg-bg-secondary/60 p-3"
                   >
                     <a
-                      href={`${uploadsBaseUrl}/uploads/${file.filename}`}
+                      href={resolveFileUrl(file)}
                       className="text-sm font-medium text-primary hover:text-primary-hover"
                       target="_blank"
                       rel="noreferrer"

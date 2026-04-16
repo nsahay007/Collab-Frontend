@@ -30,7 +30,7 @@ export default function CreateProject() {
     rolesNeeded: [],
     skillsRequired: [],
     numberOfTeammates: 1,
-    visibility: 'college',
+    visibility: 'private',
     techProduct: {
       problem: '',
       targetUsers: '',
@@ -69,6 +69,12 @@ export default function CreateProject() {
     'Marketing & Content',
     'Services & Operations'
   ]
+
+  const visibilityLabel = (value) => {
+    if (value === 'private') return 'Private (Only Team)'
+    if (value === 'college') return 'College Only'
+    return 'Global'
+  }
 
   const commonRoles = [
     'Frontend', 'Backend', 'Full Stack', 'Designer', 'Product', 'Marketing',
@@ -290,7 +296,7 @@ export default function CreateProject() {
         rolesNeeded: normalizeLabelList(formData.rolesNeeded || []),
         skillsRequired: normalizeLabelList(formData.skillsRequired || []),
         numberOfTeammates: parseInt(formData.numberOfTeammates) || 1,
-        visibility: formData.visibility || 'college',
+        visibility: formData.visibility || 'private',
         executionPlan: formData.executionPlan?.trim() || '',
         ...(formData.category === 'Tech & Product' && { 
           techProduct: {
@@ -433,6 +439,7 @@ export default function CreateProject() {
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
+                  <option value="private">Private (Only Team)</option>
                   <option value="college">College Only</option>
                   <option value="global">Global</option>
                 </select>
@@ -892,7 +899,7 @@ export default function CreateProject() {
                   <p><strong>Title:</strong> {formData.title}</p>
                   <p><strong>Category:</strong> {formData.category}</p>
                   <p><strong>Total Team Size (including you):</strong> {formData.numberOfTeammates}</p>
-                  <p><strong>Visibility:</strong> {formData.visibility === 'college' ? 'College Only' : 'Global'}</p>
+                  <p><strong>Visibility:</strong> {visibilityLabel(formData.visibility)}</p>
                   <p><strong>Short Pitch:</strong> {formData.shortPitch}</p>
                 </div>
               </div>
