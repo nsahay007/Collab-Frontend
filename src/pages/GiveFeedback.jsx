@@ -13,7 +13,11 @@ export default function GiveFeedback() {
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [rating, setRating] = useState(5)
+  const [criteria, setCriteria] = useState({
+    innovation: 5,
+    usefulness: 5,
+    execution: 5
+  })
   const [feedback, setFeedback] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -52,7 +56,11 @@ export default function GiveFeedback() {
       setSubmitting(true)
       await submitValidation({
         projectId: id,
-        rating: Number(rating),
+        criteria: {
+          innovation: Number(criteria.innovation),
+          usefulness: Number(criteria.usefulness),
+          execution: Number(criteria.execution)
+        },
         feedback: feedback.trim()
       })
       setSubmitted(true)
@@ -82,6 +90,9 @@ export default function GiveFeedback() {
 
   const validation = project.validation || {}
   const files = validation.sharedFiles || []
+  const overallScore = (
+    (Number(criteria.innovation) + Number(criteria.usefulness) + Number(criteria.execution)) / 3
+  ).toFixed(2)
 
   return (
     <div className="space-y-6">
@@ -163,16 +174,46 @@ export default function GiveFeedback() {
             ) : (
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
-                  <label className="text-sm font-medium text-text-primary">Rating</label>
+                  <label className="text-sm font-medium text-text-primary">Innovation</label>
                   <select
-                    value={rating}
-                    onChange={(event) => setRating(event.target.value)}
+                    value={criteria.innovation}
+                    onChange={(event) => setCriteria((prev) => ({ ...prev, innovation: Number(event.target.value) }))}
                     className="mt-2 w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
                   >
                     {[1, 2, 3, 4, 5].map((value) => (
-                      <option key={value} value={value}>{value} Star{value > 1 ? 's' : ''}</option>
+                      <option key={value} value={value}>{value}/5</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-text-primary">Usefulness</label>
+                  <select
+                    value={criteria.usefulness}
+                    onChange={(event) => setCriteria((prev) => ({ ...prev, usefulness: Number(event.target.value) }))}
+                    className="mt-2 w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                  >
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <option key={value} value={value}>{value}/5</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-text-primary">Execution</label>
+                  <select
+                    value={criteria.execution}
+                    onChange={(event) => setCriteria((prev) => ({ ...prev, execution: Number(event.target.value) }))}
+                    className="mt-2 w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                  >
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <option key={value} value={value}>{value}/5</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="rounded-xl border border-border-default bg-bg-secondary/70 p-3 text-sm text-text-secondary">
+                  Weighted overall score: <span className="font-semibold text-text-primary">{overallScore}/5</span>
                 </div>
 
                 <div>

@@ -12,12 +12,16 @@ import launchIcon from '../assets/icons/launch.svg'
 
 function ProjectCard({ project, isMine, onInterest }) {
   const status = project.status || 'planning'
-  const statusLabel = status.charAt(0).toUpperCase() + status.slice(1)
+  const statusLabel = status
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
   const statusVariant = status === 'validated' || status === 'completed'
     ? 'success'
     : status === 'building'
       ? 'primary'
-      : 'default'
+      : status === 'validation_failed'
+        ? 'warning'
+        : 'default'
 
   return (
     <motion.div
@@ -35,6 +39,9 @@ function ProjectCard({ project, isMine, onInterest }) {
                 <Badge variant={statusVariant}>{statusLabel}</Badge>
                 {project.validation?.featuredAt && (
                   <Badge variant="accent">Featured</Badge>
+                )}
+                {project.buildPhase?.isExtendedTimeline && (
+                  <Badge variant="warning">Extended</Badge>
                 )}
               </div>
             </div>
@@ -126,7 +133,7 @@ export default function Dashboard() {
     'Services & Operations'
   ]
 
-  const statusOptions = ['all', 'planning', 'building', 'validation', 'validated', 'completed']
+  const statusOptions = ['all', 'planning', 'building', 'validation', 'validation_failed', 'validated', 'completed']
 
   const baseSkillOptions = [
     'JavaScript', 'Python', 'React', 'Node.js', 'MongoDB', 'Express',
@@ -344,7 +351,11 @@ export default function Dashboard() {
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'all' ? 'All statuses' : status}
+                  {status === 'all'
+                    ? 'All statuses'
+                    : status
+                      .replace(/_/g, ' ')
+                      .replace(/\b\w/g, (char) => char.toUpperCase())}
                 </option>
               ))}
             </select>

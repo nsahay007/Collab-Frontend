@@ -18,13 +18,19 @@ function ValidationCard({ project, index, isOwner, onRemove, removing }) {
       <Card>
         <div className="flex flex-col h-full">
           <div className="flex-1">
-            <Badge variant="primary" className="mb-3">{project.category}</Badge>
+            <div className="mb-3 flex flex-wrap gap-2">
+              <Badge variant="primary">{project.category}</Badge>
+              {project.buildPhase?.isExtendedTimeline && <Badge variant="warning">Extended</Badge>}
+            </div>
             <h3 className="text-lg font-semibold text-text-primary mb-3">{project.title}</h3>
             <p className="text-text-secondary text-sm mb-3">{project.shortPitch || project.description}</p>
             <div className="text-xs text-text-muted">Owner: {project.owner?.name || 'Unknown'}</div>
-          <div className="mt-2 text-xs text-text-muted">
-            {project.validation?.currentReviews || 0}/{project.validation?.reviewsRequired || 30} reviews · Avg {project.validation?.averageRating || 0}
-          </div>
+            <div className="mt-2 text-xs text-text-muted">
+              {project.validation?.currentReviews || 0}/{project.validation?.reviewsRequired || 30} reviews · Avg {project.validation?.averageRating || 0}
+            </div>
+            <div className="mt-1 text-xs text-text-muted">
+              Innovation {project.validation?.criteriaAverages?.innovation || 0}/5 · Usefulness {project.validation?.criteriaAverages?.usefulness || 0}/5 · Execution {project.validation?.criteriaAverages?.execution || 0}/5
+            </div>
         </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link to={`/project/${project._id}`} className="flex-1">
@@ -40,7 +46,7 @@ function ValidationCard({ project, index, isOwner, onRemove, removing }) {
                 onClick={() => onRemove(project._id)}
                 disabled={removing}
               >
-                {removing ? 'Removing...' : 'Remove'}
+                {removing ? 'Removing...' : 'Withdraw'}
               </Button>
             )}
           </div>

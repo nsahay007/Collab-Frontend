@@ -15,6 +15,7 @@ import {
   deleteProject,
   uploadProjectFile,
   sendProjectToValidation,
+  extendValidationTimeline,
   markReviewHelpful,
   updateProjectRequirements,
   updateProjectDetails,
@@ -47,6 +48,8 @@ export default function ProjectDetail() {
   const [removeFileError, setRemoveFileError] = useState('')
   const [validating, setValidating] = useState(false)
   const [validationError, setValidationError] = useState('')
+  const [extendingTimeline, setExtendingTimeline] = useState(false)
+  const [extendTimelineError, setExtendTimelineError] = useState('')
   const [helpfulError, setHelpfulError] = useState('')
   const [helpfulLoading, setHelpfulLoading] = useState(null)
   const [validationLink, setValidationLink] = useState('')
@@ -116,6 +119,9 @@ export default function ProjectDetail() {
   const validationData = project?.validation || {}
   const validationReviewCount = validationData.currentReviews || validationData.reviews?.length || 0
   const validationRequired = validationData.reviewsRequired || 30
+  const criteriaAverages = validationData.criteriaAverages || {}
+  const hasExtendedTimeline = Boolean(project?.buildPhase?.isExtendedTimeline)
+  const extensionCount = project?.buildPhase?.extensionCount || 0
   const canSeeOnlineStatus = Boolean(isOwner || isTeamMember)
   const isOnline = (member) => {
     if (!member?.lastActive) return false
@@ -412,6 +418,20 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleExtendTimeline = async () => {
+    try {
+      setExtendingTimeline(true)
+      setExtendTimelineError('')
+      await extendValidationTimeline(id)
+      await loadProject()
+    } catch (err) {
+      console.error(err)
+      setExtendTimelineError(err?.response?.data?.message || 'Unable to extend timeline right now.')
+    } finally {
+      setExtendingTimeline(false)
+    }
+  }
+
   useEffect(() => {
     if (!canChat) return undefined
     const interval = setInterval(() => {
@@ -449,6 +469,18 @@ export default function ProjectDetail() {
           <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
           <p className="text-text-secondary">{project.description}</p>
           <div className="text-sm text-text-muted">Owner: {project.owner?.name || 'Unknown'}</div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge variant={project.status === 'validated' ? 'success' : project.status === 'building' ? 'primary' : 'default'}>
+              {(project.status === 'validation_failed' ? 'Validation Failed' : (project.status || 'planning'))
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (char) => char.toUpperCase())}
+            </Badge>
+            {hasExtendedTimeline && (
+              <Badge variant="accent">
+                Extended Timeline{extensionCount > 0 ? ` x${extensionCount}` : ''}
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {!isOwner && !isTeamMember && !hasInterest && (
@@ -572,11 +604,20 @@ export default function ProjectDetail() {
                   <p className="text-sm text-text-secondary">
                     {validationReviewCount}/{validationRequired} reviews · Avg {validationData.averageRating || 0}
                   </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    Innovation {criteriaAverages.innovation || 0}/5 · Usefulness {criteriaAverages.usefulness || 0}/5 · Execution {criteriaAverages.execution || 0}/5
+                  </p>
                 </div>
                 <Badge variant={validationData.validationStatus === 'passed' ? 'success' : 'default'}>
                   {validationData.validationStatus || 'pending'}
                 </Badge>
               </div>
+
+              {project.status === 'validation_failed' && validationData.lastFailureReason && (
+                <div className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+                  {validationData.lastFailureReason}
+                </div>
+              )}
 
               {(validationData.reviews || []).length > 0 ? (
                 <div className="space-y-3">
@@ -587,6 +628,9 @@ export default function ProjectDetail() {
                           {review.reviewer?.name || 'Reviewer'}
                         </div>
                         <div className="text-xs text-text-muted">Rating: {review.rating}/5</div>
+                      </div>
+                      <div className="text-xs text-text-muted">
+                        Innovation {review.criteria?.innovation || 0}/5 · Usefulness {review.criteria?.usefulness || 0}/5 · Execution {review.criteria?.execution || 0}/5
                       </div>
                       <p className="text-sm text-text-secondary">{review.feedback}</p>
                       {isOwner && (
@@ -612,7 +656,41 @@ export default function ProjectDetail() {
               ) : (
                 <p className="text-sm text-text-muted">No feedback submitted yet.</p>
               )}
-              {helpfulError && <p className="text-xs text-error mt-3">{helpfulError}</p>}
+          {helpfulError && <p className="text-xs text-error mt-3">{helpfulError}</p>}
+            </Card>
+          )}
+
+          {project.status === 'validation_failed' && (
+            <Card>
+              <h2 className="text-xl font-bold text-text-primary mb-2">Validation Rework Required</h2>
+              <p className="text-sm text-text-secondary">
+                This project did not pass validation yet. Improve based on feedback and choose your next step.
+              </p>
+              {validationData.lastFailureReason && (
+                <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+                  {validationData.lastFailureReason}
+                </div>
+              )}
+              {isOwner ? (
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={extendingTimeline}
+                    onClick={handleExtendTimeline}
+                  >
+                    {extendingTimeline ? 'Extending...' : 'Move to Dashboard + Extend 7 Days'}
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={openDeleteModal}>
+                    Delete Project
+                  </Button>
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-text-muted">
+                  Team lead can either delete the project or reopen it with a 7-day extension.
+                </p>
+              )}
+              {extendTimelineError && <p className="mt-3 text-xs text-error">{extendTimelineError}</p>}
             </Card>
           )}
 
@@ -623,6 +701,11 @@ export default function ProjectDetail() {
                   <div>
                     <h2 className="text-xl font-bold text-text-primary">Team Workspace</h2>
                     <p className="text-sm text-text-secondary">Collaborate, share files, and ship an MVP.</p>
+                    {hasExtendedTimeline && (
+                      <p className="text-xs text-warning mt-1">
+                        Extended timeline active (+{project.buildPhase?.extensionDaysGranted || 0} days total).
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-xs text-text-muted uppercase tracking-wide">Time Remaining</span>
@@ -799,7 +882,7 @@ export default function ProjectDetail() {
                   </div>
                 )}
 
-                {isOwner && !timeExpired && (
+                {isOwner && !timeExpired && ['building', 'completed'].includes(project.status) && (
                   <div className="flex flex-col gap-2 items-stretch sm:items-end">
                     {validationError && <p className="text-xs text-error">{validationError}</p>}
                     <Button

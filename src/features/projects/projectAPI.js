@@ -62,6 +62,9 @@ export const sendProjectToValidation = (projectId, payload = {}) => {
   return axios.post(`/projects/${projectId}/validate`, sanitized)
 }
 
+export const extendValidationTimeline = (projectId) =>
+  axios.post(`/projects/${projectId}/validation/extend`, {})
+
 export const updateActivity = (projectId) =>
   axios.post(`/projects/${projectId}/update-activity`)
 

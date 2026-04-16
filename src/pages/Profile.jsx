@@ -14,12 +14,15 @@ import {
 
 const statusLabel = (status) => {
   if (!status) return 'Planning'
-  return status.charAt(0).toUpperCase() + status.slice(1)
+  return status
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 const statusVariant = (status) => {
   if (status === 'completed' || status === 'validated') return 'success'
   if (status === 'building' || status === 'planning') return 'primary'
+  if (status === 'validation_failed') return 'warning'
   if (status === 'archived') return 'default'
   return 'default'
 }
@@ -310,7 +313,7 @@ export default function Profile() {
     return null
   }
 
-  const activeCount = projects.filter((project) => ['planning', 'building'].includes(project.status)).length
+  const activeCount = projects.filter((project) => ['planning', 'building', 'validation_failed'].includes(project.status)).length
   const validationCount = projects.filter((project) => project.status === 'validation').length
 
   return (
