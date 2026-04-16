@@ -12,12 +12,10 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    // Check localStorage for saved theme preference
     const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'light') {
-      return false
-    }
-    return true
+    if (savedTheme === 'dark') return true
+    if (savedTheme === 'light') return false
+    return false
   })
 
   useEffect(() => {
@@ -25,41 +23,38 @@ export const ThemeProvider = ({ children }) => {
     
     if (isDark) {
       root.classList.add('dark')
-      // Apply dark mode CSS variables with EXACT values
-      root.style.setProperty('--bg-main', '#0B0F19')
-      root.style.setProperty('--bg-secondary', '#111827')
-      root.style.setProperty('--bg-card', '#1F2937')
-      root.style.setProperty('--text-primary', '#E5E7EB')
-      root.style.setProperty('--text-secondary', '#9CA3AF')
-      root.style.setProperty('--text-muted', '#6B7280')
-      root.style.setProperty('--primary', '#8B85FF')
-      root.style.setProperty('--primary-hover', '#A78BFA')
-      root.style.setProperty('--primary-accent', '#C4B5FD')
-      root.style.setProperty('--border', '#374151')
-      root.style.setProperty('--shadow', '0 4px 20px rgba(0,0,0,0.4)')
-      root.style.setProperty('--success', '#4ADE80')
-      root.style.setProperty('--warning', '#FBBF24')
-      root.style.setProperty('--error', '#F87171')
+      root.style.setProperty('--bg-main', '#0b1220')
+      root.style.setProperty('--bg-secondary', '#111b2e')
+      root.style.setProperty('--bg-card', '#162237')
+      root.style.setProperty('--text-primary', '#e2e8f0')
+      root.style.setProperty('--text-secondary', '#94a3b8')
+      root.style.setProperty('--text-muted', '#64748b')
+      root.style.setProperty('--primary', '#818cf8')
+      root.style.setProperty('--primary-hover', '#6366f1')
+      root.style.setProperty('--primary-accent', '#a5b4fc')
+      root.style.setProperty('--border', '#243248')
+      root.style.setProperty('--shadow', '0 14px 32px rgba(2, 6, 23, 0.45)')
+      root.style.setProperty('--success', '#22c55e')
+      root.style.setProperty('--warning', '#f59e0b')
+      root.style.setProperty('--error', '#f87171')
     } else {
       root.classList.remove('dark')
-      // Apply light mode CSS variables
-      root.style.setProperty('--bg-main', '#F8FAFC')
-      root.style.setProperty('--bg-secondary', '#F1F5F9')
-      root.style.setProperty('--bg-card', '#FFFFFF')
-      root.style.setProperty('--text-primary', '#0F172A')
-      root.style.setProperty('--text-secondary', '#475569')
-      root.style.setProperty('--text-muted', '#94A3B8')
-      root.style.setProperty('--primary', '#6C63FF')
-      root.style.setProperty('--primary-hover', '#5A54E6')
-      root.style.setProperty('--primary-accent', '#A78BFA')
-      root.style.setProperty('--border', '#E2E8F0')
-      root.style.setProperty('--shadow', '0 4px 20px rgba(0,0,0,0.05)')
-      root.style.setProperty('--success', '#22C55E')
-      root.style.setProperty('--warning', '#F59E0B')
-      root.style.setProperty('--error', '#EF4444')
+      root.style.setProperty('--bg-main', '#f5f7fb')
+      root.style.setProperty('--bg-secondary', '#eef2ff')
+      root.style.setProperty('--bg-card', '#ffffff')
+      root.style.setProperty('--text-primary', '#0f172a')
+      root.style.setProperty('--text-secondary', '#334155')
+      root.style.setProperty('--text-muted', '#64748b')
+      root.style.setProperty('--primary', '#4f46e5')
+      root.style.setProperty('--primary-hover', '#4338ca')
+      root.style.setProperty('--primary-accent', '#818cf8')
+      root.style.setProperty('--border', '#dbe2f0')
+      root.style.setProperty('--shadow', '0 10px 28px rgba(15, 23, 42, 0.08)')
+      root.style.setProperty('--success', '#16a34a')
+      root.style.setProperty('--warning', '#d97706')
+      root.style.setProperty('--error', '#dc2626')
     }
     
-    // Save preference to localStorage with key "theme"
     localStorage.setItem('theme', isDark ? 'dark' : 'light')
   }, [isDark])
 

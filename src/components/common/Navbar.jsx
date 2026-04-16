@@ -69,13 +69,13 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="glass sticky top-0 z-50">
+    <nav className="glass sticky top-0 z-50 border-b border-border/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-8">
             <Link to={user ? "/dashboard" : "/"} className="group">
               <span className="collab-logo-text gradient-text transition-opacity duration-300 group-hover:opacity-90">
-                CoLlab
+                Collab
               </span>
             </Link>
 
@@ -84,10 +84,10 @@ export default function Navbar() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`relative text-sm font-medium transition-all duration-300 py-2 px-3 rounded-lg ${
+                  className={`relative text-sm font-medium transition-all duration-200 py-2 px-3 rounded-lg ${
                     isActive(link.to)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-text-secondary hover:text-primary hover:bg-primary/5'
+                      ? 'text-primary bg-primary/10 border border-primary/15'
+                      : 'text-text-secondary hover:text-primary hover:bg-primary/5 border border-transparent'
                   }`}
                 >
                   {link.label}
@@ -103,7 +103,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setShowNotifications((prev) => !prev)}
-                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-bg-card text-text-primary hover:bg-bg-secondary transition-colors"
+                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-bg-card text-text-primary hover:bg-bg-secondary transition-colors duration-200"
                     aria-label="Toggle notifications"
                   >
                     <svg
@@ -233,19 +233,19 @@ export default function Navbar() {
             exit={{ opacity: 0, y: -20 }}
             className="md:hidden mt-4 pt-4 glass-light rounded-b-2xl"
           >
-            <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`text-sm font-medium transition-all duration-300 py-3 px-4 rounded-xl ${
-                    isActive(link.to)
-                      ? 'text-primary bg-primary/10'
-                      : 'text-text-secondary hover:text-primary hover:bg-primary/5'
-                  }`}
-                >
-                  {link.label}
+              <div className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`text-sm font-medium transition-all duration-200 py-3 px-4 rounded-xl ${
+                      isActive(link.to)
+                        ? 'text-primary bg-primary/10 border border-primary/15'
+                        : 'text-text-secondary hover:text-primary hover:bg-primary/5 border border-transparent'
+                    }`}
+                  >
+                    {link.label}
                 </Link>
               ))}
               {user && (

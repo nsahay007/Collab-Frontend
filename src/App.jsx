@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -22,10 +22,6 @@ import ResetPassword from './pages/ResetPassword'
 import Legal from './pages/Legal'
 import LegalDoc from './pages/LegalDoc'
 
-function clamp(v, min, max) {
-  return Math.min(max, Math.max(min, v))
-}
-
 // Protected route for authenticated users
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -43,39 +39,8 @@ function PublicRoute({ children }) {
 }
 
 function Layout({ children }) {
-  const target = useRef({ x: 50, y: 50 })
-  const position = useRef({ x: 50, y: 50 })
-  const raf = useRef(null)
-
-  useEffect(() => {
-    const onMove = (event) => {
-      const x = (event.clientX / window.innerWidth) * 100
-      const y = (event.clientY / window.innerHeight) * 100
-      target.current.x = clamp(x, 0, 100)
-      target.current.y = clamp(y, 0, 100)
-      if (!raf.current) {
-        raf.current = requestAnimationFrame(update)
-      }
-    }
-
-    const update = () => {
-      position.current.x += (target.current.x - position.current.x) * 0.15
-      position.current.y += (target.current.y - position.current.y) * 0.15
-      document.documentElement.style.setProperty('--x', `${position.current.x}%`)
-      document.documentElement.style.setProperty('--y', `${position.current.y}%`)
-      raf.current = null
-    }
-
-    window.addEventListener('mousemove', onMove)
-    return () => {
-      window.removeEventListener('mousemove', onMove)
-      if (raf.current) cancelAnimationFrame(raf.current)
-    }
-  }, [])
-
   return (
-    <div className="relative min-h-screen bg-bg-main overflow-hidden">
-      <div className="cursor-glow" />
+    <div className="relative min-h-screen bg-bg-main">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
         {children}

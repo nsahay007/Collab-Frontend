@@ -23,7 +23,7 @@ export default function ThemeSwitch() {
         aria-label="Toggle dark mode"
         className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-bg-card"
         style={{
-          backgroundColor: isDark ? '#8B85FF' : '#E2E8F0'
+          backgroundColor: isDark ? 'var(--primary)' : 'color-mix(in srgb, var(--border) 85%, white)'
         }}
       >
         <span className="sr-only">Toggle dark mode</span>
