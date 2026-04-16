@@ -234,29 +234,18 @@ export default function Dashboard() {
     }
   }, [])
 
+  const updateFilters = (updates) => {
+    setFilters((prev) => {
+      const next = { ...prev, ...updates }
+      setLoading(true)
+      loadProjects(next)
+      return next
+    })
+  }
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target
-    setFilters((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSkillsChange = (e) => {
-    setFilters((prev) => ({ ...prev, skills: e.target.value }))
-  }
-
-  const handleRolesChange = (e) => {
-    setFilters((prev) => ({ ...prev, roles: e.target.value }))
-  }
-
-  const applyFilters = () => {
-    setLoading(true)
-    loadProjects(filters)
-  }
-
-  const clearFilters = () => {
-    const reset = { college: 'all', category: 'all', status: 'all', skills: 'all', roles: 'all' }
-    setFilters(reset)
-    setLoading(true)
-    loadProjects(reset)
+    updateFilters({ [name]: value })
   }
 
   const handleInterest = async (projectId) => {
@@ -363,8 +352,9 @@ export default function Dashboard() {
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">Skills</label>
             <select
+              name="skills"
               value={filters.skills}
-              onChange={handleSkillsChange}
+              onChange={handleFilterChange}
               className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="all">All skills</option>
@@ -378,8 +368,9 @@ export default function Dashboard() {
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">Roles Needed</label>
             <select
+              name="roles"
               value={filters.roles}
-              onChange={handleRolesChange}
+              onChange={handleFilterChange}
               className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="all">All roles</option>
@@ -391,10 +382,9 @@ export default function Dashboard() {
             </select>
           </div>
         </div>
-        <div className="flex flex-col gap-3 mt-4 sm:flex-row">
-          <Button variant="primary" className="w-full sm:w-auto" onClick={applyFilters}>Apply Filters</Button>
-          <Button variant="secondary" className="w-full sm:w-auto" onClick={clearFilters}>Clear</Button>
-        </div>
+        <p className="mt-4 text-xs text-text-muted">
+          Filters apply instantly. Choose “All” in any field to reset that filter.
+        </p>
       </Card>
 
       {error && (

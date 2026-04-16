@@ -147,11 +147,6 @@ export default function AdminDashboard() {
     return () => clearInterval(interval)
   }, [activeWithin])
 
-  const handleActivityFilter = () => {
-    const minutes = activeWithin.trim()
-    loadActivity(minutes ? Number(minutes) : undefined)
-  }
-
   const handleExport = () => {
     if (!users.length) return
     const rows = [
@@ -446,9 +441,6 @@ export default function AdminDashboard() {
               onChange={(e) => setActiveWithin(e.target.value)}
               className="w-40 rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary"
             />
-            <Button variant="secondary" size="sm" onClick={handleActivityFilter}>
-              Apply
-            </Button>
           </div>
         </div>
 

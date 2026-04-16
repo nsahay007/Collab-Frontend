@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Card from '../components/common/Card'
 import Badge from '../components/common/Badge'
-import Button from '../components/common/Button'
 import { getLeaderboard } from '../features/user/userAPI'
 import { getAllColleges } from '../features/college/collegeAPI'
 
@@ -44,8 +43,6 @@ export default function Leaderboard() {
     loadColleges()
   }, [])
 
-  const applyFilter = () => loadLeaderboard(collegeFilter)
-
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -56,7 +53,11 @@ export default function Leaderboard() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           <select
             value={collegeFilter}
-            onChange={(event) => setCollegeFilter(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value
+              setCollegeFilter(value)
+              loadLeaderboard(value)
+            }}
             className="w-full sm:w-auto px-4 py-2 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             <option value="all">All colleges</option>
@@ -64,7 +65,6 @@ export default function Leaderboard() {
               <option key={college._id} value={college._id}>{college.name}</option>
             ))}
           </select>
-          <Button variant="secondary" className="w-full sm:w-auto" onClick={applyFilter}>Apply</Button>
         </div>
       </div>
 
