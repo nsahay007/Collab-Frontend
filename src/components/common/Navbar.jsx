@@ -75,7 +75,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4 sm:gap-8">
             <Link to={user ? "/dashboard" : "/"} className="group">
               <span className="collab-logo-text gradient-text transition-opacity duration-300 group-hover:opacity-90">
-                Collab
+                CoLlab
               </span>
             </Link>
 
