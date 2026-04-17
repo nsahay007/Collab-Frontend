@@ -1,14 +1,16 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import useAuth from '../hooks/useAuth'
-import { login as loginAPI, verifyAdminTwoFactor } from '../features/auth/authAPI'
+import { login as loginAPI, googleAuth as googleAuthAPI, verifyAdminTwoFactor } from '../features/auth/authAPI'
 
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const googleButtonRef = useRef(null)
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -19,6 +21,8 @@ export default function Login() {
   const [twoFactorRequired, setTwoFactorRequired] = useState(false)
   const [twoFactorToken, setTwoFactorToken] = useState('')
   const [twoFactorCode, setTwoFactorCode] = useState('')
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [googleReady, setGoogleReady] = useState(false)
 
   const handleChange = (e) => {
     setFormData({
@@ -27,6 +31,84 @@ export default function Login() {
     })
     setError('')
   }
+
+  const handleGoogleCredential = async (credentialResponse) => {
+    if (!credentialResponse?.credential) {
+      setError('Google sign-in failed. Please try again.')
+      return
+    }
+
+    setGoogleLoading(true)
+    setError('')
+
+    try {
+      const response = await googleAuthAPI({ credential: credentialResponse.credential })
+      if (response?.data?.twoFactorRequired) {
+        setTwoFactorRequired(true)
+        setTwoFactorToken(response.data.twoFactorToken)
+        return
+      }
+      if (!response?.data?.user) {
+        throw new Error('Invalid Google login response')
+      }
+      login(response.data.user)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Google login failed. Please try again.')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!googleClientId || twoFactorRequired) return undefined
+
+    let cancelled = false
+    let script
+
+    const initGoogleButton = () => {
+      if (cancelled || !window.google?.accounts?.id || !googleButtonRef.current) return
+
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response) => {
+          void handleGoogleCredential(response)
+        }
+      })
+      googleButtonRef.current.innerHTML = ''
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 360,
+        text: 'continue_with',
+        shape: 'pill'
+      })
+      setGoogleReady(true)
+    }
+
+    if (window.google?.accounts?.id) {
+      initGoogleButton()
+      return () => {
+        cancelled = true
+      }
+    }
+
+    script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = initGoogleButton
+    script.onerror = () => {
+      if (!cancelled) {
+        setError('Unable to load Google sign-in. Please refresh.')
+      }
+    }
+    document.head.appendChild(script)
+
+    return () => {
+      cancelled = true
+    }
+  }, [googleClientId, twoFactorRequired])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -83,8 +165,8 @@ export default function Login() {
               onChange={handleChange}
               placeholder="Enter your email"
               required
-              disabled={twoFactorRequired}
-            />
+            disabled={twoFactorRequired || googleLoading}
+          />
           </div>
 
           <div>
@@ -100,7 +182,7 @@ export default function Login() {
                 placeholder="Enter your password"
                 className="pr-12"
                 required
-                disabled={twoFactorRequired}
+                disabled={twoFactorRequired || googleLoading}
               />
               <button
                 type="button"
@@ -153,10 +235,29 @@ export default function Login() {
             variant="primary" 
             className="w-full" 
             type="submit"
-            disabled={loading}
+            disabled={loading || googleLoading}
           >
             {loading ? 'Signing in...' : (twoFactorRequired ? 'Verify 2FA' : 'Sign In')}
           </Button>
+
+          {!twoFactorRequired && googleClientId && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs uppercase tracking-wide text-text-muted">or continue with</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className="flex justify-center">
+                <div ref={googleButtonRef} />
+              </div>
+              {!googleReady && (
+                <p className="text-xs text-text-muted text-center">Loading Google sign-in...</p>
+              )}
+              {googleLoading && (
+                <p className="text-xs text-text-secondary text-center">Signing in with Google...</p>
+              )}
+            </div>
+          )}
         </form>
 
         <div className="mt-4 text-right">
