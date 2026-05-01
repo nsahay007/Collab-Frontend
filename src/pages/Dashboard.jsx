@@ -90,10 +90,12 @@ const getSprintTiming = (project) => {
     }
   }
 
-  const startAt = project.buildPhase?.startDate ? new Date(project.buildPhase.startDate).getTime() : Date.now()
+  const startSource = project.startDate || project.buildPhase?.startDate
+  const endSource = project.endDate || project.buildPhase?.endDate
+  const startAt = startSource ? new Date(startSource).getTime() : Date.now()
   const totalDays = Number(project.buildPhase?.totalDurationDays) || DEFAULT_SPRINT_DAYS
-  const endAt = project.buildPhase?.endDate
-    ? new Date(project.buildPhase.endDate).getTime()
+  const endAt = endSource
+    ? new Date(endSource).getTime()
     : startAt + totalDays * 24 * 60 * 60 * 1000
 
   return { startAt, endAt, totalDays }
@@ -224,19 +226,50 @@ function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpoin
 
   const phase = getCurrentPhase(project)
   const { endAt } = getSprintTiming(project)
-  const remaining = formatRemaining(endAt - now)
+  const remainingMs = endAt - now
+  const remaining = formatRemaining(remainingMs)
   const progress = getProgress(project, 'active')
   const teamMembers = getTeamMembers(project)
   const phaseTitle = formatPhaseName(phase)
   const checkpointLabel = `Submit ${phaseTitle}`
+  const isEndingSoon = remainingMs > 0 && remainingMs <= 3 * 24 * 60 * 60 * 1000
+  const hasSubmittedCurrentPhase = Array.isArray(project?.checkpoints)
+    ? project.checkpoints.some((checkpoint) => checkpoint?.phase === phase)
+    : false
+  const showCompletionNudge = checkpointMessage && checkpointMessage.toLowerCase().includes('success')
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <Card hover={false}>
+        <div className="mb-6 rounded-2xl border border-border bg-bg-card p-5">
+          <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Sprint Deadline</p>
+          <p className={`text-4xl font-bold ${isEndingSoon ? 'text-red-500' : 'text-text-primary'}`}>
+            {`⏳ ${remaining} left`}
+          </p>
+          <p className="mt-3 text-sm text-text-secondary">
+            Complete your current phase to move forward.
+          </p>
+          {!hasSubmittedCurrentPhase && (
+            <p className="mt-2 text-sm font-medium text-amber-500">
+              ⚠️ You have not submitted this phase yet.
+            </p>
+          )}
+          {showCompletionNudge && (
+            <p className="mt-2 text-sm font-medium text-emerald-500">
+              ✅ Phase completed. Keep going!
+            </p>
+          )}
+          {isEndingSoon && (
+            <p className="mt-2 text-sm font-semibold text-red-500">
+              🚨 Sprint ending soon. Complete your work now.
+            </p>
+          )}
+        </div>
+
         <div className="grid gap-6 md:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Countdown</p>
-            <p className="text-3xl font-bold text-text-primary">{remaining}</p>
+            <p className={`text-3xl font-bold ${isEndingSoon ? 'text-red-500' : 'text-text-primary'}`}>{remaining}</p>
           </div>
 
           <div>
@@ -386,6 +419,7 @@ export default function Dashboard() {
 
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
+  const [checkpoints, setCheckpoints] = useState([])
 
   const [applying, setApplying] = useState(false)
   const [applyError, setApplyError] = useState('')
@@ -410,8 +444,26 @@ export default function Dashboard() {
         const projectsResponse = await api.get('/users/projects?status=all&limit=20&page=1')
         const projectList = projectsResponse?.data?.projects || []
         setProjects(Array.isArray(projectList) ? projectList : [])
+
+        const primaryProject = getPrimaryProject(projectList, status)
+        if (primaryProject?._id) {
+          try {
+            const checkpointsResponse = await api.get(`/checkpoints/${primaryProject._id}`)
+            const checkpointList = Array.isArray(checkpointsResponse?.data)
+              ? checkpointsResponse.data
+              : Array.isArray(checkpointsResponse?.data?.checkpoints)
+                ? checkpointsResponse.data.checkpoints
+                : []
+            setCheckpoints(checkpointList)
+          } catch {
+            setCheckpoints([])
+          }
+        } else {
+          setCheckpoints([])
+        }
       } else {
         setProjects([])
+        setCheckpoints([])
       }
     } catch (err) {
       const message = err?.response?.data?.message || 'Could not load sprint dashboard. Please try again.'
@@ -505,7 +557,10 @@ export default function Dashboard() {
 
   return (
     <SprintActiveState
-      project={getPrimaryProject(projects, sprintStatus)}
+      project={{
+        ...(getPrimaryProject(projects, sprintStatus) || {}),
+        checkpoints
+      }}
       onCheckpoint={handleSubmitCheckpoint}
       checkpointLoading={checkpointLoading}
       checkpointMessage={checkpointMessage}
