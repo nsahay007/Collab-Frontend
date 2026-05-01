@@ -8,6 +8,29 @@ const DEFAULT_SPRINT_DAYS = 14
 
 const PHASES = ['problem', 'plan', 'build', 'mvp', 'validation', 'demo']
 
+const phaseInstructions = {
+  problem: 'Define the exact problem your project is solving',
+  plan: 'Describe your solution and how it will work',
+  build: 'Start building the core functionality of your product',
+  mvp: 'Create a working demo or prototype',
+  validation: 'Get feedback from real users',
+  demo: 'Prepare your final pitch or demo'
+}
+
+const submissionHints = {
+  problem: 'Submit a Google Doc / Notion link explaining the problem',
+  plan: 'Submit your plan (features, flow, approach)',
+  build: 'Submit GitHub repo or progress link',
+  mvp: 'Submit working demo or video',
+  validation: 'Submit feedback screenshots or results',
+  demo: 'Submit final pitch video or presentation'
+}
+
+const formatPhaseName = (phase) => {
+  if (!phase || typeof phase !== 'string') return 'Problem'
+  return phase.charAt(0).toUpperCase() + phase.slice(1)
+}
+
 const normalizeSprintStatus = (value) => {
   if (typeof value !== 'string') return 'none'
   const normalized = value.trim().toLowerCase()
@@ -164,6 +187,8 @@ function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpoin
   const remaining = formatRemaining(endAt - now)
   const progress = getProgress(project, 'active')
   const teamMembers = getTeamMembers(project)
+  const phaseTitle = formatPhaseName(phase)
+  const checkpointLabel = `Submit ${phaseTitle}`
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -216,6 +241,12 @@ function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpoin
       </Card>
 
       <Card hover={false}>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">Current Phase: {phaseTitle}</h2>
+        <p className="text-base text-text-secondary">{phaseInstructions[phase] || phaseInstructions.problem}</p>
+        <p className="mt-2 text-sm text-text-muted">{submissionHints[phase] || submissionHints.problem}</p>
+      </Card>
+
+      <Card hover={false}>
         <h2 className="text-xl font-semibold text-text-primary mb-3">Team Members</h2>
 
         {teamMembers.length === 0 ? (
@@ -240,7 +271,7 @@ function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpoin
         )}
 
         <Button onClick={onCheckpoint} disabled={checkpointLoading || !project} className="w-full sm:w-auto">
-          {checkpointLoading ? 'Submitting...' : 'Submit Checkpoint'}
+          {checkpointLoading ? 'Submitting...' : checkpointLabel}
         </Button>
       </Card>
     </div>
