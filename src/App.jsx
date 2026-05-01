@@ -11,6 +11,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import CreateProject from './pages/CreateProject'
 import ProjectDetail from './pages/ProjectDetail'
+import ProjectProof from './pages/ProjectProof'
 import Validation from './pages/Validation'
 import GiveFeedback from './pages/GiveFeedback'
 import Profile from './pages/Profile'
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
       <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
+      <Route path="/project/:id/proof" element={<Layout><ProjectProof /></Layout>} />
       <Route path="/validation" element={<ProtectedRoute><Layout><Validation /></Layout></ProtectedRoute>} />
       <Route path="/validation/:id/feedback" element={<ProtectedRoute><Layout><GiveFeedback /></Layout></ProtectedRoute>} />
       <Route path="/leaderboard" element={<ProtectedRoute><Layout><Leaderboard /></Layout></ProtectedRoute>} />

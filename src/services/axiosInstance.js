@@ -18,7 +18,8 @@ instance.interceptors.response.use(
       localStorage.removeItem('user')
       const path = window.location.pathname
       const authPages = ['/login', '/register', '/verify-email', '/forgot', '/reset']
-      if (!authPages.includes(path)) {
+      const isPublicProofPage = /^\/project\/[^/]+\/proof\/?$/.test(path)
+      if (!authPages.includes(path) && !isPublicProofPage) {
         window.location.href = '/login'
       }
     }

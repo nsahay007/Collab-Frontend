@@ -400,11 +400,25 @@ function SprintCompletedState({ project }) {
         <h2 className="text-xl font-semibold text-text-primary mb-3">MVP Link</h2>
 
         {demoLink ? (
-          <a href={demoLink} target="_blank" rel="noreferrer">
-            <Button className="w-full sm:w-auto">Open MVP</Button>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a href={demoLink} target="_blank" rel="noreferrer">
+              <Button className="w-full sm:w-auto">Open MVP</Button>
+            </a>
+            {project?._id ? (
+              <a href={`/project/${project._id}/proof`}>
+                <Button variant="secondary" className="w-full sm:w-auto">View Proof Page</Button>
+              </a>
+            ) : null}
+          </div>
         ) : (
-          <p className="text-text-secondary">No MVP link added yet.</p>
+          <div className="space-y-3">
+            <p className="text-text-secondary">No MVP link added yet.</p>
+            {project?._id ? (
+              <a href={`/project/${project._id}/proof`}>
+                <Button variant="secondary" className="w-full sm:w-auto">View Proof Page</Button>
+              </a>
+            ) : null}
+          </div>
         )}
       </Card>
     </div>
