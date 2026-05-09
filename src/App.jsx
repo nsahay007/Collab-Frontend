@@ -1,5 +1,6 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import useAuth from './hooks/useAuth'
@@ -40,11 +41,20 @@ function PublicRoute({ children }) {
 }
 
 function Layout({ children }) {
+  const location = useLocation()
+
   return (
     <div className="relative min-h-screen bg-bg-main">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
-        {children}
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {children}
+        </motion.div>
       </main>
     </div>
   )
@@ -58,8 +68,8 @@ function AppRoutes() {
       <Route path="/register" element={<PublicRoute><Layout><Register /></Layout></PublicRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
-      <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
       <Route path="/project/:id/proof" element={<Layout><ProjectProof /></Layout>} />
+      <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
       <Route path="/validation" element={<ProtectedRoute><Layout><Validation /></Layout></ProtectedRoute>} />
       <Route path="/validation/:id/feedback" element={<ProtectedRoute><Layout><GiveFeedback /></Layout></ProtectedRoute>} />
       <Route path="/leaderboard" element={<ProtectedRoute><Layout><Leaderboard /></Layout></ProtectedRoute>} />

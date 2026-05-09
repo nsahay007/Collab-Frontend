@@ -13,9 +13,9 @@ import {
 } from '../features/user/userAPI'
 import useAuth from '../hooks/useAuth'
 
-function UserRow({ user, onEdit, onView }) {
+function UserRow({ user, onEdit, onView, highlighted = false }) {
   return (
-    <tr className="border-b border-border-default hover:bg-bg-secondary transition-colors">
+    <tr className={`border-b border-border-default hover:bg-bg-secondary transition-colors ${highlighted ? 'animate-status-flash' : ''}`}>
       <td className="py-4 px-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-semibold">
@@ -83,6 +83,7 @@ export default function AdminDashboard() {
   })
   const [userActionStatus, setUserActionStatus] = useState(null)
   const [userActionLoading, setUserActionLoading] = useState(false)
+  const [highlightedUserId, setHighlightedUserId] = useState('')
 
   const fetchUsers = async () => {
     try {
@@ -274,6 +275,8 @@ export default function AdminDashboard() {
       }
       await updateUserByAdmin(selectedUser._id, payload)
       setUserActionStatus({ type: 'success', message: 'User updated successfully.' })
+      setHighlightedUserId(String(selectedUser._id))
+      setTimeout(() => setHighlightedUserId(''), 1200)
       fetchUsers()
       loadStats()
     } catch (err) {
@@ -306,8 +309,13 @@ export default function AdminDashboard() {
         primaryCategory: userForm.primaryCategory,
         phone: userForm.phone
       }
-      await createUserByAdmin(payload)
+      const created = await createUserByAdmin(payload)
       setUserActionStatus({ type: 'success', message: 'User created successfully.' })
+      const createdId = created?.user?.id || created?.data?.user?.id
+      if (createdId) {
+        setHighlightedUserId(String(createdId))
+        setTimeout(() => setHighlightedUserId(''), 1200)
+      }
       fetchUsers()
       loadStats()
       resetUserForm()
@@ -417,6 +425,7 @@ export default function AdminDashboard() {
                 <UserRow
                   key={user._id}
                   user={user}
+                  highlighted={highlightedUserId && (highlightedUserId === String(user._id || user.id))}
                   onEdit={(selected) => openUserModal('edit', selected)}
                   onView={(selected) => openUserModal('view', selected)}
                 />

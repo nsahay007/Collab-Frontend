@@ -1,12 +1,38 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import useAuth from '../hooks/useAuth'
 import api from '../services/api'
 
 const DEFAULT_SPRINT_DAYS = 14
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000
 
 const PHASES = ['problem', 'plan', 'build', 'mvp', 'validation', 'demo']
+
+const STAGGER_CONTAINER = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      delayChildren: 0.04,
+      staggerChildren: 0.06
+    }
+  }
+}
+
+const STAGGER_ITEM = {
+  hidden: { opacity: 0, y: 8 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.26,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  }
+}
 
 const phaseInstructions = {
   problem: 'Define the exact problem your project is solving',
@@ -31,14 +57,6 @@ const formatPhaseName = (phase) => {
   return phase.charAt(0).toUpperCase() + phase.slice(1)
 }
 
-const getCurrentPhase = (project) => {
-  const phase = typeof project?.phase === 'string' ? project.phase.toLowerCase() : ''
-  if (PHASES.includes(phase)) {
-    return phase
-  }
-  return getPhaseFromProject(project)
-}
-
 const normalizeSprintStatus = (value) => {
   if (typeof value !== 'string') return 'none'
   const normalized = value.trim().toLowerCase()
@@ -54,7 +72,7 @@ const getPrimaryProject = (projects = [], sprintStatus = 'none') => {
   }
 
   if (sprintStatus === 'active') {
-    return projects.find((project) => ['planning', 'building', 'validation', 'validation_failed'].includes(project.status)) || projects[0]
+    return projects.find((project) => ['planning', 'building', 'validation', 'validation_failed', 'completed', 'validated'].includes(project.status)) || projects[0]
   }
 
   return projects[0]
@@ -62,8 +80,12 @@ const getPrimaryProject = (projects = [], sprintStatus = 'none') => {
 
 const getPhaseFromProject = (project) => {
   if (!project) return 'problem'
-  const status = String(project.status || '').toLowerCase()
 
+  if (PHASES.includes(project.phase)) {
+    return project.phase
+  }
+
+  const status = String(project.status || '').toLowerCase()
   if (status === 'planning') return 'problem'
   if (status === 'building') return 'build'
   if (status === 'validation' || status === 'validation_failed') return 'validation'
@@ -90,12 +112,10 @@ const getSprintTiming = (project) => {
     }
   }
 
-  const startSource = project.startDate || project.buildPhase?.startDate
-  const endSource = project.endDate || project.buildPhase?.endDate
-  const startAt = startSource ? new Date(startSource).getTime() : Date.now()
+  const startAt = project.buildPhase?.startDate ? new Date(project.buildPhase.startDate).getTime() : Date.now()
   const totalDays = Number(project.buildPhase?.totalDurationDays) || DEFAULT_SPRINT_DAYS
-  const endAt = endSource
-    ? new Date(endSource).getTime()
+  const endAt = project.buildPhase?.endDate
+    ? new Date(project.buildPhase.endDate).getTime()
     : startAt + totalDays * 24 * 60 * 60 * 1000
 
   return { startAt, endAt, totalDays }
@@ -116,7 +136,6 @@ const toPercent = (value) => Math.max(0, Math.min(100, value))
 
 const getProgress = (project, sprintStatus) => {
   if (sprintStatus === 'completed') return 100
-
   if (!project) return 0
 
   const { startAt, endAt } = getSprintTiming(project)
@@ -129,8 +148,8 @@ const getProgress = (project, sprintStatus) => {
 const getTeamMembers = (project) => {
   if (!project || !Array.isArray(project.teamMembers)) return []
 
-  return project.teamMembers.map((member) => ({
-    id: member?._id || member?.id || String(Math.random()),
+  return project.teamMembers.map((member, index) => ({
+    id: member?._id || member?.id || `member-${index}`,
     name: member?.name || 'Team Member'
   }))
 }
@@ -156,6 +175,9 @@ function ErrorState({ message, onRetry }) {
 function SprintNoneState({ applying, applyError, onApply }) {
   return (
     <Card className="max-w-3xl mx-auto" hover={false}>
+      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-xl animate-float-gentle">
+        🚀
+      </div>
       <h1 className="text-3xl font-bold text-text-primary mb-3">Join the 14-Day Sprint</h1>
       <p className="text-text-secondary mb-6">
         Turn your idea into a real project with a team in 14 days.
@@ -178,98 +200,77 @@ function SprintAppliedState() {
   return (
     <Card className="max-w-3xl mx-auto" hover={false}>
       <h1 className="text-3xl font-bold text-text-primary mb-3">Your application is under review</h1>
-      <p className="text-text-secondary">You’ll be notified once selected.</p>
+      <p className="text-text-secondary">You'll be notified once selected.</p>
     </Card>
   )
 }
 
-function PhaseTracker({ currentPhase }) {
-  const currentIndex = PHASES.indexOf(currentPhase)
-
-  return (
-    <div className="flex flex-wrap md:flex-nowrap gap-2">
-      {PHASES.map((phase, index) => {
-        const isCompleted = index < currentIndex
-        const isCurrent = index === currentIndex
-        const symbol = isCompleted ? '✔' : isCurrent ? '→' : '○'
-        const label = formatPhaseName(phase)
-
-        return (
-          <div
-            key={phase}
-            className={`min-w-[120px] flex-1 rounded-full border px-3 py-2 text-center text-sm ${
-              isCurrent
-                ? 'border-primary bg-primary/10 text-primary font-semibold'
-                : isCompleted
-                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600'
-                  : 'border-border bg-bg-card text-text-muted'
-            }`}
-            aria-current={isCurrent ? 'step' : undefined}
-          >
-            {`${symbol} ${label}`}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpointMessage }) {
+function SprintActiveState({
+  project,
+  onCheckpointSubmit,
+  checkpointLoading,
+  checkpointMessage,
+  demoLocked,
+  checkpointVisualState
+}) {
   const [now, setNow] = useState(Date.now())
   const [submissionLink, setSubmissionLink] = useState('')
-  const [submissionDescription, setSubmissionDescription] = useState('')
+  const [description, setDescription] = useState('')
+  const [localError, setLocalError] = useState('')
 
   useEffect(() => {
     const timerId = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(timerId)
   }, [])
 
-  const phase = getCurrentPhase(project)
+  const phase = getPhaseFromProject(project)
+  const phaseIndex = PHASES.indexOf(phase)
   const { endAt } = getSprintTiming(project)
   const remainingMs = endAt - now
   const remaining = formatRemaining(remainingMs)
+  const isEndingSoon = remainingMs > 0 && remainingMs <= THREE_DAYS_MS
   const progress = getProgress(project, 'active')
   const teamMembers = getTeamMembers(project)
   const phaseTitle = formatPhaseName(phase)
   const checkpointLabel = `Submit ${phaseTitle}`
-  const isEndingSoon = remainingMs > 0 && remainingMs <= 3 * 24 * 60 * 60 * 1000
-  const hasSubmittedCurrentPhase = Array.isArray(project?.checkpoints)
-    ? project.checkpoints.some((checkpoint) => checkpoint?.phase === phase)
-    : false
-  const showCompletionNudge = checkpointMessage && checkpointMessage.toLowerCase().includes('success')
+  const isDemoBlocked = phase === 'demo' && demoLocked
+  const showSuccessMorph = checkpointVisualState === 'success'
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setLocalError('')
+
+    const trimmedLink = submissionLink.trim()
+    if (!trimmedLink) {
+      setLocalError('Please add a submission link before continuing.')
+      return
+    }
+
+    const result = await onCheckpointSubmit({
+      phase,
+      submissionLink: trimmedLink,
+      description: description.trim()
+    })
+
+    if (result?.ok && !result?.alreadyCompleted) {
+      setSubmissionLink('')
+      setDescription('')
+    }
+  }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <Card hover={false}>
-        <div className="mb-6 rounded-2xl border border-border bg-bg-card p-5">
-          <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Sprint Deadline</p>
-          <p className={`text-4xl font-bold ${isEndingSoon ? 'text-red-500' : 'text-text-primary'}`}>
-            {`⏳ ${remaining} left`}
-          </p>
-          <p className="mt-3 text-sm text-text-secondary">
-            Complete your current phase to move forward.
-          </p>
-          {!hasSubmittedCurrentPhase && (
-            <p className="mt-2 text-sm font-medium text-amber-500">
-              ⚠️ You have not submitted this phase yet.
-            </p>
-          )}
-          {showCompletionNudge && (
-            <p className="mt-2 text-sm font-medium text-emerald-500">
-              ✅ Phase completed. Keep going!
-            </p>
-          )}
-          {isEndingSoon && (
-            <p className="mt-2 text-sm font-semibold text-red-500">
-              🚨 Sprint ending soon. Complete your work now.
-            </p>
-          )}
-        </div>
-
+    <motion.div
+      className="max-w-5xl mx-auto space-y-6"
+      variants={STAGGER_CONTAINER}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={STAGGER_ITEM}>
+        <Card hover={false}>
         <div className="grid gap-6 md:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Countdown</p>
-            <p className={`text-3xl font-bold ${isEndingSoon ? 'text-red-500' : 'text-text-primary'}`}>{remaining}</p>
+            <p className={`text-3xl font-bold ${isEndingSoon ? 'text-error' : 'text-text-primary'}`}>{remaining}</p>
           </div>
 
           <div>
@@ -284,22 +285,72 @@ function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpoin
         </div>
 
         <div className="mt-6 h-2 w-full rounded-full bg-bg-secondary">
-          <div className="h-2 rounded-full bg-primary" style={{ width: `${progress}%` }} />
+          <motion.div
+            className="h-2 rounded-full bg-primary"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          />
         </div>
-      </Card>
 
-      <Card hover={false}>
+        <p className={`mt-4 text-sm ${isEndingSoon ? 'text-error' : 'text-text-secondary'}`}>
+          {isEndingSoon
+            ? 'Sprint ending soon. Complete your work now.'
+            : 'Complete your current phase to move forward.'}
+        </p>
+        </Card>
+      </motion.div>
+
+      <motion.div variants={STAGGER_ITEM}>
+        <Card hover={false}>
         <h2 className="text-xl font-semibold text-text-primary mb-4">Sprint Workflow</h2>
-        <PhaseTracker currentPhase={phase} />
-      </Card>
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
+          {PHASES.map((item, index) => {
+            const isDone = index < phaseIndex
+            const isCurrent = index === phaseIndex
+            const baseClasses = `rounded-xl border px-3 py-2 text-center text-sm capitalize ${
+              isCurrent
+                ? 'border-primary bg-primary/10 text-primary'
+                : isDone
+                  ? 'border-success/30 bg-success/10 text-success'
+                  : 'border-border bg-bg-card text-text-muted'
+            }`
 
-      <Card hover={false}>
+            if (isCurrent) {
+              return (
+                <motion.div
+                  key={item}
+                  className={baseClasses}
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <span className="mr-1">{isDone ? '✔' : isCurrent ? '→' : '○'}</span>
+                  {item}
+                </motion.div>
+              )
+            }
+
+            return (
+              <div key={item} className={baseClasses}>
+                <span className="mr-1">{isDone ? '✔' : isCurrent ? '→' : '○'}</span>
+                {item}
+              </div>
+            )
+          })}
+        </div>
+        </Card>
+      </motion.div>
+
+      <motion.div variants={STAGGER_ITEM}>
+        <Card hover={false}>
         <h2 className="text-2xl font-bold text-text-primary mb-2">Current Phase: {phaseTitle}</h2>
         <p className="text-base text-text-secondary">{phaseInstructions[phase] || phaseInstructions.problem}</p>
         <p className="mt-2 text-sm text-text-muted">{submissionHints[phase] || submissionHints.problem}</p>
-      </Card>
+        </Card>
+      </motion.div>
 
-      <Card hover={false}>
+      <motion.div variants={STAGGER_ITEM}>
+        <Card hover={false}>
         <h2 className="text-xl font-semibold text-text-primary mb-3">Team Members</h2>
 
         {teamMembers.length === 0 ? (
@@ -313,41 +364,77 @@ function SprintActiveState({ project, onCheckpoint, checkpointLoading, checkpoin
             ))}
           </ul>
         )}
-      </Card>
+        </Card>
+      </motion.div>
 
-      <Card hover={false}>
+      <motion.div variants={STAGGER_ITEM}>
+        <Card hover={false}>
         <h2 className="text-xl font-semibold text-text-primary mb-2">Checkpoint</h2>
-        <p className="text-text-secondary mb-4">Submit today’s progress update for your sprint.</p>
+        <p className="text-text-secondary mb-4">Submit progress for this phase with a shareable proof link.</p>
 
-        {checkpointMessage && (
-          <p className="mb-3 text-sm text-success">{checkpointMessage}</p>
+        {checkpointMessage?.text && (
+          <div
+            className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
+              checkpointMessage.type === 'error'
+                ? 'border-error/30 bg-error/10 text-error'
+                : checkpointMessage.type === 'info'
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-success/30 bg-success/10 text-success'
+            }`}
+          >
+            {checkpointMessage.text}
+          </div>
         )}
 
-        <div className="space-y-3 mb-4">
-          <input
-            type="url"
-            value={submissionLink}
-            onChange={(event) => setSubmissionLink(event.target.value)}
-            placeholder="https://your-submission-link"
-            className="w-full"
-          />
-          <textarea
-            value={submissionDescription}
-            onChange={(event) => setSubmissionDescription(event.target.value)}
-            placeholder="Add a short note about this phase submission (optional)"
-            className="w-full min-h-[96px]"
-          />
-        </div>
+        {localError && (
+          <div className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+            {localError}
+          </div>
+        )}
 
-        <Button
-          onClick={() => onCheckpoint({ phase, submissionLink, submissionDescription, resetForm: () => { setSubmissionLink(''); setSubmissionDescription('') } })}
-          disabled={checkpointLoading || !project || !submissionLink.trim()}
-          className="w-full sm:w-auto"
-        >
-          {checkpointLoading ? 'Submitting...' : checkpointLabel}
-        </Button>
-      </Card>
-    </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm text-text-secondary mb-1">Submission Link</label>
+            <input
+              type="url"
+              value={submissionLink}
+              onChange={(event) => setSubmissionLink(event.target.value)}
+              placeholder="https://..."
+              className="w-full rounded-xl border border-border bg-bg-card px-3 py-2 text-text-primary"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-text-secondary mb-1">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Add a short note about this phase submission"
+              rows={3}
+              className="w-full rounded-xl border border-border bg-bg-card px-3 py-2 text-text-primary"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={checkpointLoading || !project || isDemoBlocked}
+            className="w-full sm:w-auto"
+            animate={showSuccessMorph ? { scale: [1, 1.03, 1] } : { scale: 1 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+          >
+            {showSuccessMorph
+              ? '✓ Submitted'
+              : isDemoBlocked
+              ? 'Demo Submitted'
+              : checkpointLoading
+                ? 'Submitting...'
+                : checkpointLabel}
+          </Button>
+        </form>
+        </Card>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -357,9 +444,14 @@ function SprintCompletedState({ project }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Card hover={false}>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Sprint completed</h1>
-        <p className="text-text-secondary">Your sprint is complete. Here’s the project summary.</p>
+      <Card hover={false} className="border-success/30 bg-success/10">
+        <h1 className="text-3xl font-bold text-text-primary mb-2">🎉 You completed the 14-Day Sprint</h1>
+        <p className="text-text-secondary mb-4">Great execution. Your proof of work is now ready to share.</p>
+        {project?._id ? (
+          <Link to={`/project/${project._id}/proof`}>
+            <Button className="w-full sm:w-auto">View Proof of Work</Button>
+          </Link>
+        ) : null}
       </Card>
 
       <Card hover={false}>
@@ -400,32 +492,38 @@ function SprintCompletedState({ project }) {
         <h2 className="text-xl font-semibold text-text-primary mb-3">MVP Link</h2>
 
         {demoLink ? (
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a href={demoLink} target="_blank" rel="noreferrer">
-              <Button className="w-full sm:w-auto">Open MVP</Button>
-            </a>
-            {project?._id ? (
-              <a href={`/project/${project._id}/proof`}>
-                <Button variant="secondary" className="w-full sm:w-auto">View Proof Page</Button>
-              </a>
-            ) : null}
-          </div>
+          <a href={demoLink} target="_blank" rel="noreferrer">
+            <Button className="w-full sm:w-auto">Open MVP</Button>
+          </a>
         ) : (
-          <div className="space-y-3">
-            <p className="text-text-secondary">No MVP link added yet.</p>
-            {project?._id ? (
-              <a href={`/project/${project._id}/proof`}>
-                <Button variant="secondary" className="w-full sm:w-auto">View Proof Page</Button>
-              </a>
-            ) : null}
-          </div>
+          <p className="text-text-secondary">No MVP link added yet.</p>
         )}
       </Card>
     </div>
   )
 }
 
+function ToastBanner({ message }) {
+  return (
+    <AnimatePresence>
+      {message ? (
+        <motion.div
+          key="dashboard-toast"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed right-4 top-4 z-50 rounded-xl border border-success/40 bg-success/15 px-4 py-3 text-sm text-success"
+        >
+          {message}
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  )
+}
+
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { user, login } = useAuth()
 
   const [loading, setLoading] = useState(true)
@@ -433,15 +531,23 @@ export default function Dashboard() {
 
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
-  const [checkpoints, setCheckpoints] = useState([])
 
   const [applying, setApplying] = useState(false)
   const [applyError, setApplyError] = useState('')
 
   const [checkpointLoading, setCheckpointLoading] = useState(false)
-  const [checkpointMessage, setCheckpointMessage] = useState('')
+  const [checkpointMessage, setCheckpointMessage] = useState(null)
+  const [checkpointVisualState, setCheckpointVisualState] = useState('idle')
+  const [demoLocked, setDemoLocked] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
 
   const sprintStatus = useMemo(() => normalizeSprintStatus(profile?.sprintStatus), [profile?.sprintStatus])
+
+  useEffect(() => {
+    if (!toastMessage) return undefined
+    const timeoutId = setTimeout(() => setToastMessage(''), 2600)
+    return () => clearTimeout(timeoutId)
+  }, [toastMessage])
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -450,34 +556,22 @@ export default function Dashboard() {
     try {
       const profileResponse = await api.get('/users/me')
       const profileData = profileResponse?.data || null
-
       setProfile(profileData)
+      if (login && profileData) login(profileData)
 
       const status = normalizeSprintStatus(profileData?.sprintStatus)
       if (status === 'active' || status === 'completed') {
         const projectsResponse = await api.get('/users/projects?status=all&limit=20&page=1')
         const projectList = projectsResponse?.data?.projects || []
-        setProjects(Array.isArray(projectList) ? projectList : [])
+        const normalizedProjects = Array.isArray(projectList) ? projectList : []
+        setProjects(normalizedProjects)
 
-        const primaryProject = getPrimaryProject(projectList, status)
-        if (primaryProject?._id) {
-          try {
-            const checkpointsResponse = await api.get(`/checkpoints/${primaryProject._id}`)
-            const checkpointList = Array.isArray(checkpointsResponse?.data)
-              ? checkpointsResponse.data
-              : Array.isArray(checkpointsResponse?.data?.checkpoints)
-                ? checkpointsResponse.data.checkpoints
-                : []
-            setCheckpoints(checkpointList)
-          } catch {
-            setCheckpoints([])
-          }
-        } else {
-          setCheckpoints([])
-        }
+        const currentProject = getPrimaryProject(normalizedProjects, status)
+        const currentPhase = getPhaseFromProject(currentProject)
+        setDemoLocked(status === 'completed' || (currentPhase === 'demo' && String(currentProject?.status || '').toLowerCase() === 'completed'))
       } else {
         setProjects([])
-        setCheckpoints([])
+        setDemoLocked(false)
       }
     } catch (err) {
       const message = err?.response?.data?.message || 'Could not load sprint dashboard. Please try again.'
@@ -495,7 +589,7 @@ export default function Dashboard() {
   const handleApplyForSprint = async () => {
     setApplying(true)
     setApplyError('')
-    setCheckpointMessage('')
+    setCheckpointMessage(null)
 
     try {
       const response = await api.post('/sprint/apply', {})
@@ -525,25 +619,64 @@ export default function Dashboard() {
     }
   }
 
-  const handleSubmitCheckpoint = async ({ phase, submissionLink, submissionDescription, resetForm }) => {
+  const handleSubmitCheckpoint = async ({ phase, submissionLink, description }) => {
     const project = getPrimaryProject(projects, sprintStatus)
-    if (!project?._id) return
+    if (!project?._id) return { ok: false }
 
     setCheckpointLoading(true)
-    setCheckpointMessage('')
+    setCheckpointMessage(null)
+    setCheckpointVisualState('loading')
 
     try {
-      await api.post('/checkpoint/submit', {
+      const response = await api.post('/checkpoint/submit', {
         projectId: project._id,
         phase,
         submissionLink,
-        description: submissionDescription
+        description
       })
-      setCheckpointMessage('Checkpoint submitted successfully.')
-      if (typeof resetForm === 'function') resetForm()
+
+      const data = response?.data || {}
+
+      if (data?.alreadyCompleted) {
+        setDemoLocked(true)
+        setCheckpointVisualState('completed')
+        setCheckpointMessage({
+          type: 'info',
+          text: data?.message || 'Demo already submitted. Your sprint is complete.'
+        })
+        setToastMessage('Demo already submitted. Your sprint is complete.')
+        await loadDashboardData()
+        return { ok: true, alreadyCompleted: true, sprintCompleted: true }
+      }
+
+      if (data?.sprintCompleted) {
+        setDemoLocked(true)
+        setCheckpointVisualState('completed')
+        setCheckpointMessage({
+          type: 'success',
+          text: data?.message || 'Sprint completed successfully.'
+        })
+        setToastMessage('🎉 Sprint Completed Successfully!')
+        await loadDashboardData()
+        setTimeout(() => {
+          navigate(`/project/${project._id}/proof`)
+        }, 600)
+        return { ok: true, sprintCompleted: true }
+      }
+
+      setCheckpointMessage({
+        type: 'success',
+        text: data?.message || 'Checkpoint submitted successfully.'
+      })
+      setCheckpointVisualState('success')
+      setTimeout(() => setCheckpointVisualState('idle'), 900)
       await loadDashboardData()
+      return { ok: true }
     } catch (err) {
-      setCheckpointMessage(err?.response?.data?.message || 'Could not submit checkpoint. Please retry.')
+      const message = err?.response?.data?.message || 'Could not submit checkpoint. Please retry.'
+      setCheckpointMessage({ type: 'error', text: message })
+      setCheckpointVisualState('idle')
+      return { ok: false, error: message }
     } finally {
       setCheckpointLoading(false)
     }
@@ -566,18 +699,26 @@ export default function Dashboard() {
   }
 
   if (sprintStatus === 'completed') {
-    return <SprintCompletedState project={getPrimaryProject(projects, sprintStatus)} />
+    return (
+      <>
+        <ToastBanner message={toastMessage} />
+        <SprintCompletedState project={getPrimaryProject(projects, sprintStatus)} />
+      </>
+    )
   }
 
   return (
-    <SprintActiveState
-      project={{
-        ...(getPrimaryProject(projects, sprintStatus) || {}),
-        checkpoints
-      }}
-      onCheckpoint={handleSubmitCheckpoint}
-      checkpointLoading={checkpointLoading}
-      checkpointMessage={checkpointMessage}
-    />
+    <>
+      <ToastBanner message={toastMessage} />
+
+      <SprintActiveState
+        project={getPrimaryProject(projects, sprintStatus)}
+        onCheckpointSubmit={handleSubmitCheckpoint}
+        checkpointLoading={checkpointLoading}
+        checkpointMessage={checkpointMessage}
+        demoLocked={demoLocked}
+        checkpointVisualState={checkpointVisualState}
+      />
+    </>
   )
 }
