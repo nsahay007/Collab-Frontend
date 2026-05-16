@@ -5,6 +5,7 @@ import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import ThemeSwitch from '../components/common/ThemeSwitch'
 import { getUserProjects, getProfile, updateProfile, getRank } from '../features/user/userAPI'
+import { deleteProject as deleteVenture } from '../features/projects/projectAPI'
 import { setupAdminTwoFactor, confirmAdminTwoFactor, disableAdminTwoFactor } from '../features/auth/authAPI'
 import {
   getNotifications,
@@ -27,7 +28,16 @@ const statusVariant = (status) => {
   return 'default'
 }
 
-function ProjectCard({ title, description, status, roles }) {
+function ProjectCard({
+  id,
+  title,
+  description,
+  status,
+  roles,
+  canDelete = false,
+  deleting = false,
+  onDelete
+}) {
   return (
     <Card>
       <div className="flex items-start justify-between mb-3">
@@ -39,6 +49,25 @@ function ProjectCard({ title, description, status, roles }) {
         {roles?.length ? roles.map((role) => (
           <Badge key={role} variant="default">{role}</Badge>
         )) : <span className="text-xs text-text-muted">No roles listed</span>}
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {id && (
+          <Link to={`/project/${id}`}>
+            <Button size="sm" variant="secondary">Open Venture</Button>
+          </Link>
+        )}
+
+        {canDelete && (
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={onDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete Venture'}
+          </Button>
+        )}
       </div>
     </Card>
   )
@@ -63,6 +92,8 @@ export default function Profile() {
   const [projects, setProjects] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState('')
+  const [projectActionError, setProjectActionError] = useState('')
+  const [deletingProjectId, setDeletingProjectId] = useState('')
   const [rankInfo, setRankInfo] = useState({ rank: null, collegeRank: null })
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(true)
@@ -99,7 +130,7 @@ export default function Profile() {
         setTwoFactorPending(Boolean(data.twoFactorPending))
         localStorage.setItem('user', JSON.stringify(data))
       } catch (err) {
-        console.error('Failed to load profile', err)
+        console.error('Failed to load execution profile', err)
         navigate('/login')
       }
     }
@@ -115,8 +146,8 @@ export default function Profile() {
         const list = response?.projects || []
         setProjects(list)
       } catch (err) {
-        console.error('Failed to load user projects:', err)
-        setProjectsError('Unable to load your projects right now.')
+        console.error('Failed to load user ventures:', err)
+        setProjectsError('Unable to load your ventures right now.')
       } finally {
         setProjectsLoading(false)
       }
@@ -221,12 +252,12 @@ export default function Profile() {
       setFormData((prev) => ({ ...prev, skills: parsedSkills }))
       localStorage.setItem('user', JSON.stringify(updated))
       setEditMode(false)
-      setSaveStatus({ type: 'success', message: 'Profile updated successfully.' })
+      setSaveStatus({ type: 'success', message: 'Execution Profile updated successfully.' })
     } catch (err) {
-      console.error('Failed to update profile', err)
+      console.error('Failed to update execution profile', err)
       setSaveStatus({
         type: 'error',
-        message: err?.response?.data?.message || 'Unable to update profile right now.'
+        message: err?.response?.data?.message || 'Unable to update execution profile right now.'
       })
     }
   }
@@ -315,6 +346,31 @@ export default function Profile() {
 
   const activeCount = projects.filter((project) => ['planning', 'building', 'validation_failed'].includes(project.status)).length
   const validationCount = projects.filter((project) => project.status === 'validation').length
+  const currentUserId = user?.id || user?._id || ''
+
+  const handleDeleteVenture = async (project) => {
+    const projectId = project?._id || project?.id
+    if (!projectId) {
+      setProjectActionError('This venture is missing an id and cannot be deleted right now.')
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Delete "${project?.title || 'this venture'}"? This action cannot be undone.`
+    )
+    if (!confirmed) return
+
+    try {
+      setProjectActionError('')
+      setDeletingProjectId(projectId)
+      await deleteVenture(projectId)
+      setProjects((prev) => prev.filter((item) => (item._id || item.id) !== projectId))
+    } catch (err) {
+      setProjectActionError(err?.response?.data?.message || 'Unable to delete this venture right now.')
+    } finally {
+      setDeletingProjectId('')
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -346,7 +402,7 @@ export default function Profile() {
               </>
             ) : (
               <Button variant="secondary" onClick={openEdit}>
-                Edit Profile
+                Edit Execution Profile
               </Button>
             )}
           </div>
@@ -359,7 +415,7 @@ export default function Profile() {
       </Card>
 
       <Card className="space-y-4">
-        <h2 className="text-xl font-semibold text-text-primary">Profile Summary</h2>
+        <h2 className="text-xl font-semibold text-text-primary">Execution Profile Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-text-secondary">
           <div>
             <div className="text-xs uppercase text-text-muted">College</div>
@@ -421,7 +477,7 @@ export default function Profile() {
       {editMode && (
         <div ref={editSectionRef}>
           <Card className="space-y-4">
-            <h2 className="text-xl font-semibold text-text-primary">Edit profile</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Edit Execution Profile</h2>
             {saveStatus && (
               <div
                 className={`rounded-xl border p-3 text-sm ${
@@ -718,7 +774,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">{projects.length}</div>
-          <div className="text-text-secondary">Total Projects</div>
+          <div className="text-text-secondary">Total Ventures</div>
         </Card>
         <Card className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">{activeCount}</div>
@@ -726,20 +782,20 @@ export default function Profile() {
         </Card>
         <Card className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">{validationCount}</div>
-          <div className="text-text-secondary">Validation Tasks</div>
+          <div className="text-text-secondary">Validation Milestones</div>
         </Card>
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-text-primary">My Projects</h2>
+          <h2 className="text-2xl font-bold text-text-primary">My Ventures</h2>
           <Link to="/create">
-            <Button variant="primary">New Project</Button>
+            <Button variant="primary">New Venture</Button>
           </Link>
         </div>
         {projectsLoading ? (
           <div className="rounded-xl border border-dashed border-border bg-bg-secondary p-8 text-center">
-            <h3 className="text-base font-semibold text-text-primary">Loading projects...</h3>
+            <h3 className="text-base font-semibold text-text-primary">Loading ventures...</h3>
           </div>
         ) : projectsError ? (
           <div className="rounded-xl border border-error/40 bg-error/10 p-6 text-center text-error">
@@ -747,20 +803,37 @@ export default function Profile() {
           </div>
         ) : projects.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-bg-secondary p-8 text-center">
-            <h3 className="text-base font-semibold text-text-primary">No projects yet</h3>
-            <p className="text-text-secondary mt-2">Build your first project to start collaborating.</p>
+            <h3 className="text-base font-semibold text-text-primary">No ventures yet</h3>
+            <p className="text-text-secondary mt-2">Build your first venture to start collaborating.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {projects.map((project, idx) => (
-              <ProjectCard
-                key={project._id || idx}
-                title={project.title}
-                description={project.shortPitch || project.description || ''}
-                status={project.status || 'planning'}
-                roles={project.rolesNeeded || []}
-              />
-            ))}
+          <div className="space-y-4">
+            {projectActionError && (
+              <div className="rounded-xl border border-error/40 bg-error/10 px-4 py-3 text-sm text-error">
+                {projectActionError}
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {projects.map((project, idx) => {
+              const ownerId = project?.owner?._id || project?.owner?.id || project?.owner
+              const canDelete = Boolean(currentUserId && ownerId && String(ownerId) === String(currentUserId))
+              const projectId = project?._id || project?.id
+
+              return (
+                <ProjectCard
+                  key={projectId || idx}
+                  id={projectId}
+                  title={project.title}
+                  description={project.shortPitch || project.description || ''}
+                  status={project.status || 'planning'}
+                  roles={project.rolesNeeded || []}
+                  canDelete={canDelete}
+                  deleting={deletingProjectId === projectId}
+                  onDelete={() => handleDeleteVenture(project)}
+                />
+              )
+            })}
+            </div>
           </div>
         )}
       </div>
@@ -778,7 +851,7 @@ export default function Profile() {
             <Link to="/legal/privacy-policy" className="text-primary hover:underline">Privacy</Link>
             <Link to="/legal/ip-ownership-policy" className="text-primary hover:underline">IP & Ownership</Link>
             <Link to="/legal/security-policy" className="text-primary hover:underline">Security</Link>
-            <Link to="/legal/community-guidelines" className="text-primary hover:underline">Guidelines</Link>
+            <Link to="/legal/ecosystem-guidelines" className="text-primary hover:underline">Guidelines</Link>
             <Link to="/legal/dispute-resolution" className="text-primary hover:underline">Disputes</Link>
           </div>
         </div>
