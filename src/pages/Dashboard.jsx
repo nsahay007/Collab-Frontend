@@ -35,7 +35,7 @@ const STAGGER_ITEM = {
 }
 
 const phaseInstructions = {
-  problem: 'Define the exact problem your project is solving',
+  problem: 'Define the exact problem your venture is solving',
   plan: 'Describe your solution and how it will work',
   build: 'Start building the core functionality of your product',
   mvp: 'Create a working demo or prototype',
@@ -150,7 +150,7 @@ const getTeamMembers = (project) => {
 
   return project.teamMembers.map((member, index) => ({
     id: member?._id || member?.id || `member-${index}`,
-    name: member?.name || 'Team Member'
+    name: member?.name || 'Team Contributor'
   }))
 }
 
@@ -180,7 +180,7 @@ function SprintNoneState({ applying, applyError, onApply }) {
       </div>
       <h1 className="text-3xl font-bold text-text-primary mb-3">Join the 14-Day Sprint</h1>
       <p className="text-text-secondary mb-6">
-        Turn your idea into a real project with a team in 14 days.
+        Turn your venture concept into a real venture with a startup team in 14 days.
       </p>
 
       {applyError && (
@@ -207,13 +207,16 @@ function SprintAppliedState() {
 
 function SprintActiveState({
   project,
+  checkpoints,
   onCheckpointSubmit,
+  onCheckpointUpdate,
   checkpointLoading,
   checkpointMessage,
   demoLocked,
   checkpointVisualState
 }) {
   const [now, setNow] = useState(Date.now())
+  const [selectedPhase, setSelectedPhase] = useState('problem')
   const [submissionLink, setSubmissionLink] = useState('')
   const [description, setDescription] = useState('')
   const [localError, setLocalError] = useState('')
@@ -223,17 +226,51 @@ function SprintActiveState({
     return () => clearInterval(timerId)
   }, [])
 
-  const phase = getPhaseFromProject(project)
-  const phaseIndex = PHASES.indexOf(phase)
+  const currentPhase = getPhaseFromProject(project)
+  const phaseIndex = PHASES.indexOf(currentPhase)
+  const checkpointsByPhase = useMemo(() => {
+    const phaseMap = new Map()
+    ;(checkpoints || []).forEach((checkpoint) => {
+      if (checkpoint?.phase) {
+        phaseMap.set(checkpoint.phase, checkpoint)
+      }
+    })
+    return phaseMap
+  }, [checkpoints])
+
+  useEffect(() => {
+    const normalizedCurrent = PHASES.includes(currentPhase) ? currentPhase : 'problem'
+    setSelectedPhase(normalizedCurrent)
+  }, [currentPhase])
+
+  useEffect(() => {
+    if (!PHASES.includes(selectedPhase)) return
+    const selectedCheckpoint = checkpointsByPhase.get(selectedPhase)
+
+    if (selectedCheckpoint) {
+      setSubmissionLink(selectedCheckpoint.submissionLink || '')
+      setDescription(selectedCheckpoint.description || '')
+    } else {
+      setSubmissionLink('')
+      setDescription('')
+    }
+
+    setLocalError('')
+  }, [selectedPhase, checkpointsByPhase])
+
+  const selectedCheckpoint = checkpointsByPhase.get(selectedPhase)
+  const selectedPhaseIndex = PHASES.indexOf(selectedPhase)
+  const selectedPhaseTitle = formatPhaseName(selectedPhase)
   const { endAt } = getSprintTiming(project)
   const remainingMs = endAt - now
   const remaining = formatRemaining(remainingMs)
   const isEndingSoon = remainingMs > 0 && remainingMs <= THREE_DAYS_MS
   const progress = getProgress(project, 'active')
   const teamMembers = getTeamMembers(project)
-  const phaseTitle = formatPhaseName(phase)
-  const checkpointLabel = `Submit ${phaseTitle}`
-  const isDemoBlocked = phase === 'demo' && demoLocked
+  const checkpointLabel = selectedCheckpoint
+    ? `Update ${selectedPhaseTitle}`
+    : `Submit ${selectedPhaseTitle}`
+  const isDemoBlocked = selectedPhase === 'demo' && demoLocked
   const showSuccessMorph = checkpointVisualState === 'success'
 
   const handleSubmit = async (event) => {
@@ -246,15 +283,26 @@ function SprintActiveState({
       return
     }
 
-    const result = await onCheckpointSubmit({
-      phase,
+    const payload = {
+      phase: selectedPhase,
       submissionLink: trimmedLink,
       description: description.trim()
-    })
+    }
+
+    if (!selectedCheckpoint && selectedPhase !== currentPhase) {
+      setLocalError('You can only submit the current phase. To edit, select a phase that is already submitted.')
+      return
+    }
+
+    const result = selectedCheckpoint
+      ? await onCheckpointUpdate(payload)
+      : await onCheckpointSubmit(payload)
 
     if (result?.ok && !result?.alreadyCompleted) {
-      setSubmissionLink('')
-      setDescription('')
+      if (!selectedCheckpoint) {
+        setSubmissionLink('')
+        setDescription('')
+      }
     }
   }
 
@@ -275,11 +323,11 @@ function SprintActiveState({
 
           <div>
             <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Current Phase</p>
-            <p className="text-2xl font-semibold capitalize text-text-primary">{phase}</p>
+            <p className="text-2xl font-semibold capitalize text-text-primary">{currentPhase}</p>
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Project Progress</p>
+            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Venture Progress</p>
             <p className="text-2xl font-semibold text-text-primary">{progress}%</p>
           </div>
         </div>
@@ -306,35 +354,54 @@ function SprintActiveState({
         <h2 className="text-xl font-semibold text-text-primary mb-4">Sprint Workflow</h2>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
           {PHASES.map((item, index) => {
-            const isDone = index < phaseIndex
+            const isSubmitted = checkpointsByPhase.has(item)
+            const isDone = isSubmitted && index < phaseIndex
             const isCurrent = index === phaseIndex
+            const isSelected = selectedPhase === item
+            const isSelectable = isSubmitted || index <= phaseIndex
             const baseClasses = `rounded-xl border px-3 py-2 text-center text-sm capitalize ${
               isCurrent
                 ? 'border-primary bg-primary/10 text-primary'
                 : isDone
                   ? 'border-success/30 bg-success/10 text-success'
                   : 'border-border bg-bg-card text-text-muted'
+            } ${isSelected ? 'ring-2 ring-primary/60' : ''} ${
+              isSelectable ? 'cursor-pointer hover:border-primary/60' : 'cursor-not-allowed opacity-70'
             }`
+
+            const phaseNode = (
+              <>
+                <span className="mr-1">{isSubmitted ? '✔' : isCurrent ? '→' : '○'}</span>
+                {item}
+              </>
+            )
 
             if (isCurrent) {
               return (
-                <motion.div
+                <motion.button
                   key={item}
+                  type="button"
                   className={baseClasses}
+                  disabled={!isSelectable}
+                  onClick={() => isSelectable && setSelectedPhase(item)}
                   animate={{ scale: [1, 1.04, 1] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <span className="mr-1">{isDone ? '✔' : isCurrent ? '→' : '○'}</span>
-                  {item}
-                </motion.div>
+                  {phaseNode}
+                </motion.button>
               )
             }
 
             return (
-              <div key={item} className={baseClasses}>
-                <span className="mr-1">{isDone ? '✔' : isCurrent ? '→' : '○'}</span>
-                {item}
-              </div>
+              <button
+                key={item}
+                type="button"
+                className={baseClasses}
+                disabled={!isSelectable}
+                onClick={() => isSelectable && setSelectedPhase(item)}
+              >
+                {phaseNode}
+              </button>
             )
           })}
         </div>
@@ -343,18 +410,22 @@ function SprintActiveState({
 
       <motion.div variants={STAGGER_ITEM}>
         <Card hover={false}>
-        <h2 className="text-2xl font-bold text-text-primary mb-2">Current Phase: {phaseTitle}</h2>
-        <p className="text-base text-text-secondary">{phaseInstructions[phase] || phaseInstructions.problem}</p>
-        <p className="mt-2 text-sm text-text-muted">{submissionHints[phase] || submissionHints.problem}</p>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">Selected Stage: {selectedPhaseTitle}</h2>
+        <p className="text-base text-text-secondary">
+          {phaseInstructions[selectedPhase] || phaseInstructions.problem}
+        </p>
+        <p className="mt-2 text-sm text-text-muted">
+          {submissionHints[selectedPhase] || submissionHints.problem}
+        </p>
         </Card>
       </motion.div>
 
       <motion.div variants={STAGGER_ITEM}>
         <Card hover={false}>
-        <h2 className="text-xl font-semibold text-text-primary mb-3">Team Members</h2>
+        <h2 className="text-xl font-semibold text-text-primary mb-3">Team Contributors</h2>
 
         {teamMembers.length === 0 ? (
-          <p className="text-text-secondary text-sm">No team members added yet.</p>
+          <p className="text-text-secondary text-sm">No team contributors added yet.</p>
         ) : (
           <ul className="space-y-2">
             {teamMembers.map((member) => (
@@ -370,7 +441,14 @@ function SprintActiveState({
       <motion.div variants={STAGGER_ITEM}>
         <Card hover={false}>
         <h2 className="text-xl font-semibold text-text-primary mb-2">Checkpoint</h2>
-        <p className="text-text-secondary mb-4">Submit progress for this phase with a shareable proof link.</p>
+        <p className="text-text-secondary mb-2">
+          {selectedCheckpoint
+            ? `This stage is already submitted. Update it if you need to refine your proof.`
+            : 'Submit progress for this stage with a shareable proof link.'}
+        </p>
+        <p className="text-xs text-text-muted mb-4">
+          Active stage: <span className="font-semibold capitalize text-text-primary">{currentPhase}</span>
+        </p>
 
         {checkpointMessage?.text && (
           <div
@@ -455,7 +533,7 @@ function SprintCompletedState({ project }) {
       </Card>
 
       <Card hover={false}>
-        <h2 className="text-xl font-semibold text-text-primary mb-3">Project Summary</h2>
+        <h2 className="text-xl font-semibold text-text-primary mb-3">Venture Summary</h2>
 
         {project ? (
           <div className="space-y-3">
@@ -464,7 +542,7 @@ function SprintCompletedState({ project }) {
             <p className="text-sm text-text-muted">Status: {project.status || 'completed'}</p>
           </div>
         ) : (
-          <p className="text-text-secondary">Project summary will appear once your sprint project is linked.</p>
+          <p className="text-text-secondary">Venture summary will appear once your sprint venture is linked.</p>
         )}
       </Card>
 
@@ -531,6 +609,7 @@ export default function Dashboard() {
 
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
+  const [checkpoints, setCheckpoints] = useState([])
 
   const [applying, setApplying] = useState(false)
   const [applyError, setApplyError] = useState('')
@@ -568,9 +647,23 @@ export default function Dashboard() {
 
         const currentProject = getPrimaryProject(normalizedProjects, status)
         const currentPhase = getPhaseFromProject(currentProject)
+
+        if (currentProject?._id) {
+          try {
+            const checkpointsResponse = await api.get(`/checkpoints/${currentProject._id}`)
+            setCheckpoints(checkpointsResponse?.data?.checkpoints || [])
+          } catch (checkpointError) {
+            console.error('Unable to load checkpoints for dashboard:', checkpointError)
+            setCheckpoints([])
+          }
+        } else {
+          setCheckpoints([])
+        }
+
         setDemoLocked(status === 'completed' || (currentPhase === 'demo' && String(currentProject?.status || '').toLowerCase() === 'completed'))
       } else {
         setProjects([])
+        setCheckpoints([])
         setDemoLocked(false)
       }
     } catch (err) {
@@ -682,6 +775,37 @@ export default function Dashboard() {
     }
   }
 
+  const handleUpdateCheckpoint = async ({ phase, submissionLink, description }) => {
+    const project = getPrimaryProject(projects, sprintStatus)
+    if (!project?._id) return { ok: false }
+
+    setCheckpointLoading(true)
+    setCheckpointMessage(null)
+    setCheckpointVisualState('loading')
+
+    try {
+      const response = await api.patch(`/checkpoint/${project._id}/${phase}`, {
+        submissionLink,
+        description
+      })
+
+      const message = response?.data?.message || `Updated ${formatPhaseName(phase)} checkpoint successfully.`
+      setCheckpointMessage({ type: 'success', text: message })
+      setCheckpointVisualState('success')
+      setToastMessage(message)
+      setTimeout(() => setCheckpointVisualState('idle'), 900)
+      await loadDashboardData()
+      return { ok: true, updated: true }
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not update checkpoint. Please retry.'
+      setCheckpointMessage({ type: 'error', text: message })
+      setCheckpointVisualState('idle')
+      return { ok: false, error: message }
+    } finally {
+      setCheckpointLoading(false)
+    }
+  }
+
   if (loading) {
     return <LoadingState />
   }
@@ -713,7 +837,9 @@ export default function Dashboard() {
 
       <SprintActiveState
         project={getPrimaryProject(projects, sprintStatus)}
+        checkpoints={checkpoints}
         onCheckpointSubmit={handleSubmitCheckpoint}
+        onCheckpointUpdate={handleUpdateCheckpoint}
         checkpointLoading={checkpointLoading}
         checkpointMessage={checkpointMessage}
         demoLocked={demoLocked}
