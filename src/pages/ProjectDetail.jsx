@@ -19,11 +19,27 @@ import {
   markReviewHelpful,
   updateProjectRequirements,
   updateProjectDetails,
-  deleteProjectFile
+  deleteProjectFile,
+  updateValidationWorkspace
 } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
 import checkIcon from '../assets/icons/check.svg'
 import { uploadsBaseUrl } from '../config/api'
+
+const WORKSPACE_SECTIONS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'validation', label: 'Validation' },
+  { id: 'team', label: 'Team' },
+  { id: 'milestones', label: 'Milestones' },
+  { id: 'build-progress', label: 'Build Progress' },
+  { id: 'assets', label: 'Assets' },
+  { id: 'updates', label: 'Updates' },
+  { id: 'contributors', label: 'Contributors' },
+  { id: 'roadmap', label: 'Roadmap' },
+  { id: 'settings', label: 'Settings' }
+]
+
+const LIFECYCLE_STEPS = ['Idea', 'Validation', 'Prototype', 'MVP', 'Incubation Ready']
 
 export default function ProjectDetail() {
   const { id } = useParams()
@@ -76,6 +92,25 @@ export default function ProjectDetail() {
     tags: '',
     executionPlan: ''
   })
+  const [activeSection, setActiveSection] = useState('overview')
+  const [workspaceForm, setWorkspaceForm] = useState({
+    problemStatement: '',
+    targetUsers: '',
+    assumptionsText: '',
+    confidenceScore: 0,
+    tasks: [],
+    evidence: []
+  })
+  const [workspaceTaskInput, setWorkspaceTaskInput] = useState('')
+  const [workspaceEvidenceInput, setWorkspaceEvidenceInput] = useState({
+    kind: 'feedback',
+    title: '',
+    summary: '',
+    link: ''
+  })
+  const [workspaceSaving, setWorkspaceSaving] = useState(false)
+  const [workspaceError, setWorkspaceError] = useState('')
+  const [workspaceSuccess, setWorkspaceSuccess] = useState('')
 
   const loadProject = useCallback(async () => {
     try {
@@ -83,11 +118,11 @@ export default function ProjectDetail() {
       if (response?.data) {
         setProject(response.data)
       } else {
-        setError('Project not found')
+        setError('Venture not found')
       }
     } catch (err) {
-      console.error('Error loading project', err)
-      setError('Failed to load project')
+      console.error('Error loading venture', err)
+      setError('Failed to load venture')
     } finally {
       setLoading(false)
     }
@@ -102,9 +137,20 @@ export default function ProjectDetail() {
     setValidationLink(project.validation?.demoLink || '')
     setValidationNotes(project.validation?.demoNotes || '')
     const existingShared = project.validation?.sharedFiles || []
-    if (existingShared.length > 0) {
-      setSharedFileIds(existingShared.map((file) => file._id || file.filename).filter(Boolean))
-    }
+    setSharedFileIds(existingShared.map((file) => file._id || file.filename).filter(Boolean))
+
+    const workspace = project.validation?.workspace || {}
+    const assumptions = Array.isArray(workspace.coreAssumptions) ? workspace.coreAssumptions : []
+    setWorkspaceForm({
+      problemStatement: workspace.problemStatement || '',
+      targetUsers: workspace.targetUsers || '',
+      assumptionsText: assumptions.join('\n'),
+      confidenceScore: Number.isFinite(Number(workspace.confidenceScore))
+        ? Number(workspace.confidenceScore)
+        : 0,
+      tasks: Array.isArray(workspace.tasks) ? workspace.tasks : [],
+      evidence: Array.isArray(workspace.evidence) ? workspace.evidence : []
+    })
   }, [project])
 
   const userId = user?._id || user?.id
@@ -123,6 +169,31 @@ export default function ProjectDetail() {
   const hasExtendedTimeline = Boolean(project?.buildPhase?.isExtendedTimeline)
   const extensionCount = project?.buildPhase?.extensionCount || 0
   const canSeeOnlineStatus = Boolean(isOwner || isTeamMember)
+  const workspaceTasks = Array.isArray(workspaceForm.tasks) ? workspaceForm.tasks : []
+  const workspaceEvidence = Array.isArray(workspaceForm.evidence) ? workspaceForm.evidence : []
+  const completedWorkspaceTasks = workspaceTasks.filter((task) => task.status === 'completed').length
+  const pendingWorkspaceTasks = Math.max(0, workspaceTasks.length - completedWorkspaceTasks)
+  const validationProgress = workspaceTasks.length > 0
+    ? Math.round((completedWorkspaceTasks / workspaceTasks.length) * 100)
+    : Math.round(Number(workspaceForm.confidenceScore || 0))
+  const validationTimelineEntries = [
+    ...workspaceTasks.map((task) => ({
+      type: 'task',
+      title: task.title,
+      status: task.status,
+      at: task.updatedAt || task.completedAt || task.dueDate
+    })),
+    ...workspaceEvidence.map((entry) => ({
+      type: 'evidence',
+      title: entry.title,
+      status: entry.kind || 'logged',
+      at: entry.createdAt
+    }))
+  ]
+    .filter((entry) => entry.at)
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, 10)
+
   const isOnline = (member) => {
     if (!member?.lastActive) return false
     const lastActive = new Date(member.lastActive).getTime()
@@ -259,7 +330,7 @@ export default function ProjectDetail() {
       setDetailsOpen(false)
     } catch (err) {
       console.error(err)
-      setDetailsError(err?.response?.data?.message || 'Unable to update project details.')
+      setDetailsError(err?.response?.data?.message || 'Unable to update venture details.')
     } finally {
       setDetailsSaving(false)
     }
@@ -304,6 +375,107 @@ export default function ProjectDetail() {
     )
   }
 
+  const jumpToSection = (sectionId) => {
+    setActiveSection(sectionId)
+    const element = document.getElementById(`workspace-${sectionId}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const addValidationTask = () => {
+    const title = workspaceTaskInput.trim()
+    if (!title) return
+    const task = {
+      taskId: `task-${Date.now()}`,
+      title,
+      status: 'pending',
+      updatedAt: new Date().toISOString()
+    }
+    setWorkspaceForm((prev) => ({ ...prev, tasks: [...prev.tasks, task] }))
+    setWorkspaceTaskInput('')
+  }
+
+  const removeValidationTask = (taskId) => {
+    setWorkspaceForm((prev) => ({
+      ...prev,
+      tasks: prev.tasks.filter((task) => task.taskId !== taskId)
+    }))
+  }
+
+  const toggleValidationTask = (taskId) => {
+    setWorkspaceForm((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((task) => {
+        if (task.taskId !== taskId) return task
+        const nextCompleted = task.status !== 'completed'
+        return {
+          ...task,
+          status: nextCompleted ? 'completed' : 'pending',
+          updatedAt: new Date().toISOString(),
+          completedAt: nextCompleted ? new Date().toISOString() : undefined
+        }
+      })
+    }))
+  }
+
+  const addValidationEvidence = () => {
+    const title = workspaceEvidenceInput.title.trim()
+    if (!title) return
+    const evidence = {
+      evidenceId: `evidence-${Date.now()}`,
+      kind: workspaceEvidenceInput.kind || 'other',
+      title,
+      summary: workspaceEvidenceInput.summary.trim(),
+      link: workspaceEvidenceInput.link.trim(),
+      createdAt: new Date().toISOString()
+    }
+    setWorkspaceForm((prev) => ({ ...prev, evidence: [evidence, ...prev.evidence] }))
+    setWorkspaceEvidenceInput({
+      kind: 'feedback',
+      title: '',
+      summary: '',
+      link: ''
+    })
+  }
+
+  const removeValidationEvidence = (evidenceId) => {
+    setWorkspaceForm((prev) => ({
+      ...prev,
+      evidence: prev.evidence.filter((entry) => entry.evidenceId !== evidenceId)
+    }))
+  }
+
+  const saveValidationWorkspace = async () => {
+    try {
+      setWorkspaceSaving(true)
+      setWorkspaceError('')
+      setWorkspaceSuccess('')
+
+      const coreAssumptions = workspaceForm.assumptionsText
+        .split('\n')
+        .map((item) => item.trim())
+        .filter(Boolean)
+
+      await updateValidationWorkspace(id, {
+        problemStatement: workspaceForm.problemStatement,
+        targetUsers: workspaceForm.targetUsers,
+        coreAssumptions,
+        validationTasks: workspaceForm.tasks,
+        validationEvidence: workspaceForm.evidence,
+        confidenceScore: workspaceForm.confidenceScore
+      })
+
+      setWorkspaceSuccess('Validation workspace updated.')
+      await loadProject()
+    } catch (err) {
+      console.error(err)
+      setWorkspaceError(err?.response?.data?.message || 'Unable to update validation workspace.')
+    } finally {
+      setWorkspaceSaving(false)
+    }
+  }
+
   const handleRemoveMember = async () => {
     const targetId = removeTarget?._id || removeTarget?.id
     if (!userId || !targetId) return
@@ -315,7 +487,7 @@ export default function ProjectDetail() {
       closeRemoveModal()
     } catch (err) {
       console.error(err)
-      setRemoveError(err?.response?.data?.message || 'Unable to remove this member. Please try again.')
+      setRemoveError(err?.response?.data?.message || 'Unable to remove this contributor. Please try again.')
     } finally {
       setRemoving(false)
     }
@@ -339,7 +511,7 @@ export default function ProjectDetail() {
       navigate('/dashboard')
     } catch (err) {
       console.error(err)
-      setDeleteError(err?.response?.data?.message || 'Unable to delete project.')
+      setDeleteError(err?.response?.data?.message || 'Unable to delete venture.')
     } finally {
       setDeleting(false)
     }
@@ -422,10 +594,12 @@ export default function ProjectDetail() {
         demoNotes: validationNotes,
         sharedFileIds
       })
-      navigate('/validation')
+      await loadProject()
+      setActiveSection('validation')
+      setWorkspaceSuccess('Venture moved into validation inside this workspace.')
     } catch (err) {
       console.error(err)
-      setValidationError(err?.response?.data?.message || 'Unable to send project to validation.')
+      setValidationError(err?.response?.data?.message || 'Unable to send venture to validation.')
     } finally {
       setValidating(false)
     }
@@ -459,15 +633,19 @@ export default function ProjectDetail() {
     return () => clearInterval(interval)
   }, [updateTimeLeft])
 
+  const sectionCardClass = (sectionId) => (
+    activeSection === sectionId ? 'border-primary/35 ring-1 ring-primary/30' : ''
+  )
+
   if (loading) {
-    return <div>Loading project...</div>
+    return <div>Loading venture...</div>
   }
 
   if (error || !project) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center space-y-4">
-        <h1 className="text-2xl font-bold text-text-primary">{error || 'Project not found'}</h1>
-        <p className="text-text-secondary max-w-md">Please go back and select another project.</p>
+        <h1 className="text-2xl font-bold text-text-primary">{error || 'Venture not found'}</h1>
+        <p className="text-text-secondary max-w-md">Please go back and select another venture.</p>
         <Link to="/dashboard">
           <Button variant="primary">Back to Dashboard</Button>
         </Link>
@@ -508,20 +686,46 @@ export default function ProjectDetail() {
           )}
           {isOwner && (
             <Button variant="danger" size="sm" className="w-full sm:w-auto" onClick={openDeleteModal}>
-              Delete Project
+              Delete Venture
             </Button>
           )}
         </div>
       </div>
 
+      <Card className="p-4" hover={false}>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-base font-semibold text-text-primary">Venture Workspace</h2>
+            <p className="text-xs text-text-muted">Your startup HQ: discovery, execution, and validation in one place.</p>
+          </div>
+          <Badge variant="default">Current: {activeSection.replace(/-/g, ' ')}</Badge>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {WORKSPACE_SECTIONS.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              onClick={() => jumpToSection(section.id)}
+              className={`rounded-lg border px-3 py-2 text-xs font-medium text-left transition ${
+                activeSection === section.id
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border-default bg-bg-card text-text-secondary hover:border-primary/35 hover:text-text-primary'
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
+        </div>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-6">
-          <Card>
-            <h2 className="text-xl font-bold text-text-primary mb-3">Project Overview</h2>
+          <Card id="workspace-overview" className={sectionCardClass('overview')}>
+            <h2 className="text-xl font-bold text-text-primary mb-3">Venture Overview</h2>
             <p className="text-text-secondary leading-relaxed">{project.description}</p>
           </Card>
 
-          <Card>
+          <Card className={sectionCardClass('overview')}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-bold text-text-primary">Requirements</h2>
               {isOwner && (
@@ -561,9 +765,272 @@ export default function ProjectDetail() {
             </div>
           </Card>
 
-          <Card>
+          <Card id="workspace-milestones" className={sectionCardClass('milestones')}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-text-primary">Milestones</h2>
+              <Badge variant="primary">{String(project.phase || 'problem').toUpperCase()}</Badge>
+            </div>
+            <p className="text-sm text-text-secondary mb-4">
+              Execution lifecycle is unified inside this venture workspace.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {['problem', 'plan', 'build', 'mvp', 'validation', 'demo'].map((phaseLabel) => {
+                const currentPhase = String(project.phase || 'problem')
+                const ordered = ['problem', 'plan', 'build', 'mvp', 'validation', 'demo']
+                const currentIndex = ordered.indexOf(currentPhase)
+                const phaseIndex = ordered.indexOf(phaseLabel)
+                const completed = phaseIndex < currentIndex
+                const active = phaseIndex === currentIndex
+
+                return (
+                  <div
+                    key={phaseLabel}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      active
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : completed
+                          ? 'border-success/30 bg-success/10 text-success'
+                          : 'border-border-default bg-bg-card text-text-muted'
+                    }`}
+                  >
+                    {completed ? '✔' : active ? '→' : '○'} {phaseLabel.toUpperCase()}
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+
+          <Card id="workspace-roadmap" className={sectionCardClass('roadmap')}>
+            <h2 className="text-xl font-bold text-text-primary mb-2">Roadmap</h2>
+            <p className="text-sm text-text-secondary mb-4">
+              Idea → Validation → Prototype → MVP → Incubation Ready
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              {LIFECYCLE_STEPS.map((step, index) => (
+                <div
+                  key={step}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border-default bg-bg-card px-3 py-2 text-xs text-text-secondary"
+                >
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold">
+                    {index + 1}
+                  </span>
+                  {step}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card id="workspace-validation" className={sectionCardClass('validation')}>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div>
+                <h2 className="text-xl font-bold text-text-primary">Validation</h2>
+                <p className="text-sm text-text-secondary">
+                  Discovery work inside the venture lifecycle. No separate validation workflow.
+                </p>
+              </div>
+              <Badge variant="default">{validationProgress}% confidence</Badge>
+            </div>
+
+            <div className="h-2 w-full rounded-full bg-bg-secondary mb-4">
+              <div
+                className="h-2 rounded-full bg-gradient-to-r from-primary to-primary-accent transition-all"
+                style={{ width: `${Math.max(0, Math.min(100, validationProgress))}%` }}
+              />
+            </div>
+
+            {(isOwner || isTeamMember) ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-text-secondary">Problem Statement</label>
+                    <textarea
+                      rows={4}
+                      value={workspaceForm.problemStatement}
+                      onChange={(event) => setWorkspaceForm((prev) => ({ ...prev, problemStatement: event.target.value }))}
+                      placeholder="What problem is being solved?"
+                      className="mt-2 w-full resize-none px-4 py-3 rounded-xl border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-text-secondary">Target Users</label>
+                    <textarea
+                      rows={4}
+                      value={workspaceForm.targetUsers}
+                      onChange={(event) => setWorkspaceForm((prev) => ({ ...prev, targetUsers: event.target.value }))}
+                      placeholder="Who is this startup for?"
+                      className="mt-2 w-full resize-none px-4 py-3 rounded-xl border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-text-secondary">Core Assumptions (one per line)</label>
+                  <textarea
+                    rows={4}
+                    value={workspaceForm.assumptionsText}
+                    onChange={(event) => setWorkspaceForm((prev) => ({ ...prev, assumptionsText: event.target.value }))}
+                    placeholder={'Users struggle to find technical cofounders.\nStudents need structured startup collaboration.'}
+                    className="mt-2 w-full resize-none px-4 py-3 rounded-xl border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-border-default bg-bg-secondary/40 p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-text-primary">Validation Tasks</h3>
+                      <span className="text-xs text-text-muted">{completedWorkspaceTasks} done · {pendingWorkspaceTasks} pending</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={workspaceTaskInput}
+                        onChange={(event) => setWorkspaceTaskInput(event.target.value)}
+                        placeholder="Interview users / run survey / waitlist test"
+                      />
+                      <Button variant="secondary" size="sm" onClick={addValidationTask}>Add</Button>
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {workspaceTasks.length > 0 ? workspaceTasks.map((task) => (
+                        <div key={task.taskId} className="rounded-lg border border-border-default bg-bg-card p-2 flex items-start gap-2">
+                          <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={task.status === 'completed'}
+                            onChange={() => toggleValidationTask(task.taskId)}
+                          />
+                          <div className="flex-1">
+                            <p className={`text-sm ${task.status === 'completed' ? 'text-text-muted line-through' : 'text-text-primary'}`}>{task.title}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeValidationTask(task.taskId)}
+                            className="text-xs text-error hover:text-error/80"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )) : (
+                        <p className="text-xs text-text-muted">No tasks yet. Add task-based validation goals.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border-default bg-bg-secondary/40 p-3 space-y-3">
+                    <h3 className="text-sm font-semibold text-text-primary">Validation Evidence</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      <select
+                        value={workspaceEvidenceInput.kind}
+                        onChange={(event) => setWorkspaceEvidenceInput((prev) => ({ ...prev, kind: event.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-border-default bg-bg-card text-text-primary text-sm"
+                      >
+                        <option value="survey">Survey</option>
+                        <option value="interview">Interview</option>
+                        <option value="waitlist">Waitlist</option>
+                        <option value="feedback">Beta Feedback</option>
+                        <option value="experiment">Experiment</option>
+                        <option value="insight">Insight</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <Input
+                        value={workspaceEvidenceInput.title}
+                        onChange={(event) => setWorkspaceEvidenceInput((prev) => ({ ...prev, title: event.target.value }))}
+                        placeholder="Evidence title"
+                      />
+                      <textarea
+                        rows={2}
+                        value={workspaceEvidenceInput.summary}
+                        onChange={(event) => setWorkspaceEvidenceInput((prev) => ({ ...prev, summary: event.target.value }))}
+                        placeholder="What did you learn?"
+                        className="w-full resize-none px-3 py-2 rounded-lg border border-border-default bg-bg-card text-text-primary text-sm"
+                      />
+                      <Input
+                        value={workspaceEvidenceInput.link}
+                        onChange={(event) => setWorkspaceEvidenceInput((prev) => ({ ...prev, link: event.target.value }))}
+                        placeholder="Link to screenshot/doc/video"
+                      />
+                      <Button variant="secondary" size="sm" onClick={addValidationEvidence}>Add Evidence</Button>
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {workspaceEvidence.length > 0 ? workspaceEvidence.map((entry) => (
+                        <div key={entry.evidenceId} className="rounded-lg border border-border-default bg-bg-card p-2 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-text-primary">{entry.title}</p>
+                            <button
+                              type="button"
+                              onClick={() => removeValidationEvidence(entry.evidenceId)}
+                              className="text-xs text-error hover:text-error/80"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <p className="text-xs text-text-muted">{entry.kind}</p>
+                          {entry.summary && <p className="text-xs text-text-secondary">{entry.summary}</p>}
+                          {entry.link && (
+                            <a href={entry.link} target="_blank" rel="noreferrer" className="text-xs text-primary hover:text-primary-hover break-all">
+                              {entry.link}
+                            </a>
+                          )}
+                        </div>
+                      )) : (
+                        <p className="text-xs text-text-muted">No evidence logged yet.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-text-secondary">Validation Confidence</label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={workspaceForm.confidenceScore}
+                      onChange={(event) => setWorkspaceForm((prev) => ({ ...prev, confidenceScore: Number(event.target.value) }))}
+                      className="w-full"
+                    />
+                    <span className="text-sm font-semibold text-text-primary">{workspaceForm.confidenceScore}%</span>
+                  </div>
+                </div>
+
+                {workspaceError && <p className="text-xs text-error">{workspaceError}</p>}
+                {workspaceSuccess && <p className="text-xs text-success">{workspaceSuccess}</p>}
+                <div className="flex justify-end">
+                  <Button variant="primary" size="sm" onClick={saveValidationWorkspace} disabled={workspaceSaving}>
+                    {workspaceSaving ? 'Saving...' : 'Save Validation Workspace'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-text-secondary">{workspaceForm.problemStatement || 'Problem statement not shared yet.'}</p>
+                <p className="text-sm text-text-secondary">{workspaceForm.targetUsers || 'Target users not shared yet.'}</p>
+                <p className="text-xs text-text-muted">Only venture contributors can edit validation workspace.</p>
+              </div>
+            )}
+
+            <div className="mt-4 rounded-xl border border-border-default bg-bg-secondary/30 p-3">
+              <h3 className="text-sm font-semibold text-text-primary mb-2">Validation Timeline</h3>
+              {validationTimelineEntries.length > 0 ? (
+                <div className="space-y-2">
+                  {validationTimelineEntries.map((entry, index) => (
+                    <div key={`${entry.type}-${index}`} className="flex items-center justify-between gap-3 text-xs">
+                      <div>
+                        <span className="uppercase text-text-muted mr-2">{entry.type}</span>
+                        <span className="text-text-secondary">{entry.title}</span>
+                      </div>
+                      <span className="text-text-muted">{new Date(entry.at).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-text-muted">No validation activity yet.</p>
+              )}
+            </div>
+          </Card>
+
+          <Card id="workspace-team" className={sectionCardClass('team')}>
             <h2 className="text-xl font-bold text-text-primary mb-3">
-              Team Members ({teamCount}/{maxTeamMembers})
+              Team Contributors ({teamCount}/{maxTeamMembers})
             </h2>
             <div className="space-y-2">
               {(project.teamMembers || []).map((member) => {
@@ -610,7 +1077,7 @@ export default function ProjectDetail() {
           </Card>
 
           {(isOwner || isTeamMember) && (project.validation?.reviews || project.status === 'validation' || project.status === 'validated') && (
-            <Card>
+            <Card className={sectionCardClass('validation')}>
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-text-primary">Validation Feedback</h2>
@@ -680,10 +1147,10 @@ export default function ProjectDetail() {
           )}
 
           {project.status === 'validation_failed' && (
-            <Card>
+            <Card className={sectionCardClass('validation')}>
               <h2 className="text-xl font-bold text-text-primary mb-2">Validation Rework Required</h2>
               <p className="text-sm text-text-secondary">
-                This project did not pass validation yet. Improve based on feedback and choose your next step.
+                This venture did not pass validation yet. Improve based on feedback and choose your next step.
               </p>
               {validationData.lastFailureReason && (
                 <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
@@ -701,12 +1168,12 @@ export default function ProjectDetail() {
                     {extendingTimeline ? 'Extending...' : 'Move to Dashboard + Extend 7 Days'}
                   </Button>
                   <Button variant="danger" size="sm" onClick={openDeleteModal}>
-                    Delete Project
+                    Delete Venture
                   </Button>
                 </div>
               ) : (
                 <p className="mt-3 text-xs text-text-muted">
-                  Team lead can either delete the project or reopen it with a 7-day extension.
+                  Venture lead can either delete the venture or reopen it with a 7-day extension.
                 </p>
               )}
               {extendTimelineError && <p className="mt-3 text-xs text-error">{extendTimelineError}</p>}
@@ -714,7 +1181,7 @@ export default function ProjectDetail() {
           )}
 
           {teamFull && isTeamMember && (
-            <Card>
+            <Card id="workspace-build-progress" className={sectionCardClass('build-progress')}>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
@@ -734,9 +1201,14 @@ export default function ProjectDetail() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border-default bg-bg-secondary/60 p-4 space-y-3">
+                <div
+                  id="workspace-assets"
+                  className={`rounded-xl border border-border-default bg-bg-secondary/60 p-4 space-y-3 ${
+                    activeSection === 'assets' ? 'ring-1 ring-primary/30 border-primary/35' : ''
+                  }`}
+                >
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-text-primary">Project Files</h3>
+                    <h3 className="text-sm font-semibold text-text-primary">Venture Files</h3>
                     <span className="text-xs text-text-muted">Upload any format</span>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -789,7 +1261,7 @@ export default function ProjectDetail() {
                               )}
                             </div>
                             <div className="text-xs text-text-muted">
-                              {file.uploadedBy?.name || 'Team member'} · {(file.size / 1024).toFixed(1)} KB
+                              {file.uploadedBy?.name || 'Team contributor'} · {(file.size / 1024).toFixed(1)} KB
                             </div>
                           </div>
                         )
@@ -801,15 +1273,20 @@ export default function ProjectDetail() {
                   {removeFileError && <p className="text-xs text-error">{removeFileError}</p>}
                 </div>
 
-                <div className="rounded-xl border border-border-default bg-bg-secondary/50 p-4 space-y-3">
+                <div
+                  id="workspace-updates"
+                  className={`rounded-xl border border-border-default bg-bg-secondary/50 p-4 space-y-3 ${
+                    activeSection === 'updates' ? 'ring-1 ring-primary/30 border-primary/35' : ''
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-text-primary">Team Chat</h3>
-                    <span className="text-xs text-text-muted">Private to team members</span>
+                    <span className="text-xs text-text-muted">Private to team contributors</span>
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
                     {(project.messages || []).length > 0 ? (
                       (project.messages || []).map((message) => {
-                        const senderName = message.sender?.name || 'Team Member'
+                        const senderName = message.sender?.name || 'Team Contributor'
                         const timestamp = message.createdAt
                           ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                           : ''
@@ -911,17 +1388,40 @@ export default function ProjectDetail() {
                       onClick={handleSendToValidation}
                       disabled={validating}
                     >
-                      {validating ? 'Sending...' : 'Validate Project'}
+                      {validating ? 'Sending...' : 'Validate Venture'}
                     </Button>
                   </div>
                 )}
               </div>
             </Card>
           )}
+
+          {!(teamFull && isTeamMember) && (
+            <>
+              <Card id="workspace-build-progress" className={sectionCardClass('build-progress')}>
+                <h2 className="text-xl font-bold text-text-primary mb-2">Build Progress</h2>
+                <p className="text-sm text-text-secondary">
+                  Build execution tools unlock once your startup team is complete and active.
+                </p>
+              </Card>
+              <Card id="workspace-assets" className={sectionCardClass('assets')}>
+                <h2 className="text-xl font-bold text-text-primary mb-2">Assets</h2>
+                <p className="text-sm text-text-secondary">
+                  Uploads and shared validation assets will appear here when your team workspace is active.
+                </p>
+              </Card>
+              <Card id="workspace-updates" className={sectionCardClass('updates')}>
+                <h2 className="text-xl font-bold text-text-primary mb-2">Updates</h2>
+                <p className="text-sm text-text-secondary">
+                  Team build updates and internal execution chat are shown in this section.
+                </p>
+              </Card>
+            </>
+          )}
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card id="workspace-contributors" className={sectionCardClass('contributors')}>
             <h2 className="text-xl font-bold text-text-primary mb-3">Interest Queue</h2>
             {project.interestedUsers?.length > 0 ? (
               <div className="space-y-2">
@@ -967,13 +1467,38 @@ export default function ProjectDetail() {
               <p className="text-text-secondary">No users have shown interest yet.</p>
             )}
           </Card>
+
+          <Card id="workspace-settings" className={sectionCardClass('settings')}>
+            <h2 className="text-xl font-bold text-text-primary mb-3">Workspace Settings</h2>
+            <p className="text-sm text-text-secondary mb-4">
+              Manage venture details, team requirements, and lifecycle controls from one place.
+            </p>
+            <div className="flex flex-col gap-2">
+              {isOwner && (
+                <>
+                  <Button variant="secondary" size="sm" onClick={openEditDetails}>
+                    Edit Venture Details
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={openEditRequirements}>
+                    Edit Team Requirements
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={openDeleteModal}>
+                    Delete Venture
+                  </Button>
+                </>
+              )}
+              {!isOwner && (
+                <p className="text-xs text-text-muted">Only venture lead can change workspace settings.</p>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
 
       <Modal open={editOpen} onClose={closeEditRequirements} size="sm">
         <h3 className="text-lg font-semibold text-text-primary">Update Requirements</h3>
         <p className="text-sm text-text-secondary mt-2">
-          Edit roles, skills, team size, or visibility without deleting the project.
+          Edit roles, skills, team size, or visibility without deleting the venture.
         </p>
         <div className="space-y-4 mt-4">
           <div>
@@ -1037,9 +1562,9 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={detailsOpen} onClose={closeEditDetails} size="sm">
-        <h3 className="text-lg font-semibold text-text-primary">Update Project Details</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Update Venture Details</h3>
         <p className="text-sm text-text-secondary mt-2">
-          Edit the project title, pitch, description, tags, or execution plan.
+          Edit the venture title, pitch, description, tags, or execution plan.
         </p>
         <div className="space-y-4 mt-4">
           <div>
@@ -1048,7 +1573,7 @@ export default function ProjectDetail() {
               type="text"
               value={detailsForm.title}
               onChange={(e) => setDetailsForm((prev) => ({ ...prev, title: e.target.value }))}
-              placeholder="Project title"
+              placeholder="Venture title"
             />
           </div>
           <div>
@@ -1068,7 +1593,7 @@ export default function ProjectDetail() {
               onChange={(e) => setDetailsForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={4}
               className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-              placeholder="Describe the project"
+              placeholder="Describe the venture"
             />
           </div>
           <div>
@@ -1109,11 +1634,11 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={removeOpen} onClose={closeRemoveModal} size="sm">
-        <h3 className="text-lg font-semibold text-text-primary">Remove Team Member</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Remove Team Contributor</h3>
         <p className="text-sm text-text-secondary mt-2">
           Are you sure you want to remove{' '}
           <span className="text-text-primary font-medium">
-            {removeTarget?.name || 'this member'}
+            {removeTarget?.name || 'this contributor'}
           </span>{' '}
           from the team? This action cannot be undone.
         </p>
@@ -1135,9 +1660,9 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={deleteOpen} onClose={closeDeleteModal} size="sm">
-        <h3 className="text-lg font-semibold text-text-primary">Delete Project</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Delete Venture</h3>
         <p className="text-sm text-text-secondary mt-2">
-          This will permanently delete the project and remove it for all members. This action cannot be undone.
+          This will permanently delete the venture and remove it for all contributors. This action cannot be undone.
         </p>
         {deleteError && <p className="text-xs text-error mt-3">{deleteError}</p>}
         <div className="flex flex-col gap-2 mt-5 sm:flex-row sm:justify-end">

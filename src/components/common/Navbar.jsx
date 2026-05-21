@@ -39,8 +39,7 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard' },
-    { to: '/create', label: 'Create Project' },
-    { to: '/validation', label: 'Validation' },
+    { to: '/create', label: 'Create Venture' },
     { to: '/leaderboard', label: 'Leaderboard' }
   ]
 
@@ -255,7 +254,7 @@ export default function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="text-sm font-medium transition-all duration-300 py-3 px-4 rounded-xl text-text-secondary hover:text-primary hover:bg-primary/5"
                   >
-                    Profile
+                    Execution Profile
                   </Link>
                 </>
               )}

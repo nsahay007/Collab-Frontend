@@ -3,8 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
-import { getProjectById } from '../features/project/projectAPI'
-import { submitValidation } from '../features/validation/validationAPI'
+import { getProjectById, submitReview } from '../features/project/projectAPI'
 import { uploadsBaseUrl } from '../config/api'
 
 const SCORE_FIELDS = [
@@ -15,7 +14,7 @@ const SCORE_FIELDS = [
   { key: 'usefulness', label: 'Usefulness', hint: 'How useful is this for target users right now?' },
   { key: 'executionReadiness', label: 'Execution Readiness', hint: 'Is the team ready to execute?' },
   { key: 'feasibility30Days', label: '30-Day Feasibility', hint: 'Can this realistically be built in 30 days?' },
-  { key: 'evidenceStrength', label: 'Evidence Strength', hint: 'Is there proof or data supporting the idea?' },
+  { key: 'evidenceStrength', label: 'Evidence Strength', hint: 'Is there proof or data supporting the venture concept?' },
   { key: 'scalabilityPotential', label: 'Scalability Potential', hint: 'Can this grow beyond one small cohort?' },
   { key: 'teamReadiness', label: 'Team Readiness', hint: 'Does the team have required skills and focus?' },
   { key: 'confidence', label: 'Overall Confidence', hint: 'Your confidence in this team succeeding.' }
@@ -55,7 +54,7 @@ export default function GiveFeedback() {
         setProject(data)
       } catch (err) {
         console.error(err)
-        setError(err?.response?.data?.message || 'Unable to load project.')
+        setError(err?.response?.data?.message || 'Unable to load venture.')
       } finally {
         setLoading(false)
       }
@@ -82,8 +81,7 @@ export default function GiveFeedback() {
 
     try {
       setSubmitting(true)
-      await submitValidation({
-        projectId: id,
+      await submitReview(id, {
         criteria: {
           ...Object.fromEntries(
             SCORE_FIELDS.map((field) => [field.key, Number(criteria[field.key])])
@@ -113,10 +111,10 @@ export default function GiveFeedback() {
   if (error || !project) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-3">
-        <h1 className="text-2xl font-bold text-text-primary">{error || 'Project not found'}</h1>
-        <p className="text-text-secondary max-w-md">Please go back and select another project.</p>
-        <Link to="/validation">
-          <Button variant="primary">Back to Validation</Button>
+        <h1 className="text-2xl font-bold text-text-primary">{error || 'Venture not found'}</h1>
+        <p className="text-text-secondary max-w-md">Please go back and select another venture.</p>
+        <Link to={`/project/${id}`}>
+          <Button variant="primary">Back to Venture Workspace</Button>
         </Link>
       </div>
     )
@@ -143,7 +141,7 @@ export default function GiveFeedback() {
           <h1 className="text-3xl font-bold text-text-primary">Startup Validation Review</h1>
           <p className="text-text-secondary">Give precise scorecard feedback that helps the team improve quickly.</p>
         </div>
-        <Button variant="secondary" className="w-full sm:w-auto" onClick={() => navigate('/validation')}>Back to Validation</Button>
+        <Button variant="secondary" className="w-full sm:w-auto" onClick={() => navigate(`/project/${id}`)}>Back to Venture Workspace</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -170,7 +168,7 @@ export default function GiveFeedback() {
           </Card>
 
           <Card>
-            <h2 className="text-xl font-bold text-text-primary mb-3">Project Files</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-3">Venture Files</h2>
             <p className="text-sm text-text-secondary mb-4">Review shared files before submitting your decision.</p>
             {files.length > 0 ? (
               <div className="space-y-2">
@@ -188,7 +186,7 @@ export default function GiveFeedback() {
                       {file.originalName}
                     </a>
                     <div className="text-xs text-text-muted">
-                      {file.uploadedBy?.name || 'Team member'} · {(file.size / 1024).toFixed(1)} KB
+                      {file.uploadedBy?.name || 'Team contributor'} · {(file.size / 1024).toFixed(1)} KB
                     </div>
                   </div>
                 ))}
@@ -205,7 +203,7 @@ export default function GiveFeedback() {
             {submitted ? (
               <div className="space-y-4">
                 <p className="text-text-secondary">Thanks! Your validation feedback has been submitted.</p>
-                <Button variant="primary" onClick={() => navigate('/validation')}>Explore More Projects</Button>
+                <Button variant="primary" onClick={() => navigate(`/project/${id}`)}>Back to Venture Workspace</Button>
               </div>
             ) : (
               <form className="space-y-4" onSubmit={handleSubmit}>

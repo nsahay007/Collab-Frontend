@@ -65,6 +65,46 @@ export const sendProjectToValidation = (projectId, payload = {}) => {
 export const extendValidationTimeline = (projectId) =>
   axios.post(`/projects/${projectId}/validation/extend`, {})
 
+export const updateValidationWorkspace = (projectId, payload = {}) => {
+  const assumptions = Array.isArray(payload.coreAssumptions)
+    ? payload.coreAssumptions.map((item) => sanitizeOptionalText(item || ''))
+    : []
+
+  const tasks = Array.isArray(payload.validationTasks)
+    ? payload.validationTasks.map((task) => ({
+      taskId: task?.taskId,
+      title: sanitizeOptionalText(task?.title || ''),
+      status: task?.status === 'completed' ? 'completed' : 'pending',
+      dueDate: task?.dueDate,
+      completedAt: task?.completedAt
+    }))
+    : []
+
+  const evidence = Array.isArray(payload.validationEvidence)
+    ? payload.validationEvidence.map((item) => ({
+      evidenceId: item?.evidenceId,
+      kind: sanitizeOptionalText(item?.kind || 'other'),
+      title: sanitizeOptionalText(item?.title || ''),
+      summary: sanitizeOptionalText(item?.summary || ''),
+      link: sanitizeOptionalText(item?.link || ''),
+      createdAt: item?.createdAt
+    }))
+    : []
+
+  const sanitized = {
+    problemStatement: sanitizeOptionalText(payload.problemStatement || ''),
+    targetUsers: sanitizeOptionalText(payload.targetUsers || ''),
+    coreAssumptions: assumptions.filter(Boolean),
+    validationTasks: tasks.filter((task) => task.title),
+    validationEvidence: evidence.filter((item) => item.title),
+    confidenceScore: Number.isFinite(Number(payload.confidenceScore))
+      ? Number(payload.confidenceScore)
+      : 0
+  }
+
+  return axios.put(`/projects/${projectId}/validation/workspace`, sanitized)
+}
+
 export const updateActivity = (projectId) =>
   axios.post(`/projects/${projectId}/update-activity`)
 
