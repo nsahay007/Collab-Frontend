@@ -120,6 +120,7 @@ export default function ProjectDetail() {
   const [workspaceSuccess, setWorkspaceSuccess] = useState('')
   const [stageSaving, setStageSaving] = useState(false)
   const [stageError, setStageError] = useState('')
+  const [selectedStage, setSelectedStage] = useState(null)
 
   const loadProject = useCallback(async () => {
     try {
@@ -193,8 +194,10 @@ export default function ProjectDetail() {
   const validationProgress = workspaceTasks.length > 0
     ? Math.round((completedWorkspaceTasks / workspaceTasks.length) * 100)
     : Math.round(Number(workspaceForm.confidenceScore || 0))
-  const stageQuestions = getLifecycleQuestions(lifecycleStage)
-  const stageNextAction = getLifecycleNextAction(lifecycleStage)
+  const activeGuideStage = normalizeLifecycleStage(selectedStage || lifecycleStage)
+  const activeGuideIndex = LINEAR_LIFECYCLE.indexOf(activeGuideStage)
+  const stageQuestions = getLifecycleQuestions(activeGuideStage)
+  const stageNextAction = getLifecycleNextAction(activeGuideStage)
   const stageTargetSection = {
     idea: 'overview',
     planning: 'milestones',
@@ -204,7 +207,8 @@ export default function ProjectDetail() {
     incubation_ready: 'readiness',
     pivoted: 'roadmap',
     archived: 'overview'
-  }[lifecycleStage] || 'overview'
+  }[activeGuideStage] || 'overview'
+  const editableStages = LINEAR_LIFECYCLE.filter((stage, index) => index <= Math.max(0, lifecycleIndex))
   const primaryStageAction = {
     idea: { label: 'Continue to Planning', action: 'continue_planning' },
     planning: { label: 'Start Building', action: 'continue_building' },
@@ -640,6 +644,43 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleSaveStageProgress = async () => {
+    if (!canUseStageFlow) return
+    try {
+      setStageSaving(true)
+      setStageError('')
+      const note = chatMessage.trim() || `Updated ${getLifecycleLabel(activeGuideStage)} answers.`
+      await addProjectMessage(id, userId, `[${getLifecycleLabel(activeGuideStage)}] ${note}`)
+      setChatMessage('')
+      await loadProject()
+    } catch (err) {
+      console.error(err)
+      setStageError(err?.response?.data?.message || 'Could not save progress.')
+    } finally {
+      setStageSaving(false)
+    }
+  }
+
+  const handleDownloadIncubationPackage = async () => {
+    try {
+      setStageSaving(true)
+      setStageError('')
+      const data = await fetchIncubationPacket(id)
+      const blob = new Blob([JSON.stringify(data?.packet || data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${project.title || 'startup'}-incubation-package.json`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      setStageError(err?.response?.data?.message || 'Could not export package.')
+    } finally {
+      setStageSaving(false)
+    }
+  }
+
   useEffect(() => {
     if (!canChat) return undefined
     const interval = setInterval(() => {
@@ -682,9 +723,32 @@ export default function ProjectDetail() {
       </div>
 
       <Card hover={false} className="border-primary/25">
+        <div className="mb-5 flex flex-wrap gap-2">
+          {editableStages.map((stage) => (
+            <button
+              key={stage}
+              type="button"
+              onClick={() => setSelectedStage(stage)}
+              className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
+                activeGuideStage === stage
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border-default bg-bg-card text-text-secondary hover:border-primary/40 hover:text-text-primary'
+              }`}
+            >
+              {getLifecycleLabel(stage)}
+            </button>
+          ))}
+          {selectedStage && selectedStage !== lifecycleStage && (
+            <button type="button" onClick={() => setSelectedStage(null)} className="rounded-full px-3 py-2 text-xs font-medium text-text-muted hover:text-text-primary">
+              Back to current stage
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Badge variant={getLifecycleVariant(lifecycleStage)}>{getLifecycleLabel(lifecycleStage)}</Badge>
+            <Badge variant={getLifecycleVariant(activeGuideStage)}>
+              {activeGuideStage === lifecycleStage ? 'Current' : 'Editing'}: {getLifecycleLabel(activeGuideStage)}
+            </Badge>
             <h2 className="mt-3 text-2xl font-bold text-text-primary">What should we do now?</h2>
             <p className="mt-2 text-sm text-text-secondary">{stageNextAction}</p>
           </div>
@@ -699,7 +763,7 @@ export default function ProjectDetail() {
       </Card>
 
       <Card hover={false}>
-        <h2 className="text-xl font-semibold text-text-primary">Answer these questions</h2>
+        <h2 className="text-xl font-semibold text-text-primary">Edit answers</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {stageQuestions.map((question) => (
             <div key={question} className="rounded-xl bg-bg-secondary/70 p-4 text-sm text-text-primary">
@@ -717,7 +781,35 @@ export default function ProjectDetail() {
         />
       </Card>
 
-      {lifecycleStage !== 'idea' && lifecycleStage !== 'archived' && (
+      {(lifecycleStage === 'validation' || lifecycleStage === 'incubation_ready') && (
+        <Card hover={false}>
+          <h2 className="text-xl font-semibold text-text-primary">What would you like to improve next?</h2>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ['Improve MVP', 'mvp'],
+              ['Re-run Validation', 'validation'],
+              ['Update Planning', 'planning'],
+              ['Add New Features', 'building'],
+              ['Continue Building', 'building'],
+              ['Prepare Incubation Documents', 'incubation_ready']
+            ].map(([label, stage]) => (
+              <Button key={label} variant="secondary" size="sm" onClick={() => setSelectedStage(stage)}>
+                {label}
+              </Button>
+            ))}
+            <Button variant="primary" size="sm" onClick={handleDownloadIncubationPackage} disabled={stageSaving}>
+              Export Startup Package
+            </Button>
+          </div>
+          {lifecycleStage === 'incubation_ready' && (
+            <p className="mt-3 text-sm text-text-secondary">
+              Your startup is incubation-ready, but you can continue improving the idea, MVP, validation, and documents anytime.
+            </p>
+          )}
+        </Card>
+      )}
+
+      {activeGuideStage !== 'idea' && activeGuideStage !== 'archived' && (
         <Card hover={false}>
           <h2 className="text-xl font-semibold text-text-primary">Upload proof or evidence</h2>
           <p className="mt-1 text-sm text-text-secondary">
@@ -755,18 +847,20 @@ export default function ProjectDetail() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-text-primary">Next step</h2>
-            <p className="mt-1 text-sm text-text-secondary">
-              One action at a time. Save the team’s answer, upload proof if needed, then continue.
-            </p>
+            <p className="mt-1 text-sm text-text-secondary">Save progress, continue later, return to earlier stages, or move forward when ready.</p>
           </div>
-          <Button
-            variant="primary"
-            onClick={handlePrimaryStageAction}
-            disabled={stageSaving || !canUseStageFlow || lifecycleStage === 'archived'}
-            className="w-full sm:w-auto"
-          >
-            {stageSaving ? 'Working...' : primaryStageAction.label}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button variant="secondary" onClick={handleSaveStageProgress} disabled={stageSaving || !canUseStageFlow}>Save Progress</Button>
+            <Link to="/dashboard"><Button variant="secondary" className="w-full sm:w-auto">Continue Later</Button></Link>
+            {activeGuideIndex > 0 && <Button variant="secondary" onClick={() => setSelectedStage(LINEAR_LIFECYCLE[activeGuideIndex - 1])}>Return Previous</Button>}
+            <Button
+              variant="primary"
+              onClick={activeGuideStage !== lifecycleStage ? () => setSelectedStage(null) : activeGuideStage === 'incubation_ready' ? handleDownloadIncubationPackage : handlePrimaryStageAction}
+              disabled={stageSaving || !canUseStageFlow || lifecycleStage === 'archived'}
+            >
+              {stageSaving ? 'Working...' : activeGuideStage !== lifecycleStage ? 'Return To Current Stage' : activeGuideStage === 'incubation_ready' ? 'Download Incubation Package' : primaryStageAction.label}
+            </Button>
+          </div>
         </div>
         {stageError && <p className="mt-3 text-xs text-error">{stageError}</p>}
         {!canUseStageFlow && <p className="mt-3 text-xs text-text-muted">Only startup team members can update this guided pipeline.</p>}
