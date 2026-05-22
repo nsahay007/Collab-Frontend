@@ -22,6 +22,7 @@ import useAuth from '../hooks/useAuth'
 import { uploadsBaseUrl } from '../config/api'
 import VentureExecutionPanel from '../features/ventures/components/VentureExecutionPanel'
 import IncubationReadinessPanel from '../features/ventures/components/IncubationReadinessPanel'
+import { applyContinuationAction, fetchIncubationPacket } from '../features/ventures/ventureAPI'
 import {
   LINEAR_LIFECYCLE,
   getLifecycleLabel,
@@ -117,6 +118,8 @@ export default function ProjectDetail() {
   const [workspaceSaving, setWorkspaceSaving] = useState(false)
   const [workspaceError, setWorkspaceError] = useState('')
   const [workspaceSuccess, setWorkspaceSuccess] = useState('')
+  const [stageSaving, setStageSaving] = useState(false)
+  const [stageError, setStageError] = useState('')
 
   const loadProject = useCallback(async () => {
     try {
@@ -202,6 +205,16 @@ export default function ProjectDetail() {
     pivoted: 'roadmap',
     archived: 'overview'
   }[lifecycleStage] || 'overview'
+  const primaryStageAction = {
+    idea: { label: 'Continue to Planning', action: 'continue_planning' },
+    planning: { label: 'Start Building', action: 'continue_building' },
+    building: { label: 'Move to MVP', action: 'extend_mvp' },
+    mvp: { label: 'Start Validation', action: 'start_validation' },
+    validation: { label: 'Prepare for Incubation', action: 'prepare_incubation' },
+    incubation_ready: { label: 'Download Incubation Package', action: 'download_packet' },
+    pivoted: { label: 'Restart Planning', action: 'continue_planning' }
+  }[lifecycleStage] || { label: 'Continue', action: 'continue_building' }
+  const canUseStageFlow = Boolean(isOwner || isTeamMember)
   const validationTimelineEntries = [
     ...workspaceTasks.map((task) => ({
       type: 'task',
@@ -585,6 +598,48 @@ export default function ProjectDetail() {
     }
   }
 
+  const handlePrimaryStageAction = async () => {
+    if (!canUseStageFlow) return
+    try {
+      setStageSaving(true)
+      setStageError('')
+      const note = chatMessage.trim()
+      if (note) {
+        await addProjectMessage(id, userId, note)
+        setChatMessage('')
+      }
+
+      if (primaryStageAction.action === 'download_packet') {
+        const data = await fetchIncubationPacket(id)
+        const blob = new Blob([JSON.stringify(data?.packet || data, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${project.title || 'startup'}-incubation-package.json`
+        link.click()
+        URL.revokeObjectURL(url)
+      } else if (primaryStageAction.action === 'start_validation') {
+        await sendProjectToValidation(id, {
+          demoLink: validationLink,
+          demoNotes: note || 'MVP is ready for self-conducted validation.',
+          sharedFileIds
+        })
+      } else {
+        await applyContinuationAction(id, {
+          action: primaryStageAction.action,
+          note: note || `Moved from ${getLifecycleLabel(lifecycleStage)} using the guided pipeline.`
+        })
+      }
+
+      await loadProject()
+    } catch (err) {
+      console.error(err)
+      setStageError(err?.response?.data?.message || 'Could not complete this step.')
+    } finally {
+      setStageSaving(false)
+    }
+  }
+
   useEffect(() => {
     if (!canChat) return undefined
     const interval = setInterval(() => {
@@ -612,6 +667,112 @@ export default function ProjectDetail() {
       </div>
     )
   }
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-text-muted">Startup Guided Pipeline</p>
+          <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
+          <p className="mt-2 text-text-secondary">{project.shortPitch || project.description}</p>
+        </div>
+        <Link to="/dashboard">
+          <Button variant="secondary" size="sm" className="w-full sm:w-auto">Dashboard</Button>
+        </Link>
+      </div>
+
+      <Card hover={false} className="border-primary/25">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <Badge variant={getLifecycleVariant(lifecycleStage)}>{getLifecycleLabel(lifecycleStage)}</Badge>
+            <h2 className="mt-3 text-2xl font-bold text-text-primary">What should we do now?</h2>
+            <p className="mt-2 text-sm text-text-secondary">{stageNextAction}</p>
+          </div>
+          <div className="text-sm text-text-muted">{lifecycleProgress}% complete</div>
+        </div>
+        <div className="mt-5 h-2 rounded-full bg-bg-secondary">
+          <div
+            className="h-2 rounded-full bg-primary transition-all"
+            style={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+          />
+        </div>
+      </Card>
+
+      <Card hover={false}>
+        <h2 className="text-xl font-semibold text-text-primary">Answer these questions</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {stageQuestions.map((question) => (
+            <div key={question} className="rounded-xl bg-bg-secondary/70 p-4 text-sm text-text-primary">
+              {question}
+            </div>
+          ))}
+        </div>
+        <textarea
+          rows={6}
+          value={chatMessage}
+          onChange={(event) => setChatMessage(event.target.value)}
+          disabled={!canUseStageFlow}
+          placeholder="Write your team’s answers or progress update here. Keep it simple and practical."
+          className="mt-5 w-full resize-none rounded-2xl border border-border-default bg-bg-card px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+      </Card>
+
+      {lifecycleStage !== 'idea' && lifecycleStage !== 'archived' && (
+        <Card hover={false}>
+          <h2 className="text-xl font-semibold text-text-primary">Upload proof or evidence</h2>
+          <p className="mt-1 text-sm text-text-secondary">
+            Add screenshots, sketches, repo links as files, prototype demos, interview notes, PDFs, or validation evidence.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              type="file"
+              onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+              className="w-full rounded-xl border border-border-default bg-bg-card px-3 py-2 text-sm text-text-secondary"
+            />
+            <Button
+              variant="secondary"
+              onClick={handleFileUpload}
+              disabled={!selectedFile || uploading || !canUseStageFlow}
+              className="w-full sm:w-auto"
+            >
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+          </div>
+          {uploadError && <p className="mt-2 text-xs text-error">{uploadError}</p>}
+          {(project.files || []).length > 0 && (
+            <div className="mt-4 space-y-2">
+              {(project.files || []).slice(0, 4).map((file) => (
+                <div key={file._id || file.filename} className="rounded-xl bg-bg-secondary/60 px-3 py-2 text-sm text-text-secondary">
+                  {file.originalName || file.filename}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      <Card hover={false} className="bg-primary/5 border-primary/25">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-text-primary">Next step</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              One action at a time. Save the team’s answer, upload proof if needed, then continue.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handlePrimaryStageAction}
+            disabled={stageSaving || !canUseStageFlow || lifecycleStage === 'archived'}
+            className="w-full sm:w-auto"
+          >
+            {stageSaving ? 'Working...' : primaryStageAction.label}
+          </Button>
+        </div>
+        {stageError && <p className="mt-3 text-xs text-error">{stageError}</p>}
+        {!canUseStageFlow && <p className="mt-3 text-xs text-text-muted">Only startup team members can update this guided pipeline.</p>}
+      </Card>
+    </div>
+  )
 
   return (
     <div className="space-y-8">
