@@ -27,6 +27,8 @@ import {
   getLifecycleLabel,
   getLifecycleProgress,
   getLifecyclePrompt,
+  getLifecycleQuestions,
+  getLifecycleNextAction,
   getLifecycleVariant,
   getNextLifecycleLabel,
   normalizeLifecycleStage
@@ -188,6 +190,18 @@ export default function ProjectDetail() {
   const validationProgress = workspaceTasks.length > 0
     ? Math.round((completedWorkspaceTasks / workspaceTasks.length) * 100)
     : Math.round(Number(workspaceForm.confidenceScore || 0))
+  const stageQuestions = getLifecycleQuestions(lifecycleStage)
+  const stageNextAction = getLifecycleNextAction(lifecycleStage)
+  const stageTargetSection = {
+    idea: 'overview',
+    planning: 'milestones',
+    building: 'build-progress',
+    mvp: 'build-progress',
+    validation: 'validation',
+    incubation_ready: 'readiness',
+    pivoted: 'roadmap',
+    archived: 'overview'
+  }[lifecycleStage] || 'overview'
   const validationTimelineEntries = [
     ...workspaceTasks.map((task) => ({
       type: 'task',
@@ -667,6 +681,26 @@ export default function ProjectDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-6">
+          <Card className="border-primary/30 bg-primary/5" hover={false}>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-primary mb-2">Guided Pipeline Step</p>
+                <h2 className="text-2xl font-bold text-text-primary">{getLifecycleLabel(lifecycleStage)}: what should we do next?</h2>
+                <p className="mt-2 text-sm text-text-secondary">{stageNextAction}</p>
+              </div>
+              <Button size="sm" className="w-full lg:w-auto" onClick={() => jumpToSection(stageTargetSection)}>
+                Go to next step
+              </Button>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {stageQuestions.map((question) => (
+                <div key={question} className="rounded-xl border border-border-default bg-bg-card px-4 py-3 text-sm text-text-primary">
+                  {question}
+                </div>
+              ))}
+            </div>
+          </Card>
+
           <Card id="workspace-overview" className={sectionCardClass('overview')}>
             <h2 className="text-xl font-bold text-text-primary mb-3">Startup Overview</h2>
             <p className="text-text-secondary leading-relaxed">{project.description}</p>

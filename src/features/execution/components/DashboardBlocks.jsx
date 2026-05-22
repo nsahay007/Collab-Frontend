@@ -6,6 +6,7 @@ import Badge from '../../../components/common/Badge'
 import {
   LINEAR_LIFECYCLE,
   getLifecycleLabel,
+  getLifecycleNextAction,
   getLifecycleProgress,
   getLifecycleVariant,
   getNextLifecycleLabel,
@@ -48,14 +49,17 @@ export function VentureOverviewCard({ project }) {
 }
 
 export function ContinueBuildingPanel({ project, nextMilestone, pendingTasks = [] }) {
+  const lifecycleStage = normalizeLifecycleStage(project?.lifecycleStage || project?.status || project?.phase)
+  const nextAction = getLifecycleNextAction(lifecycleStage)
+
   return (
     <Card hover={false} className="border-primary/30">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-primary mb-2">Continue Building</p>
-          <h2 className="text-2xl font-semibold text-text-primary">{nextMilestone.title}</h2>
+          <p className="text-xs uppercase tracking-wide text-primary mb-2">Next Action</p>
+          <h2 className="text-2xl font-semibold text-text-primary">{nextAction}</h2>
           <p className="text-sm text-text-secondary mt-2">
-            Next action from the guided startup pipeline. Keep the team focused on the most important milestone.
+            Latest milestone: {nextMilestone.title}
           </p>
         </div>
         <Link to={`/project/${project._id || project.id}`}>
