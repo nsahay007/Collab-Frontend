@@ -47,6 +47,16 @@ const WORKSPACE_SECTIONS = [
   { id: 'settings', label: 'Settings' }
 ]
 
+const downloadTextFile = (filename, content, type = 'application/json') => {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function ProjectDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -666,19 +676,37 @@ export default function ProjectDetail() {
       setStageSaving(true)
       setStageError('')
       const data = await fetchIncubationPacket(id)
-      const blob = new Blob([JSON.stringify(data?.packet || data, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${project.title || 'startup'}-incubation-package.json`
-      link.click()
-      URL.revokeObjectURL(url)
+      downloadTextFile(`${project.title || 'startup'}-incubation-package.json`, JSON.stringify({
+        folders: {
+          '01_Idea': getLifecycleQuestions('idea'),
+          '02_Planning': getLifecycleQuestions('planning'),
+          '03_Building': getLifecycleQuestions('building'),
+          '04_MVP': getLifecycleQuestions('mvp'),
+          '05_Validation': getLifecycleQuestions('validation'),
+          '06_Incubation_Ready': getLifecycleQuestions('incubation_ready')
+        },
+        startupSummary: data?.packet || data,
+        uploadedFiles: project.files || [],
+        notes: project.messages || []
+      }, null, 2))
     } catch (err) {
       console.error(err)
       setStageError(err?.response?.data?.message || 'Could not export package.')
     } finally {
       setStageSaving(false)
     }
+  }
+
+  const handleDownloadCertificates = () => {
+    const members = project.teamMembers || []
+    downloadTextFile(`${project.title || 'startup'}-team-certificates.json`, JSON.stringify(members.map((member) => ({
+      startupName: project.title,
+      memberName: member.name || 'Team Member',
+      role: member._id === ownerId ? 'Startup Lead' : 'Team Member',
+      contributionSummary: 'Contributed to startup execution and incubation readiness.',
+      completion: 'Incubation Ready',
+      completionDate: new Date().toISOString().slice(0, 10)
+    })), null, 2))
   }
 
   useEffect(() => {
@@ -705,6 +733,35 @@ export default function ProjectDetail() {
         <Link to="/dashboard">
           <Button variant="primary">Back to Dashboard</Button>
         </Link>
+      </div>
+    )
+  }
+
+  if (lifecycleStage === 'incubation_ready' && !selectedStage) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <Card hover={false} className="border-success/30 text-center">
+          <p className="text-5xl mb-3">✅</p>
+          <p className="text-xs uppercase tracking-wide text-success mb-2">Startup Status</p>
+          <h1 className="text-3xl font-bold text-text-primary">Incubation Ready</h1>
+          <p className="mt-3 text-text-secondary">
+            {project.title} is complete for pre-incubation. Download the final package, get team certificates, or reopen the workspace to improve it later.
+          </p>
+        </Card>
+        <Card hover={false}>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Button variant="primary" onClick={handleDownloadIncubationPackage} disabled={stageSaving}>
+              Download Startup Package
+            </Button>
+            <Button variant="secondary" onClick={handleDownloadCertificates}>
+              Download Team Certificates
+            </Button>
+            <Button variant="secondary" onClick={() => setSelectedStage('validation')}>
+              Reopen Workspace
+            </Button>
+          </div>
+          {stageError && <p className="mt-3 text-xs text-error">{stageError}</p>}
+        </Card>
       </div>
     )
   }
