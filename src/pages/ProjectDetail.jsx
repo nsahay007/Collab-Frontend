@@ -119,8 +119,9 @@ export default function ProjectDetail() {
   const loadProject = useCallback(async () => {
     try {
       const response = await fetchProject(id)
-      if (response?.data) {
-        setProject(response.data)
+      const workspace = response?.data || response
+      if (workspace?._id || workspace?.id) {
+        setProject(workspace)
       } else {
         setError('Startup workspace not found')
       }
