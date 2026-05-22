@@ -25,6 +25,16 @@ import {
 import useAuth from '../hooks/useAuth'
 import checkIcon from '../assets/icons/check.svg'
 import { uploadsBaseUrl } from '../config/api'
+import VentureExecutionPanel from '../features/ventures/components/VentureExecutionPanel'
+import {
+  LINEAR_LIFECYCLE,
+  getLifecycleLabel,
+  getLifecycleProgress,
+  getLifecyclePrompt,
+  getLifecycleVariant,
+  getNextLifecycleLabel,
+  normalizeLifecycleStage
+} from '../utils/ventureLifecycle'
 
 const WORKSPACE_SECTIONS = [
   { id: 'overview', label: 'Overview' },
@@ -38,8 +48,6 @@ const WORKSPACE_SECTIONS = [
   { id: 'roadmap', label: 'Roadmap' },
   { id: 'settings', label: 'Settings' }
 ]
-
-const LIFECYCLE_STEPS = ['Idea', 'Validation', 'Prototype', 'MVP', 'Incubation Ready']
 
 export default function ProjectDetail() {
   const { id } = useParams()
@@ -163,6 +171,18 @@ export default function ProjectDetail() {
   const teamCount = project?.teamMembers?.length || 0
   const teamFull = teamCount >= maxTeamMembers
   const validationData = project?.validation || {}
+  const lifecycleStage = normalizeLifecycleStage(project?.lifecycleStage || project?.status || project?.phase)
+  const lifecycleProgress = getLifecycleProgress(lifecycleStage)
+  const lifecycleIndex = LINEAR_LIFECYCLE.indexOf(lifecycleStage)
+  const canSubmitForValidation = isOwner
+    && ['prototype', 'mvp', 'growth'].includes(lifecycleStage)
+    && !['in_review', 'passed'].includes(validationData.validationStatus)
+    && !timeExpired
+  const hasValidationFeedback = Boolean(
+    validationData.reviews?.length
+    || ['in_review', 'passed', 'failed'].includes(validationData.validationStatus)
+  )
+  const needsValidationRework = validationData.validationStatus === 'failed' || lifecycleStage === 'pivoted'
   const validationReviewCount = validationData.currentReviews || validationData.reviews?.length || 0
   const validationRequired = validationData.reviewsRequired || 30
   const criteriaAverages = validationData.criteriaAverages || {}
@@ -661,10 +681,11 @@ export default function ProjectDetail() {
           <p className="text-text-secondary">{project.description}</p>
           <div className="text-sm text-text-muted">Owner: {project.owner?.name || 'Unknown'}</div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Badge variant={project.status === 'validated' ? 'success' : project.status === 'building' ? 'primary' : 'default'}>
-              {(project.status === 'validation_failed' ? 'Validation Failed' : (project.status || 'planning'))
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, (char) => char.toUpperCase())}
+            <Badge variant={getLifecycleVariant(lifecycleStage)}>
+              {getLifecycleLabel(lifecycleStage)}
+            </Badge>
+            <Badge variant="default">
+              Next: {getNextLifecycleLabel(lifecycleStage)}
             </Badge>
             {hasExtendedTimeline && (
               <Badge variant="accent">
@@ -767,33 +788,36 @@ export default function ProjectDetail() {
 
           <Card id="workspace-milestones" className={sectionCardClass('milestones')}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-text-primary">Milestones</h2>
-              <Badge variant="primary">{String(project.phase || 'problem').toUpperCase()}</Badge>
+              <h2 className="text-xl font-bold text-text-primary">Lifecycle Milestones</h2>
+              <Badge variant={getLifecycleVariant(lifecycleStage)}>{getLifecycleLabel(lifecycleStage)}</Badge>
             </div>
             <p className="text-sm text-text-secondary mb-4">
-              Execution lifecycle is unified inside this venture workspace.
+              {getLifecyclePrompt(lifecycleStage)}
             </p>
+            <div className="h-2 w-full rounded-full bg-bg-secondary mb-4">
+              <div
+                className="h-2 rounded-full bg-primary transition-all"
+                style={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {['problem', 'plan', 'build', 'mvp', 'validation', 'demo'].map((phaseLabel) => {
-                const currentPhase = String(project.phase || 'problem')
-                const ordered = ['problem', 'plan', 'build', 'mvp', 'validation', 'demo']
-                const currentIndex = ordered.indexOf(currentPhase)
-                const phaseIndex = ordered.indexOf(phaseLabel)
-                const completed = phaseIndex < currentIndex
-                const active = phaseIndex === currentIndex
+              {LINEAR_LIFECYCLE.map((stage) => {
+                const stageIndex = LINEAR_LIFECYCLE.indexOf(stage)
+                const completed = lifecycleIndex >= 0 && stageIndex < lifecycleIndex
+                const active = stage === lifecycleStage
 
                 return (
                   <div
-                    key={phaseLabel}
+                    key={stage}
                     className={`rounded-lg border px-3 py-2 text-sm ${
                       active
                         ? 'border-primary bg-primary/10 text-primary'
                         : completed
                           ? 'border-success/30 bg-success/10 text-success'
-                          : 'border-border-default bg-bg-card text-text-muted'
+                        : 'border-border-default bg-bg-card text-text-muted'
                     }`}
                   >
-                    {completed ? '✔' : active ? '→' : '○'} {phaseLabel.toUpperCase()}
+                    {completed ? 'Complete' : active ? 'Current' : 'Next'}: {getLifecycleLabel(stage)}
                   </div>
                 )
               })}
@@ -803,22 +827,28 @@ export default function ProjectDetail() {
           <Card id="workspace-roadmap" className={sectionCardClass('roadmap')}>
             <h2 className="text-xl font-bold text-text-primary mb-2">Roadmap</h2>
             <p className="text-sm text-text-secondary mb-4">
-              Idea → Validation → Prototype → MVP → Incubation Ready
+              Idea to validation, team formation, prototype, MVP, growth, and incubation readiness.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              {LIFECYCLE_STEPS.map((step, index) => (
+              {LINEAR_LIFECYCLE.map((stage, index) => (
                 <div
-                  key={step}
+                  key={stage}
                   className="inline-flex items-center gap-2 rounded-lg border border-border-default bg-bg-card px-3 py-2 text-xs text-text-secondary"
                 >
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold">
                     {index + 1}
                   </span>
-                  {step}
+                  {getLifecycleLabel(stage)}
                 </div>
               ))}
             </div>
           </Card>
+
+          <VentureExecutionPanel
+            project={project}
+            isContributor={Boolean(isOwner || isTeamMember)}
+            onProjectRefresh={loadProject}
+          />
 
           <Card id="workspace-validation" className={sectionCardClass('validation')}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -1076,7 +1106,7 @@ export default function ProjectDetail() {
 
           </Card>
 
-          {(isOwner || isTeamMember) && (project.validation?.reviews || project.status === 'validation' || project.status === 'validated') && (
+          {(isOwner || isTeamMember) && hasValidationFeedback && (
             <Card className={sectionCardClass('validation')}>
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <div>
@@ -1093,7 +1123,7 @@ export default function ProjectDetail() {
                 </Badge>
               </div>
 
-              {project.status === 'validation_failed' && validationData.lastFailureReason && (
+              {needsValidationRework && validationData.lastFailureReason && (
                 <div className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
                   {validationData.lastFailureReason}
                 </div>
@@ -1146,7 +1176,7 @@ export default function ProjectDetail() {
             </Card>
           )}
 
-          {project.status === 'validation_failed' && (
+          {needsValidationRework && (
             <Card className={sectionCardClass('validation')}>
               <h2 className="text-xl font-bold text-text-primary mb-2">Validation Rework Required</h2>
               <p className="text-sm text-text-secondary">
@@ -1165,7 +1195,7 @@ export default function ProjectDetail() {
                     disabled={extendingTimeline}
                     onClick={handleExtendTimeline}
                   >
-                    {extendingTimeline ? 'Extending...' : 'Move to Dashboard + Extend 7 Days'}
+                    {extendingTimeline ? 'Reopening...' : 'Reopen Prototype Work'}
                   </Button>
                   <Button variant="danger" size="sm" onClick={openDeleteModal}>
                     Delete Venture
@@ -1379,7 +1409,7 @@ export default function ProjectDetail() {
                   </div>
                 )}
 
-                {isOwner && !timeExpired && ['building', 'completed'].includes(project.status) && (
+                {canSubmitForValidation && (
                   <div className="flex flex-col gap-2 items-stretch sm:items-end">
                     {validationError && <p className="text-xs text-error">{validationError}</p>}
                     <Button
@@ -1612,7 +1642,7 @@ export default function ProjectDetail() {
               onChange={(e) => setDetailsForm((prev) => ({ ...prev, executionPlan: e.target.value }))}
               rows={4}
               className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-              placeholder="What will you complete in 14 days?"
+              placeholder="What is the next execution milestone?"
             />
           </div>
         </div>

@@ -151,7 +151,7 @@ export default function AdminDashboard() {
   const handleExport = () => {
     if (!users.length) return
     const rows = [
-      ['id', 'name', 'email', 'role', 'emailVerified', 'points', 'lastActive', 'createdAt']
+      ['id', 'name', 'email', 'role', 'emailVerified', 'executionSignal', 'lastActive', 'createdAt']
     ]
     users.forEach((user) => {
       rows.push([
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers.toString() },
-    { label: 'Active Projects', value: stats.activeProjects.toString() },
+    { label: 'Active Ventures', value: stats.activeProjects.toString() },
     { label: 'Validations Run', value: stats.validationsRun.toString() },
     { label: `New Signups (${stats.signupWindowDays}d)`, value: stats.newSignups.toString() }
   ]
@@ -571,7 +571,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs uppercase text-text-muted">Points</div>
+                    <div className="text-xs uppercase text-text-muted">Execution Signal</div>
                     <div className="text-text-primary font-medium">{userDetails?.points ?? 0}</div>
                   </div>
                   <div>
@@ -637,7 +637,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-text-primary">Points</label>
+                    <label className="block text-sm font-medium text-text-primary">Execution Signal</label>
                     <input
                       type="number"
                       name="points"

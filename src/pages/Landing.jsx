@@ -7,20 +7,20 @@ import Badge from '../components/common/Badge'
 import api from '../services/api'
 const steps = [
   {
-    title: 'Post Idea',
-    description: 'Share your startup concept with clear goals and roles needed.',
+    title: 'Define Venture Thesis',
+    description: 'Capture the startup problem, target user, and execution thesis.',
     icon: 'idea',
     accent: 'from-primary/20 to-primary-accent/30'
   },
   {
-    title: 'Build Team',
-    description: 'Invite skilled collaborators and align on a 14‑day plan.',
+    title: 'Form Execution Team',
+    description: 'Bring founders, developers, designers, and operators into one venture pod.',
     icon: 'team',
     accent: 'from-primary/20 to-success/30'
   },
   {
-    title: 'Validate Project',
-    description: 'Get feedback from real users and improve faster.',
+    title: 'Ship & Validate MVP',
+    description: 'Launch build updates, capture evidence, and prepare for incubation.',
     icon: 'validate',
     accent: 'from-warning/20 to-primary-accent/30'
   }
@@ -28,41 +28,43 @@ const steps = [
 
 const featureSections = [
   {
-    title: 'Smart Team Formation',
-    description: 'Match with builders who complement your skills and keep teams focused.',
-    bullets: ['Role‑based matching', 'Instant join requests', 'Private team chat'],
+    title: 'Execution-Grade Team Formation',
+    description: 'Assemble venture contributors with complementary roles and clear ownership.',
+    bullets: ['Role-based matching', 'Instant join requests', 'Private execution threads'],
     accent: 'from-primary/20 to-primary-accent/10',
     widget: 'team'
   },
   {
-    title: '14‑Day Build System',
-    description: 'Turn ideas into MVPs with a time‑boxed plan and accountability.',
-    bullets: ['Automated countdown', 'Activity tracking', 'Milestone focus'],
+    title: 'Venture Execution System',
+    description: 'Move from concept to MVP through lifecycle milestones, blocker visibility, and accountable checkpoints.',
+    bullets: ['Lifecycle progress', 'Build-update tracking', 'Milestone discipline'],
     accent: 'from-warning/20 to-primary/10',
     widget: 'build'
   },
   {
-    title: 'Validation by Real Users',
-    description: 'Launch into validation with structured feedback and ratings.',
-    bullets: ['Minimum 30 reviews', 'Avg rating threshold', 'Actionable insights'],
+    title: 'Evidence-Led Validation',
+    description: 'Collect structured market signals that strengthen venture readiness.',
+    bullets: ['Minimum 30 reviews', 'Score thresholds', 'Actionable execution gaps'],
     accent: 'from-success/20 to-primary/10',
     widget: 'validation'
   },
   {
-    title: 'Cross‑College Collaboration',
-    description: 'Find the best teammates beyond your campus while staying relevant.',
-    bullets: ['College filters', 'Global visibility', 'Trusted profiles'],
+    title: 'Collaboration Network',
+    description: 'Tap a high-intent contributor pool built for venture execution, not passive browsing.',
+    bullets: ['Discovery filters', 'Global visibility', 'Trusted execution profiles for contributors'],
     accent: 'from-primary-accent/20 to-primary/10',
     widget: 'collab'
   },
   {
-    title: 'Gamified Progress System',
-    description: 'Earn points, badges, and leaderboard rank as you build.',
-    bullets: ['Points for progress', 'Badges that matter', 'Public leaderboard'],
+    title: 'Execution Proof System',
+    description: 'Track venture progress through build updates, checkpoints, and proof-of-work artifacts.',
+    bullets: ['Checkpoint evidence', 'Progress scoring', 'Proof-of-work visibility'],
     accent: 'from-primary/20 to-success/10',
     widget: 'gamified'
   }
 ]
+
+const lifecycleStages = ['Idea', 'Validation', 'Team Formation', 'Prototype', 'MVP', 'Growth', 'Incubation Ready']
 
 function SectionHeader({ title, subtitle, align = 'center' }) {
   const alignment = align === 'center' ? 'text-center' : 'text-left'
@@ -121,6 +123,30 @@ function StepIcon({ type }) {
   )
 }
 
+function LifecycleSection() {
+  return (
+    <section className="py-24 bg-bg-secondary/40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <SectionHeader
+          title="Startup Lifecycle"
+          subtitle="Every venture on Collab is pushed through an execution sequence designed for incubation readiness."
+        />
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+          {lifecycleStages.map((stage, index) => (
+            <div key={stage} className="rounded-2xl border border-border bg-bg-card px-4 py-5 text-center relative">
+              <p className="text-xs text-text-muted mb-1">Stage {index + 1}</p>
+              <p className="text-sm font-semibold text-text-primary">{stage}</p>
+              {index < lifecycleStages.length - 1 && (
+                <span className="hidden lg:block absolute -right-2 top-1/2 -translate-y-1/2 text-text-muted">→</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function GlowWidgetCard({ title, meta, accent, children }) {
   return (
     <div className="relative rounded-2xl border border-border bg-bg-card/80 p-4 shadow-card overflow-hidden">
@@ -159,8 +185,8 @@ function GlowWidgets({ type }) {
   if (type === 'build') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <GlowWidgetCard title="14‑Day Countdown" meta="Day 5" accent="from-warning to-primary">
-          <div className="text-2xl font-semibold text-primary">09:14:22</div>
+        <GlowWidgetCard title="Next Milestone" meta="Prototype" accent="from-warning to-primary">
+          <div className="text-2xl font-semibold text-primary">68%</div>
           <div className="h-2 w-full rounded-full bg-border">
             <div className="h-2 w-2/3 rounded-full bg-warning" />
           </div>
@@ -213,15 +239,15 @@ function GlowWidgets({ type }) {
   }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <GlowWidgetCard title="Points" meta="+15" accent="from-primary to-primary-accent">
-        <div className="text-2xl font-semibold text-primary">128</div>
-        <div className="text-xs text-text-muted">Total points</div>
+      <GlowWidgetCard title="Credibility" meta="rising" accent="from-primary to-primary-accent">
+        <div className="text-2xl font-semibold text-primary">82%</div>
+        <div className="text-xs text-text-muted">Execution signal</div>
       </GlowWidgetCard>
-      <GlowWidgetCard title="Badges" meta="3 earned" accent="from-success to-primary">
-        <div className="flex gap-2">
-          <span className="h-8 w-8 rounded-lg bg-primary/20 border border-primary/30" />
-          <span className="h-8 w-8 rounded-lg bg-success/20 border border-success/30" />
-          <span className="h-8 w-8 rounded-lg bg-warning/20 border border-warning/30" />
+      <GlowWidgetCard title="Contribution Mix" meta="live" accent="from-success to-primary">
+        <div className="space-y-2">
+          <div className="h-2 w-28 rounded-full bg-primary/50" />
+          <div className="h-2 w-36 rounded-full bg-success/50" />
+          <div className="h-2 w-24 rounded-full bg-warning/50" />
         </div>
       </GlowWidgetCard>
     </div>
@@ -268,8 +294,8 @@ export default function Landing() {
   }
 
   const activeUsersLabel = publicStats.activeUsersWindowDays
-    ? `Active users (${publicStats.activeUsersWindowDays}d)`
-    : 'Active users'
+    ? `Active contributors (${publicStats.activeUsersWindowDays}d)`
+    : 'Active contributors'
 
   return (
     <div className="min-h-screen bg-bg-main">
@@ -286,26 +312,29 @@ export default function Landing() {
               transition={{ duration: 0.6 }}
               className="space-y-6"
             >
-              <Badge variant="accent" className="inline-flex">Built for student founders</Badge>
+              <Badge variant="accent" className="inline-flex">Startup Execution Ecosystem</Badge>
               <h1
                 className="text-5xl md:text-6xl font-semibold text-text-primary leading-tight"
                 style={{ fontFamily: "'Cormorant Garamond', serif" }}
               >
-                Turn Ideas Into Real Startups
+                From Venture Concept to MVP
               </h1>
               <p className="text-lg text-text-secondary max-w-xl">
-                Collab helps you assemble the right team, build fast in 14 days, and validate with real users—before you launch.
+                Collab helps founders, developers, designers, and operators form teams, execute venture concepts, and build incubation-ready MVPs.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 sm:flex-wrap">
                 <Link to="/register">
-                  <Button variant="primary" className="px-8 py-3">Get Started</Button>
+                  <Button variant="primary" className="px-8 py-3">Start Building</Button>
                 </Link>
-                <Link to="/dashboard">
-                  <Button variant="secondary" className="px-8 py-3">Explore Projects</Button>
+                <Link to="/create">
+                  <Button variant="secondary" className="px-8 py-3">Create a Venture</Button>
+                </Link>
+                <Link to="/discover">
+                  <Button variant="secondary" className="px-8 py-3">Join a Venture</Button>
                 </Link>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-text-muted">
-                <span>Real teams • Real feedback • Real momentum</span>
+                <span>Real ventures • Real execution • Real startup outcomes</span>
               </div>
             </motion.div>
             <motion.div
@@ -315,7 +344,7 @@ export default function Landing() {
             >
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="text-sm font-semibold text-text-primary">Sample build sprint</div>
+                  <div className="text-sm font-semibold text-text-primary">Sample venture workspace</div>
                   <Badge variant="secondary">Preview</Badge>
                 </div>
                 <div className="space-y-3">
@@ -323,7 +352,7 @@ export default function Landing() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-text-primary">EcoCart</p>
-                        <p className="text-xs text-text-muted">Marketplace • 4 members</p>
+                        <p className="text-xs text-text-muted">Commerce Venture • 4 contributors</p>
                       </div>
                       <Badge variant="secondary">Example</Badge>
                     </div>
@@ -335,7 +364,7 @@ export default function Landing() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-text-primary">CampusPay</p>
-                        <p className="text-xs text-text-muted">Fintech • 3 members</p>
+                        <p className="text-xs text-text-muted">Fintech Venture • 3 contributors</p>
                       </div>
                       <Badge variant="secondary">Preview</Badge>
                     </div>
@@ -351,12 +380,14 @@ export default function Landing() {
         </div>
       </section>
 
+      <LifecycleSection />
+
       {/* How it works */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
             title="How It Works"
-            subtitle="From idea to validated project in three focused steps."
+            subtitle="From startup intent to incubation-ready output in three execution-focused moves."
           />
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
             {steps.map((step, index) => (
@@ -414,8 +445,8 @@ export default function Landing() {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
-            title="Live Platform Preview"
-            subtitle="A quick look at what your workspace feels like once you’re inside."
+            title="Live Execution Preview"
+            subtitle="A quick look at your venture command center once execution begins."
           />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -429,12 +460,12 @@ export default function Landing() {
                   <div className="rounded-2xl border border-border bg-bg-secondary/60 p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-text-muted">Trending Project</p>
+                        <p className="text-sm text-text-muted">Trending Venture</p>
                         <h4 className="text-xl font-semibold text-text-primary">SkillBridge</h4>
                       </div>
-                      <Badge variant="primary">Open roles</Badge>
+                      <Badge variant="primary">Open contributor roles</Badge>
                     </div>
-                    <p className="text-sm text-text-secondary mt-3">Connecting students with micro‑internships from local startups.</p>
+                    <p className="text-sm text-text-secondary mt-3">Connecting talent with startup opportunities through a high-accountability execution model.</p>
                     <div className="mt-4 flex gap-2">
                       <Badge variant="secondary">Frontend</Badge>
                       <Badge variant="secondary">Marketing</Badge>
@@ -459,7 +490,7 @@ export default function Landing() {
                 </div>
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-border bg-bg-secondary/60 p-4">
-                    <p className="text-xs text-text-muted">Recent activity</p>
+                    <p className="text-xs text-text-muted">Recent build updates</p>
                     <div className="mt-3 space-y-3">
                       <div className="text-sm text-text-secondary">Nishant uploaded pitch deck</div>
                       <div className="text-sm text-text-secondary">Anya left validation feedback</div>
@@ -483,7 +514,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
             title="Validation by Real Users"
-            subtitle="Every project is tested by real students who give candid feedback."
+            subtitle="Every venture is stress-tested with structured market feedback and clear execution signals."
           />
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="p-6">
@@ -520,7 +551,7 @@ export default function Landing() {
                   <div className="h-2 w-3/4 rounded-full bg-primary" />
                 </div>
                 <div className="rounded-2xl border border-border bg-bg-secondary/60 p-4">
-                  <p className="text-sm text-text-secondary">Validated projects appear in the featured list for new collaborators.</p>
+                  <p className="text-sm text-text-secondary">Validated ventures move into spotlight placement inside the collaboration network.</p>
                 </div>
               </div>
             </Card>
@@ -532,8 +563,8 @@ export default function Landing() {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <SectionHeader
-            title="Used by students across colleges"
-            subtitle="A growing community of builders, designers, and validators."
+            title="Built for high-intent startup contributors"
+            subtitle="A growing ecosystem of founders, builders, and operators shipping real ventures."
           />
           <div className="mt-6 text-center text-xs text-text-muted">
             Live metrics reflect real activity on Collab and are shared to help you understand the progress happening across the platform.
@@ -549,7 +580,7 @@ export default function Landing() {
               <div className="text-4xl font-semibold text-primary">
                 {statsError ? '—' : formatNumber(publicStats.totalProjects)}
               </div>
-              <p className="text-sm text-text-secondary mt-2">Projects launched</p>
+              <p className="text-sm text-text-secondary mt-2">Ventures launched</p>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-semibold text-primary">Coming soon</div>
@@ -579,7 +610,7 @@ export default function Landing() {
                 variant="secondary"
                 className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 hover:bg-white/20 px-8 py-3"
               >
-                Get Started
+                Start Building
               </Button>
             </Link>
           </motion.div>

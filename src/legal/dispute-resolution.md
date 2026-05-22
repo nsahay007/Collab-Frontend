@@ -6,7 +6,7 @@ This policy outlines how Collab handles disputes related to ownership, contribut
 
 ## 1. Reporting a Dispute
 Email **helpdesk@collab.qzz.io** with:
-- project name
+- venture name
 - involved parties
 - description of the dispute
 - any proof of contribution
@@ -17,7 +17,7 @@ Collab will review activity logs, timestamps, and submitted evidence. We may con
 ## 3. Possible Outcomes
 - content removal
 - account warnings or suspension
-- project access restrictions
+- venture access restrictions
 
 ## 4. Final Decision
 Collab’s decision is based on platform logs and submitted proof. We will communicate outcomes to all parties.

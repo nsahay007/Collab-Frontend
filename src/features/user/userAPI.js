@@ -20,8 +20,8 @@ export const updateProfile = async (payload) => {
   return response.data
 }
 
-export const getUserProjects = async (status = 'all') => {
-  const response = await axios.get(`/users/projects?status=${status}`)
+export const getUserProjects = async (lifecycleStage = 'all') => {
+  const response = await axios.get(`/users/projects?lifecycleStage=${lifecycleStage}`)
   return response.data
 }
 
@@ -32,6 +32,11 @@ export const getLeaderboard = async (college = 'all', page = 1, limit = 50) => {
 
 export const getRank = async () => {
   const response = await axios.get('/users/rank')
+  return response.data
+}
+
+export const getExecutionProfile = async () => {
+  const response = await axios.get('/users/execution-profile')
   return response.data
 }
 

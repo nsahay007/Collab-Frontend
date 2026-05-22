@@ -5,7 +5,7 @@ export const createProject = async (projectData) => {
     const response = await axios.post('/projects', projectData)
     return response.data
   } catch (error) {
-    console.error('Create project error:', error)
+    console.error('Create venture error:', error)
     throw error
   }
 }
@@ -16,7 +16,7 @@ export const getProjects = async (filters = {}) => {
     const response = await axios.get(`/projects?${params}`)
     return response.data
   } catch (error) {
-    console.error('Get projects error:', error)
+    console.error('Get ventures error:', error)
     throw error
   }
 }
@@ -26,7 +26,7 @@ export const getProjectById = async (id) => {
     const response = await axios.get(`/projects/${id}`)
     return response.data
   } catch (error) {
-    console.error('Get project error:', error)
+    console.error('Get venture error:', error)
     throw error
   }
 }
@@ -36,7 +36,7 @@ export const joinProject = async (id) => {
     const response = await axios.post(`/projects/${id}/join`)
     return response.data
   } catch (error) {
-    console.error('Join project error:', error)
+    console.error('Join venture error:', error)
     throw error
   }
 }
@@ -66,7 +66,7 @@ export const completeProject = async (id) => {
     const response = await axios.post(`/projects/${id}/complete`)
     return response.data
   } catch (error) {
-    console.error('Complete project error:', error)
+    console.error('Complete venture error:', error)
     throw error
   }
 }
@@ -97,7 +97,7 @@ export const getValidationProjects = async (filters = {}) => {
     const response = await axios.get(`/projects/validation?${params}`)
     return response.data
   } catch (error) {
-    console.error('Get validation projects error:', error)
+    console.error('Get validation ventures error:', error)
     throw error
   }
 }

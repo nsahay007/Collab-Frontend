@@ -39,8 +39,9 @@ export default function Navbar() {
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard' },
+    { to: '/discover', label: 'Discover Ventures' },
     { to: '/create', label: 'Create Venture' },
-    { to: '/leaderboard', label: 'Leaderboard' }
+    { to: '/profile', label: 'Execution Profile' }
   ]
 
   const isActive = (path) => location.pathname === path

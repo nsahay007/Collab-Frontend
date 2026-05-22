@@ -3,6 +3,12 @@ import { useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import api from '../services/api'
+import {
+  getLifecycleLabel,
+  getLifecycleProgress,
+  getNextLifecycleLabel,
+  normalizeLifecycleStage
+} from '../utils/ventureLifecycle'
 
 const PHASES = ['problem', 'plan', 'build', 'mvp', 'validation', 'demo']
 
@@ -46,7 +52,7 @@ export default function ProjectProof() {
       loadProof()
     } else {
       setLoading(false)
-      setError('Project id is missing.')
+      setError('Venture id is missing.')
     }
 
     return () => {
@@ -63,6 +69,8 @@ export default function ProjectProof() {
     })
     return map
   }, [proof?.checkpoints])
+  const lifecycleStage = normalizeLifecycleStage(proof?.lifecycleStage || proof?.currentLifecycleStage)
+  const lifecycleProgress = proof?.lifecycleProgress ?? getLifecycleProgress(lifecycleStage)
 
   const handleCopyLink = async () => {
     try {
@@ -77,7 +85,7 @@ export default function ProjectProof() {
   if (loading) {
     return (
       <Card className="max-w-4xl mx-auto" hover={false}>
-        <p className="text-text-secondary">Loading project proof...</p>
+        <p className="text-text-secondary">Loading venture proof...</p>
       </Card>
     )
   }
@@ -94,18 +102,32 @@ export default function ProjectProof() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <Card hover={false} className="border-success/30 bg-success/10">
-        <p className="text-sm font-medium text-success mb-2">🎉 Sprint Completed</p>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">{proof?.title || 'Project Proof of Work'}</h1>
-        <p className="text-text-secondary">{proof?.description || 'No project description provided.'}</p>
+        <p className="text-sm font-medium text-success mb-2">
+          Venture Stage: {proof?.lifecycleLabel || getLifecycleLabel(lifecycleStage)}
+        </p>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">{proof?.title || 'Venture Proof of Work'}</h1>
+        <p className="text-text-secondary">{proof?.description || 'No venture description provided.'}</p>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-xs text-text-secondary mb-2">
+            <span>{lifecycleProgress}% lifecycle readiness</span>
+            <span>Next: {getNextLifecycleLabel(lifecycleStage)}</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-bg-secondary">
+            <div
+              className="h-2 rounded-full bg-success transition-all"
+              style={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+            />
+          </div>
+        </div>
 
         <div className="mt-4 flex flex-wrap gap-3">
-          <Button onClick={handleCopyLink}>Copy Project Link</Button>
+          <Button onClick={handleCopyLink}>Copy Venture Link</Button>
           {copied ? <span className="text-sm text-success">Link copied.</span> : null}
         </div>
       </Card>
 
       <Card hover={false}>
-        <h2 className="text-xl font-semibold text-text-primary mb-3">Team Members</h2>
+        <h2 className="text-xl font-semibold text-text-primary mb-3">Team Contributors</h2>
         {Array.isArray(proof?.teamMembers) && proof.teamMembers.length > 0 ? (
           <ul className="grid gap-2 sm:grid-cols-2">
             {proof.teamMembers.map((member, index) => (
@@ -115,12 +137,15 @@ export default function ProjectProof() {
             ))}
           </ul>
         ) : (
-          <p className="text-text-secondary">No team members listed.</p>
+          <p className="text-text-secondary">No team contributors listed.</p>
         )}
       </Card>
 
       <Card hover={false}>
-        <h2 className="text-xl font-semibold text-text-primary mb-3">Phase Timeline</h2>
+        <h2 className="text-xl font-semibold text-text-primary mb-3">Execution Checkpoints</h2>
+        <p className="text-sm text-text-secondary mb-4">
+          Checkpoints are proof artifacts only. Venture progression is controlled by lifecycle stage.
+        </p>
         <div className="space-y-3">
           {PHASES.map((phase) => {
             const checkpoint = checkpointsByPhase.get(phase)
@@ -152,9 +177,9 @@ export default function ProjectProof() {
       <Card hover={false}>
         <h2 className="text-xl font-semibold text-text-primary mb-3">What's Next?</h2>
         <ul className="space-y-2 text-text-secondary">
-          <li>- Add this project to your portfolio</li>
-          <li>- Improve your MVP</li>
-          <li>- Apply to incubators</li>
+          <li>- Continue the next venture milestone</li>
+          <li>- Improve validation evidence and execution readiness</li>
+          <li>- Prepare incubation materials when the venture is ready</li>
         </ul>
       </Card>
     </div>

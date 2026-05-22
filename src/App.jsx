@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import CreateProject from './pages/CreateProject'
+import VentureDiscovery from './pages/VentureDiscovery'
 import ProjectDetail from './pages/ProjectDetail'
 import ProjectProof from './pages/ProjectProof'
 import GiveFeedback from './pages/GiveFeedback'
@@ -66,6 +67,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><Layout><Login /></Layout></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Layout><Register /></Layout></PublicRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+      <Route path="/discover" element={<ProtectedRoute><Layout><VentureDiscovery /></Layout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
       <Route path="/project/:id/proof" element={<Layout><ProjectProof /></Layout>} />
       <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />

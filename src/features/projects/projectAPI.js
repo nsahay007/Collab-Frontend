@@ -5,6 +5,7 @@ export const fetchProjects = (filters = {}) => {
   const params = new URLSearchParams()
   if (filters.college) params.append('college', filters.college)
   if (filters.category) params.append('category', filters.category)
+  if (filters.lifecycleStage) params.append('lifecycleStage', filters.lifecycleStage)
   if (filters.status) params.append('status', filters.status)
   if (filters.skills && filters.skills !== 'all') {
     params.append('skills', filters.skills)

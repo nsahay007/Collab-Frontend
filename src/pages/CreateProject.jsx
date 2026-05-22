@@ -85,7 +85,7 @@ export default function CreateProject() {
     'JavaScript', 'Python', 'React', 'Node.js', 'MongoDB', 'Express',
     'HTML', 'CSS', 'TypeScript', 'Vue.js', 'Angular', 'Docker',
     'Git', 'AWS', 'Figma', 'Adobe Creative Suite', 'Marketing',
-    'Business Development', 'Project Management', 'Data Analysis'
+    'Business Development', 'Venture Management', 'Data Analysis'
   ]
 
   const normalizeLabel = (value) => {
@@ -136,7 +136,7 @@ export default function CreateProject() {
         setRoleOptions(mergeOptions(commonRoles, roles))
         setSkillOptions(mergeOptions(commonSkills, skills))
       } catch (err) {
-        console.error('Failed to fetch project options:', err)
+        console.error('Failed to fetch venture options:', err)
         if (isMounted) {
           setRoleOptions(mergeOptions(commonRoles, []))
           setSkillOptions(mergeOptions(commonSkills, []))
@@ -343,12 +343,12 @@ export default function CreateProject() {
       const response = await createProject(cleanedData)
       const projectId = response?.data?.project?._id || response?.data?._id || response?.project?._id
       if (!projectId) {
-        throw new Error('Invalid project response')
+        throw new Error('Invalid venture response')
       }
       navigate(`/project/${projectId}`)
     } catch (err) {
       console.error('Submit error:', err)
-      setError(err.response?.data?.message || 'Failed to create project')
+      setError(err.response?.data?.message || 'Failed to create venture')
     } finally {
       setLoading(false)
     }
@@ -364,14 +364,14 @@ export default function CreateProject() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">
-                  Project Title *
+                  Venture Title *
                 </label>
                 <Input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  placeholder="Enter project title"
+                  placeholder="Enter venture title"
                   required
                 />
               </div>
@@ -384,7 +384,7 @@ export default function CreateProject() {
                   name="shortPitch"
                   value={formData.shortPitch}
                   onChange={handleChange}
-                  placeholder="Brief description of your project"
+                  placeholder="Brief description of your venture"
                   maxLength={200}
                   rows={3}
                   className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
@@ -454,7 +454,7 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-text-primary mb-4">Step 2: Category-Specific Details</h2>
             <p className="text-text-secondary mb-4">
               {formData.category === 'Tech & Product' && 'Describe the problem, target users, features, and tech stack.'}
-              {formData.category === 'Business & Startup' && 'Describe the market gap, target audience, business model, and revenue idea.'}
+              {formData.category === 'Business & Startup' && 'Describe the market gap, target audience, business model, and revenue strategy.'}
               {formData.category === 'Design & Creative' && 'Describe the design goal, tools, and deliverables.'}
               {formData.category === 'Marketing & Content' && 'Describe the platform, niche, and content strategy.'}
               {formData.category === 'Services & Operations' && 'Describe the service type, target clients, pricing, and execution plan.'}
@@ -564,7 +564,7 @@ export default function CreateProject() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2">
-                    Revenue Idea
+                    Revenue Strategy
                   </label>
                   <textarea
                     name="businessStartup.revenueIdea"
@@ -704,7 +704,7 @@ export default function CreateProject() {
                     name="servicesOperations.pricing"
                     value={formData.servicesOperations.pricing}
                     onChange={handleNestedChange}
-                    placeholder="Example: Subscription, Per project, Commission"
+                    placeholder="Example: Subscription, Per venture, Commission"
                   />
                 </div>
 
@@ -872,13 +872,13 @@ export default function CreateProject() {
             
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                What will you complete in 14 days?
+                What is the next execution milestone?
               </label>
               <textarea
                 name="executionPlan"
                 value={formData.executionPlan}
                 onChange={handleChange}
-                placeholder="Describe your 14-day execution plan..."
+                placeholder="Describe the next milestone, validation work, and expected outcome..."
                 rows={6}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                 required
@@ -894,7 +894,7 @@ export default function CreateProject() {
             
             <div className="bg-bg-secondary p-6 rounded-xl space-y-4">
               <div>
-                <h3 className="font-semibold text-text-primary mb-2">Project Summary</h3>
+                <h3 className="font-semibold text-text-primary mb-2">Venture Summary</h3>
                 <div className="space-y-2 text-sm">
                   <p><strong>Title:</strong> {formData.title}</p>
                   <p><strong>Category:</strong> {formData.category}</p>
@@ -931,7 +931,7 @@ export default function CreateProject() {
                   disabled={loading}
                   className="w-full sm:w-auto"
                 >
-                  {loading ? 'Publishing...' : 'Publish Project'}
+                  {loading ? 'Publishing...' : 'Publish Venture'}
                 </Button>
               </div>
             </div>
@@ -948,7 +948,7 @@ export default function CreateProject() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <Card className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <h1 className="text-2xl font-bold text-text-primary">Create Project</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Create Venture</h1>
             <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5].map(step => (
                 <div

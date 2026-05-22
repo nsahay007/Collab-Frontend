@@ -1,4 +1,4 @@
-# Collab Community Guidelines
+# Collab Ecosystem Guidelines
 
 **Effective Date:** April 1, 2026
 
@@ -7,7 +7,7 @@ Collab is a professional space for collaboration. These guidelines protect creat
 ## 1. Respect & Professionalism
 Treat others respectfully. Harassment or abuse is not allowed.
 
-## 2. No Idea Theft
+## 2. No Venture Concept Theft
 Plagiarism, misrepresentation, or copying without permission will result in suspension or removal.
 
 ## 3. Honest Collaboration

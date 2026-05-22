@@ -18,8 +18,8 @@ export default function Leaderboard() {
       const response = await getLeaderboard(college)
       setLeaders(response?.users || [])
     } catch (err) {
-      console.error('Failed to load leaderboard:', err)
-      setError('Unable to load leaderboard.')
+      console.error('Failed to load execution rank:', err)
+      setError('Unable to load execution rank.')
     } finally {
       setLoading(false)
     }
@@ -47,8 +47,8 @@ export default function Leaderboard() {
     <div className="space-y-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">Leaderboard</h1>
-          <p className="text-text-secondary">Top builders, collaborators, and validators on Collab.</p>
+          <h1 className="text-3xl font-bold text-text-primary">Execution Rank</h1>
+          <p className="text-text-secondary">Credibility from building, collaborating, and validating real ventures.</p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           <select
@@ -69,7 +69,7 @@ export default function Leaderboard() {
       </div>
 
       {loading ? (
-        <Card className="text-center">Loading leaderboard...</Card>
+        <Card className="text-center">Loading execution rank...</Card>
       ) : error ? (
         <Card className="text-center text-error">{error}</Card>
       ) : leaders.length === 0 ? (
@@ -81,17 +81,13 @@ export default function Leaderboard() {
               <Card key={leader._id || index}>
                 <div className="flex items-center justify-between text-xs text-text-muted">
                   <span>#{index + 1}</span>
-                  <span className="font-semibold text-primary">{leader.points ?? 0} pts</span>
+                  <span className="font-semibold text-primary">{leader.points ?? 0} signal</span>
                 </div>
                 <div className="mt-2">
                   <div className="font-medium text-text-primary">{leader.name || 'User'}</div>
                   <div className="text-xs text-text-muted">{leader.college?.name || '—'}</div>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(leader.badges || []).length > 0 ? leader.badges.map((badge) => (
-                    <Badge key={badge} variant="default">{badge}</Badge>
-                  )) : <span className="text-xs text-text-muted">No badges</span>}
-                </div>
+                <div className="mt-3 text-xs text-text-muted">Execution credibility signal</div>
               </Card>
             ))}
           </div>
@@ -101,8 +97,8 @@ export default function Leaderboard() {
               <div className="col-span-1">#</div>
               <div className="col-span-4">User</div>
               <div className="col-span-3">College</div>
-              <div className="col-span-2">Points</div>
-              <div className="col-span-2">Badges</div>
+              <div className="col-span-2">Signal</div>
+              <div className="col-span-2">Credibility</div>
             </div>
             {leaders.map((leader, index) => (
               <div key={leader._id || index} className="grid grid-cols-12 gap-3 px-6 py-4 border-b border-border last:border-b-0">
@@ -113,9 +109,7 @@ export default function Leaderboard() {
                 <div className="col-span-3 text-text-secondary">{leader.college?.name || '—'}</div>
                 <div className="col-span-2 font-semibold text-primary">{leader.points ?? 0}</div>
                 <div className="col-span-2 flex flex-wrap gap-2">
-                  {(leader.badges || []).length > 0 ? leader.badges.map((badge) => (
-                    <Badge key={badge} variant="default">{badge}</Badge>
-                  )) : <span className="text-xs text-text-muted">—</span>}
+                  <Badge variant="default">Execution</Badge>
                 </div>
               </div>
             ))}

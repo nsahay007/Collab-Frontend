@@ -53,7 +53,7 @@ export default function Register() {
     'JavaScript', 'Python', 'React', 'Node.js', 'MongoDB', 'Express',
     'HTML', 'CSS', 'TypeScript', 'Vue.js', 'Angular', 'Docker',
     'Git', 'AWS', 'Figma', 'Adobe Creative Suite', 'Marketing',
-    'Business Development', 'Project Management', 'Data Analysis'
+    'Business Development', 'Venture Management', 'Data Analysis'
   ]
 
   const toTitleCase = (value) => {
@@ -180,7 +180,7 @@ export default function Register() {
       <Card className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-text-primary mb-2">Create Account</h1>
-          <p className="text-text-secondary">Join Collab and build startups with your college network</p>
+          <p className="text-text-secondary">Join Collab and build startups with your college collaborators</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

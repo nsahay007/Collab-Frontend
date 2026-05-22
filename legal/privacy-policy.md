@@ -6,21 +6,21 @@ This Privacy Policy explains how Collab collects, uses, and protects your inform
 
 ## 1. Information We Collect
 - **Account data:** name, email, college, course, year, skills
-- **Profile data:** optional details you choose to provide
-- **Project data:** ideas, descriptions, files, progress updates
+- **Execution Profile data:** optional details you choose to provide
+- **Venture data:** venture concepts, descriptions, files, progress updates
 - **Usage data:** activity timestamps, feature usage, analytics
 
 ## 2. How We Use Information
 We use your data to:
 - provide and improve the platform
 - enable team collaboration
-- show project progress and validations
+- show venture progress and validations
 - maintain security and prevent abuse
 
 ## 3. Visibility & Privacy Controls
 - Contact details are hidden by default.
-- They are visible only to team leads during join requests and to team members after joining.
-- Project visibility is controlled by you (college-only or public where available).
+- They are visible only to team leads during join requests and to team contributors after joining.
+- Venture visibility is controlled by you (college-only or public where available).
 
 ## 4. Data Sharing
 We do not sell your personal data. We only share data:

@@ -11,14 +11,14 @@ You must be at least 13 years old to use Collab. By using the platform, you repr
 You agree to provide accurate information during registration and keep your account details up to date. You are responsible for maintaining the confidentiality of your login credentials.
 
 ## 3. User Content & Ownership
-You retain full ownership of all ideas, projects, files, and content you submit to Collab ("User Content").
+You retain full ownership of all venture concepts, ventures, files, and content you submit to Collab ("User Content").
 
 By uploading or sharing User Content, you grant Collab a limited, non-exclusive, worldwide, royalty-free license to host, display, and distribute your content **solely** to provide the platform’s collaboration features.
 
-Collab **does not** claim ownership of your ideas or project content.
+Collab **does not** claim ownership of your venture concepts or venture content.
 
 ## 4. Collaboration & Privacy Controls
-You control project visibility (college-only, private, or public) where applicable. Access to contact details is limited based on role and permissions within the team.
+You control venture visibility (college-only, private, or public) where applicable. Access to contact details is limited based on role and permissions within the team.
 
 ## 5. Acceptable Use
 You agree not to:
@@ -36,7 +36,7 @@ If you believe your IP has been infringed, contact us at **helpdesk@collab.qzz.i
 We may suspend or terminate accounts that violate these Terms, or if required by law.
 
 ## 8. Disclaimers
-Collab is provided “as is.” We do not guarantee project success, funding, or outcomes.
+Collab is provided “as is.” We do not guarantee venture success, funding, or outcomes.
 
 ## 9. Limitation of Liability
 To the maximum extent permitted by law, Collab is not liable for indirect, incidental, or consequential damages arising from platform use.

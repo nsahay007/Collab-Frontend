@@ -15,16 +15,16 @@ const docs = [
   {
     slug: 'ip-ownership-policy',
     title: 'IP & Ownership Policy',
-    description: 'You keep full ownership of your ideas and work.'
+    description: 'You keep full ownership of your venture concepts and work.'
   },
   {
     slug: 'security-policy',
     title: 'Security Policy',
-    description: 'How Collab secures accounts and project data.'
+    description: 'How Collab secures accounts and venture data.'
   },
   {
-    slug: 'community-guidelines',
-    title: 'Community Guidelines',
+    slug: 'ecosystem-guidelines',
+    title: 'Ecosystem Guidelines',
     description: 'Professional standards for collaboration.'
   },
   {
@@ -40,7 +40,7 @@ export default function Legal() {
       <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">Legal & Policies</h1>
         <p className="text-text-secondary max-w-2xl">
-          Transparent rules and protections to keep projects safe and ownership clear.
+          Transparent rules and protections to keep ventures safe and ownership clear.
         </p>
       </div>
 

@@ -14,7 +14,8 @@ const DOCS = {
   'privacy-policy': { title: 'Privacy Policy', body: privacy },
   'ip-ownership-policy': { title: 'IP & Ownership Policy', body: ipPolicy },
   'security-policy': { title: 'Security Policy', body: security },
-  'community-guidelines': { title: 'Community Guidelines', body: guidelines },
+  'ecosystem-guidelines': { title: 'Ecosystem Guidelines', body: guidelines },
+  'community-guidelines': { title: 'Ecosystem Guidelines', body: guidelines },
   'dispute-resolution': { title: 'Dispute Resolution', body: dispute }
 }
 

@@ -4,7 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import ThemeSwitch from '../components/common/ThemeSwitch'
-import { getUserProjects, getProfile, updateProfile, getRank } from '../features/user/userAPI'
+import { getUserProjects, getProfile, updateProfile, getExecutionProfile } from '../features/user/userAPI'
 import { deleteProject as deleteVenture } from '../features/projects/projectAPI'
 import { setupAdminTwoFactor, confirmAdminTwoFactor, disableAdminTwoFactor } from '../features/auth/authAPI'
 import {
@@ -12,37 +12,29 @@ import {
   markNotificationRead,
   markAllNotificationsRead
 } from '../features/notifications/notificationAPI'
-
-const statusLabel = (status) => {
-  if (!status) return 'Planning'
-  return status
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-}
-
-const statusVariant = (status) => {
-  if (status === 'completed' || status === 'validated') return 'success'
-  if (status === 'building' || status === 'planning') return 'primary'
-  if (status === 'validation_failed') return 'warning'
-  if (status === 'archived') return 'default'
-  return 'default'
-}
+import {
+  getLifecycleLabel,
+  getLifecycleVariant,
+  normalizeLifecycleStage
+} from '../utils/ventureLifecycle'
 
 function ProjectCard({
   id,
   title,
   description,
-  status,
+  lifecycleStage,
   roles,
   canDelete = false,
   deleting = false,
   onDelete
 }) {
+  const stage = normalizeLifecycleStage(lifecycleStage)
+
   return (
     <Card>
       <div className="flex items-start justify-between mb-3">
         <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
-        <Badge variant={statusVariant(status)}>{statusLabel(status)}</Badge>
+        <Badge variant={getLifecycleVariant(stage)}>{getLifecycleLabel(stage)}</Badge>
       </div>
       <p className="text-text-secondary text-sm mb-4">{description}</p>
       <div className="flex flex-wrap gap-2">
@@ -73,6 +65,15 @@ function ProjectCard({
   )
 }
 
+function ExecutionMetric({ label, value }) {
+  return (
+    <div className="rounded-xl border border-border bg-bg-secondary/50 px-4 py-3 text-center">
+      <div className="text-2xl font-bold text-primary mb-1">{value}</div>
+      <div className="text-xs uppercase tracking-wide text-text-muted">{label}</div>
+    </div>
+  )
+}
+
 export default function Profile() {
   const navigate = useNavigate()
   const currentYear = new Date().getFullYear()
@@ -94,7 +95,7 @@ export default function Profile() {
   const [projectsError, setProjectsError] = useState('')
   const [projectActionError, setProjectActionError] = useState('')
   const [deletingProjectId, setDeletingProjectId] = useState('')
-  const [rankInfo, setRankInfo] = useState({ rank: null, collegeRank: null })
+  const [executionProfile, setExecutionProfile] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [notificationsError, setNotificationsError] = useState('')
@@ -157,19 +158,9 @@ export default function Profile() {
   }, [])
 
   useEffect(() => {
-    const loadRank = async () => {
-      try {
-        const data = await getRank()
-        setRankInfo({
-          rank: data?.rank || null,
-          collegeRank: data?.collegeRank || null
-        })
-      } catch (err) {
-        console.error('Failed to load rank:', err)
-      }
-    }
-
-    loadRank()
+    getExecutionProfile()
+      .then((data) => setExecutionProfile(data))
+      .catch((err) => console.error('Failed to load execution reputation:', err))
   }, [])
 
   useEffect(() => {
@@ -344,9 +335,16 @@ export default function Profile() {
     return null
   }
 
-  const activeCount = projects.filter((project) => ['planning', 'building', 'validation_failed'].includes(project.status)).length
-  const validationCount = projects.filter((project) => project.status === 'validation').length
+  const activeCount = projects.filter((project) => {
+    const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
+    return !['archived', 'incubation_ready'].includes(stage)
+  }).length
+  const validationCount = projects.filter((project) => {
+    const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
+    return stage === 'validation' || project.validation?.validationStatus === 'in_review'
+  }).length
   const currentUserId = user?.id || user?._id || ''
+  const reputation = executionProfile?.reputation || {}
 
   const handleDeleteVenture = async (project) => {
     const projectId = project?._id || project?.id
@@ -442,35 +440,55 @@ export default function Profile() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-primary mb-2">{user.points ?? 0}</div>
-          <div className="text-text-secondary">Total Points</div>
-        </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-primary mb-2">
-            {rankInfo.rank ? `#${rankInfo.rank}` : '—'}
+      <Card className="space-y-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-text-primary">Execution Reputation</h2>
+            <p className="text-sm text-text-secondary mt-1">
+              Credibility from shipped milestones, contribution consistency, blocker resolution, and venture progression.
+            </p>
           </div>
-          <div className="text-text-secondary">Leaderboard Rank</div>
-        </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-primary mb-2">
-            {rankInfo.collegeRank ? `#${rankInfo.collegeRank}` : '—'}
+          <Badge variant="accent">{reputation.executionCredibility ?? 0}% credibility</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <ExecutionMetric label="Ventures Contributed" value={reputation.venturesContributedTo ?? projects.length} />
+          <ExecutionMetric label="Milestones Completed" value={reputation.milestonesCompleted ?? 0} />
+          <ExecutionMetric label="Blockers Resolved" value={reputation.blockerResolutions ?? 0} />
+          <ExecutionMetric label="Consistency" value={`${reputation.contributionConsistency ?? 0}%`} />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ExecutionMetric label="Execution Reliability" value={`${reputation.executionReliability ?? 0}%`} />
+          <ExecutionMetric label="Collaboration Quality" value={`${reputation.collaborationQuality ?? 0}%`} />
+          <ExecutionMetric label="Progression Impact" value={`${reputation.ventureProgressionImpact ?? 0}%`} />
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-text-primary mb-2">Execution Strengths</h3>
+          <div className="flex flex-wrap gap-2">
+            {(reputation.strengths || []).length > 0 ? reputation.strengths.map((strength) => (
+              <Badge key={strength} variant="success">{strength}</Badge>
+            )) : (
+              <span className="text-sm text-text-secondary">Start shipping milestones to build visible strengths.</span>
+            )}
           </div>
-          <div className="text-text-secondary">College Rank</div>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       <Card>
-        <h2 className="text-xl font-semibold text-text-primary mb-3">Badges</h2>
-        {(user.badges || []).length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {user.badges.map((badge) => (
-              <Badge key={badge} variant="primary">{badge}</Badge>
+        <h2 className="text-xl font-semibold text-text-primary mb-3">Contribution Timeline</h2>
+        {executionProfile?.recentContributions?.length > 0 ? (
+          <div className="space-y-3">
+            {executionProfile.recentContributions.slice(0, 6).map((log) => (
+              <div key={log._id} className="rounded-xl border border-border bg-bg-secondary/40 px-4 py-3">
+                <p className="text-sm font-semibold text-text-primary">{log.action}</p>
+                {log.impact && <p className="text-sm text-text-secondary mt-1">{log.impact}</p>}
+                <p className="text-xs text-text-muted mt-2">
+                  {log.projectId?.title || 'Venture'} · {log.timestamp ? new Date(log.timestamp).toLocaleDateString() : ''}
+                </p>
+              </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-text-secondary">Earn badges by building, collaborating, and validating.</p>
+          <p className="text-sm text-text-secondary">Contribution history appears as you log execution updates and complete milestones.</p>
         )}
       </Card>
 
@@ -825,7 +843,7 @@ export default function Profile() {
                   id={projectId}
                   title={project.title}
                   description={project.shortPitch || project.description || ''}
-                  status={project.status || 'planning'}
+                  lifecycleStage={project.lifecycleStage || project.status || project.phase}
                   roles={project.rolesNeeded || []}
                   canDelete={canDelete}
                   deleting={deletingProjectId === projectId}
