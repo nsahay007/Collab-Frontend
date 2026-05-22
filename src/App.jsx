@@ -13,10 +13,7 @@ import Dashboard from './pages/Dashboard'
 import CreateProject from './pages/CreateProject'
 import VentureDiscovery from './pages/VentureDiscovery'
 import ProjectDetail from './pages/ProjectDetail'
-import ProjectProof from './pages/ProjectProof'
-import GiveFeedback from './pages/GiveFeedback'
 import Profile from './pages/Profile'
-import Leaderboard from './pages/Leaderboard'
 import AdminDashboard from './pages/AdminDashboard'
 import VerifyEmail from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
@@ -69,10 +66,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
       <Route path="/discover" element={<ProtectedRoute><Layout><VentureDiscovery /></Layout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
-      <Route path="/project/:id/proof" element={<Layout><ProjectProof /></Layout>} />
       <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
-      <Route path="/project/:id/validation/review" element={<ProtectedRoute><Layout><GiveFeedback /></Layout></ProtectedRoute>} />
-      <Route path="/leaderboard" element={<ProtectedRoute><Layout><Leaderboard /></Layout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
       <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />

@@ -8,14 +8,16 @@ import {
 export const MOMENTUM_LABELS = {
   strong_momentum: 'Strong Momentum',
   facing_blockers: 'Facing Blockers',
-  need_contributors: 'Need Contributors',
+  needs_team_decision: 'Needs Team Decision',
+  need_contributors: 'Needs Team Decision',
   pivoting: 'Pivoting',
-  preparing_launch: 'Preparing Launch'
+  preparing_launch: 'Preparing Incubation'
 }
 
 export const MOMENTUM_VARIANTS = {
   strong_momentum: 'success',
   facing_blockers: 'warning',
+  needs_team_decision: 'accent',
   need_contributors: 'accent',
   pivoting: 'warning',
   preparing_launch: 'primary'
@@ -28,13 +30,13 @@ export const formatDate = (value) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-export const formatMomentum = (value) => MOMENTUM_LABELS[value] || 'Need Contributors'
+export const formatMomentum = (value) => MOMENTUM_LABELS[value] || 'Needs Team Decision'
 
 export const getTeamMembers = (project) => {
   if (!project || !Array.isArray(project.teamMembers)) return []
   return project.teamMembers.map((member, index) => ({
     id: member?._id || member?.id || `member-${index}`,
-    name: member?.name || 'Team Contributor'
+    name: member?.name || 'Team Member'
   }))
 }
 
@@ -108,7 +110,7 @@ export const getPendingTasks = (project, milestones = []) => {
     .filter((task) => task.status !== 'completed')
     .map((task) => ({
       title: task.title,
-      source: 'Validation',
+      source: 'Self-validation',
       dueDate: task.dueDate
     }))
 

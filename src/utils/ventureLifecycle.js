@@ -1,10 +1,9 @@
 export const VENTURE_LIFECYCLE = [
   'idea',
-  'validation',
-  'team_formation',
-  'prototype',
+  'planning',
+  'building',
   'mvp',
-  'growth',
+  'validation',
   'incubation_ready',
   'pivoted',
   'archived'
@@ -12,55 +11,55 @@ export const VENTURE_LIFECYCLE = [
 
 export const LINEAR_LIFECYCLE = [
   'idea',
-  'validation',
-  'team_formation',
-  'prototype',
+  'planning',
+  'building',
   'mvp',
-  'growth',
+  'validation',
   'incubation_ready'
 ]
 
 export const LIFECYCLE_LABELS = {
   idea: 'Idea',
-  validation: 'Validation',
-  team_formation: 'Team Formation',
-  prototype: 'Prototype',
+  planning: 'Planning',
+  building: 'Building',
   mvp: 'MVP',
-  growth: 'Growth',
+  validation: 'Validation',
   incubation_ready: 'Incubation Ready',
   pivoted: 'Pivoted',
   archived: 'Archived'
 }
 
 export const LIFECYCLE_PROMPTS = {
-  idea: 'Clarify the problem, user, and execution thesis.',
-  validation: 'Test assumptions and collect evidence before scaling the team.',
-  team_formation: 'Fill the critical roles needed to execute.',
-  prototype: 'Build the first usable product path and resolve blockers.',
-  mvp: 'Package a usable MVP and prepare external validation.',
-  growth: 'Turn validated learning into traction and repeatable usage.',
-  incubation_ready: 'Prepare the venture story, evidence, and operating metrics.',
+  idea: 'Clarify the startup name, problem, users, and why this matters.',
+  planning: 'Turn the concept into milestones, feature scope, roles, goals, and a simple execution timeline.',
+  building: 'Build the prototype, upload progress, resolve blockers, and keep the team moving.',
+  mvp: 'Narrow the MVP scope, prepare testing, and organize demo-ready proof.',
+  validation: 'Run self-conducted surveys, interviews, testing, and feedback collection.',
+  incubation_ready: 'Organize the startup summary, validation report, team details, execution history, and pitch structure.',
   pivoted: 'Use feedback to choose a sharper direction.',
   archived: 'This venture is no longer active.'
 }
 
 const LEGACY_STATUS_MAP = {
-  planning: 'idea',
-  building: 'prototype',
+  planning: 'planning',
+  building: 'building',
   completed: 'mvp',
-  validation: 'mvp',
+  validation: 'validation',
   validated: 'incubation_ready',
   validation_failed: 'pivoted',
+  team_formation: 'planning',
+  prototype: 'building',
+  growth: 'incubation_ready',
   archived: 'archived'
 }
 
 const LEGACY_PHASE_MAP = {
   problem: 'idea',
-  plan: 'validation',
-  build: 'prototype',
+  plan: 'planning',
+  build: 'building',
   mvp: 'mvp',
-  validation: 'mvp',
-  demo: 'growth'
+  validation: 'validation',
+  demo: 'mvp'
 }
 
 export const normalizeLifecycleStage = (value, fallback = 'idea') => {
@@ -83,7 +82,7 @@ export const getLifecycleProgress = (stage) => {
 
 export const getNextLifecycleStage = (stage) => {
   const normalized = normalizeLifecycleStage(stage)
-  if (normalized === 'pivoted') return 'validation'
+  if (normalized === 'pivoted') return 'planning'
   if (normalized === 'archived' || normalized === 'incubation_ready') return null
   const index = LINEAR_LIFECYCLE.indexOf(normalized)
   if (index < 0 || index >= LINEAR_LIFECYCLE.length - 1) return null
@@ -99,7 +98,7 @@ export const getLifecyclePrompt = (stage) => LIFECYCLE_PROMPTS[normalizeLifecycl
 
 export const getLifecycleVariant = (stage) => {
   const normalized = normalizeLifecycleStage(stage)
-  if (normalized === 'incubation_ready' || normalized === 'growth') return 'success'
+  if (normalized === 'incubation_ready') return 'success'
   if (normalized === 'pivoted') return 'warning'
   if (normalized === 'archived') return 'default'
   return 'primary'

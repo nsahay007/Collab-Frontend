@@ -46,7 +46,7 @@ function ProjectCard({
       <div className="mt-5 flex flex-wrap gap-2">
         {id && (
           <Link to={`/project/${id}`}>
-            <Button size="sm" variant="secondary">Open Venture</Button>
+            <Button size="sm" variant="secondary">Open Workspace</Button>
           </Link>
         )}
 
@@ -57,7 +57,7 @@ function ProjectCard({
             onClick={onDelete}
             disabled={deleting}
           >
-            {deleting ? 'Deleting...' : 'Delete Venture'}
+            {deleting ? 'Deleting...' : 'Delete Workspace'}
           </Button>
         )}
       </div>
@@ -147,8 +147,8 @@ export default function Profile() {
         const list = response?.projects || []
         setProjects(list)
       } catch (err) {
-        console.error('Failed to load user ventures:', err)
-        setProjectsError('Unable to load your ventures right now.')
+        console.error('Failed to load startup workspaces:', err)
+        setProjectsError('Unable to load your startup workspaces right now.')
       } finally {
         setProjectsLoading(false)
       }
@@ -349,12 +349,12 @@ export default function Profile() {
   const handleDeleteVenture = async (project) => {
     const projectId = project?._id || project?.id
     if (!projectId) {
-      setProjectActionError('This venture is missing an id and cannot be deleted right now.')
+      setProjectActionError('This startup workspace is missing an id and cannot be deleted right now.')
       return
     }
 
     const confirmed = window.confirm(
-      `Delete "${project?.title || 'this venture'}"? This action cannot be undone.`
+      `Delete "${project?.title || 'this startup workspace'}"? This action cannot be undone.`
     )
     if (!confirmed) return
 
@@ -364,7 +364,7 @@ export default function Profile() {
       await deleteVenture(projectId)
       setProjects((prev) => prev.filter((item) => (item._id || item.id) !== projectId))
     } catch (err) {
-      setProjectActionError(err?.response?.data?.message || 'Unable to delete this venture right now.')
+      setProjectActionError(err?.response?.data?.message || 'Unable to delete this startup workspace right now.')
     } finally {
       setDeletingProjectId('')
     }
@@ -445,20 +445,20 @@ export default function Profile() {
           <div>
             <h2 className="text-xl font-semibold text-text-primary">Execution Reputation</h2>
             <p className="text-sm text-text-secondary mt-1">
-              Credibility from shipped milestones, contribution consistency, blocker resolution, and venture progression.
+              Credibility from shipped milestones, consistency, blocker resolution, and startup progression.
             </p>
           </div>
           <Badge variant="accent">{reputation.executionCredibility ?? 0}% credibility</Badge>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <ExecutionMetric label="Ventures Contributed" value={reputation.venturesContributedTo ?? projects.length} />
+          <ExecutionMetric label="Startup Workspaces" value={reputation.venturesContributedTo ?? projects.length} />
           <ExecutionMetric label="Milestones Completed" value={reputation.milestonesCompleted ?? 0} />
           <ExecutionMetric label="Blockers Resolved" value={reputation.blockerResolutions ?? 0} />
           <ExecutionMetric label="Consistency" value={`${reputation.contributionConsistency ?? 0}%`} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ExecutionMetric label="Execution Reliability" value={`${reputation.executionReliability ?? 0}%`} />
-          <ExecutionMetric label="Collaboration Quality" value={`${reputation.collaborationQuality ?? 0}%`} />
+          <ExecutionMetric label="Team Reliability" value={`${reputation.collaborationQuality ?? 0}%`} />
           <ExecutionMetric label="Progression Impact" value={`${reputation.ventureProgressionImpact ?? 0}%`} />
         </div>
         <div>
@@ -482,7 +482,7 @@ export default function Profile() {
                 <p className="text-sm font-semibold text-text-primary">{log.action}</p>
                 {log.impact && <p className="text-sm text-text-secondary mt-1">{log.impact}</p>}
                 <p className="text-xs text-text-muted mt-2">
-                  {log.projectId?.title || 'Venture'} · {log.timestamp ? new Date(log.timestamp).toLocaleDateString() : ''}
+                  {log.projectId?.title || 'Startup'} · {log.timestamp ? new Date(log.timestamp).toLocaleDateString() : ''}
                 </p>
               </div>
             ))}
@@ -792,11 +792,11 @@ export default function Profile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">{projects.length}</div>
-          <div className="text-text-secondary">Total Ventures</div>
+          <div className="text-text-secondary">Startup Workspaces</div>
         </Card>
         <Card className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">{activeCount}</div>
-          <div className="text-text-secondary">Active Collaborations</div>
+          <div className="text-text-secondary">Active Pipelines</div>
         </Card>
         <Card className="text-center">
           <div className="text-3xl font-bold text-primary mb-2">{validationCount}</div>
@@ -806,14 +806,14 @@ export default function Profile() {
 
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-text-primary">My Ventures</h2>
+          <h2 className="text-2xl font-bold text-text-primary">My Startup Workspaces</h2>
           <Link to="/create">
-            <Button variant="primary">New Venture</Button>
+            <Button variant="primary">New Workspace</Button>
           </Link>
         </div>
         {projectsLoading ? (
           <div className="rounded-xl border border-dashed border-border bg-bg-secondary p-8 text-center">
-            <h3 className="text-base font-semibold text-text-primary">Loading ventures...</h3>
+            <h3 className="text-base font-semibold text-text-primary">Loading startup workspaces...</h3>
           </div>
         ) : projectsError ? (
           <div className="rounded-xl border border-error/40 bg-error/10 p-6 text-center text-error">
@@ -821,8 +821,8 @@ export default function Profile() {
           </div>
         ) : projects.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-bg-secondary p-8 text-center">
-            <h3 className="text-base font-semibold text-text-primary">No ventures yet</h3>
-            <p className="text-text-secondary mt-2">Build your first venture to start collaborating.</p>
+            <h3 className="text-base font-semibold text-text-primary">No startup workspaces yet</h3>
+            <p className="text-text-secondary mt-2">Create your first workspace to start the guided pipeline.</p>
           </div>
         ) : (
           <div className="space-y-4">

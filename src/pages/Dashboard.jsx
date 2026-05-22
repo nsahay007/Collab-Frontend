@@ -49,7 +49,7 @@ const STAGGER_ITEM = {
 function LoadingState() {
   return (
     <Card className="max-w-3xl mx-auto" hover={false}>
-      <p className="text-text-secondary">Loading your startup operating system...</p>
+      <p className="text-text-secondary">Loading your startup pipeline...</p>
     </Card>
   )
 }
@@ -67,17 +67,14 @@ function ErrorState({ message, onRetry }) {
 function EmptyVentureState() {
   return (
     <Card className="max-w-3xl mx-auto" hover={false}>
-      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup Operating System</p>
-      <h1 className="text-3xl font-bold text-text-primary mb-3">Start with a venture workspace</h1>
+      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup Pipeline Control Center</p>
+      <h1 className="text-3xl font-bold text-text-primary mb-3">Create your startup workspace</h1>
       <p className="text-text-secondary mb-6">
-        Create or join a venture to validate assumptions, form a team, ship milestones, and move toward incubation readiness.
+        Collab is for existing student teams. Create a guided workspace to plan, build, validate, and prepare for incubation.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Link to="/create">
-          <Button className="w-full sm:w-auto">Create Venture</Button>
-        </Link>
-        <Link to="/discover">
-          <Button variant="secondary" className="w-full sm:w-auto">Discover Ventures</Button>
+          <Button className="w-full sm:w-auto">Create Startup Workspace</Button>
         </Link>
       </div>
     </Card>
@@ -150,18 +147,15 @@ export default function Dashboard() {
       <motion.div variants={STAGGER_ITEM}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup Operating System</p>
-            <h1 className="text-3xl font-bold text-text-primary">What should we build next?</h1>
+            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup Pipeline Control Center</p>
+            <h1 className="text-3xl font-bold text-text-primary">What should this team do next?</h1>
             <p className="text-text-secondary mt-2">
-              {profile?.name ? `${profile.name}, ` : ''}your dashboard is organized around venture momentum, not passive participation.
+              {profile?.name ? `${profile.name}, ` : ''}your dashboard keeps the startup focused on the next pipeline step.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Link to="/discover">
-              <Button variant="secondary" size="sm" className="w-full sm:w-auto">Find Contributors</Button>
-            </Link>
             <Link to="/create">
-              <Button size="sm" className="w-full sm:w-auto">New Venture</Button>
+              <Button size="sm" className="w-full sm:w-auto">New Startup Workspace</Button>
             </Link>
           </div>
         </div>

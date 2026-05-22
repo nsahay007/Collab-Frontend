@@ -1,22 +1,6 @@
 import axios from '../../services/axiosInstance'
 import { sanitizeOptionalText, sanitizeText, sanitizeList } from '../../utils/sanitize'
 
-export const fetchVentureDiscovery = async (filters = {}) => {
-  const params = new URLSearchParams()
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '' && value !== 'all') {
-      params.append(key, value)
-    }
-  })
-  const response = await axios.get(`/projects/discovery${params.toString() ? `?${params}` : ''}`)
-  return response.data
-}
-
-export const fetchValidationQueue = async () => {
-  const response = await axios.get('/projects/validation?limit=20&page=1')
-  return response.data
-}
-
 export const fetchVentureMilestones = async (projectId) => {
   const response = await axios.get(`/projects/${projectId}/milestones`)
   return response.data
@@ -82,6 +66,11 @@ export const updateTeamCheckIn = async (projectId, payload = {}) => {
 
 export const fetchContinuationPlan = async (projectId) => {
   const response = await axios.get(`/projects/${projectId}/continuation`)
+  return response.data
+}
+
+export const fetchIncubationPacket = async (projectId) => {
+  const response = await axios.get(`/projects/${projectId}/incubation-packet`)
   return response.data
 }
 

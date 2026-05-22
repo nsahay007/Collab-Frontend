@@ -26,8 +26,8 @@ import {
 } from '../ventureAPI'
 
 const MILESTONE_STATUSES = ['pending', 'in_progress', 'completed', 'blocked']
-const BLOCKER_TYPES = ['technical', 'design', 'validation', 'contributor']
-const CHECK_IN_STATUSES = ['strong_momentum', 'facing_blockers', 'need_contributors', 'pivoting', 'preparing_launch']
+const BLOCKER_TYPES = ['technical', 'design', 'validation', 'team']
+const CHECK_IN_STATUSES = ['strong_momentum', 'facing_blockers', 'needs_team_decision', 'pivoting', 'preparing_launch']
 
 const initialMilestoneForm = (project) => ({
   title: '',
@@ -51,7 +51,7 @@ export default function VentureExecutionPanel({ project, isContributor, onProjec
   const [milestoneForm, setMilestoneForm] = useState(initialMilestoneForm(project))
   const [milestoneSaving, setMilestoneSaving] = useState(false)
   const [checkInForm, setCheckInForm] = useState({
-    status: project?.momentumStatus || 'need_contributors',
+    status: project?.momentumStatus || 'needs_team_decision',
     note: project?.teamCheckIn?.note || ''
   })
   const [logForm, setLogForm] = useState({ action: '', impact: '', milestoneId: '' })
@@ -100,7 +100,7 @@ export default function VentureExecutionPanel({ project, isContributor, onProjec
   useEffect(() => {
     setMilestoneForm(initialMilestoneForm(project))
     setCheckInForm({
-      status: project?.momentumStatus || 'need_contributors',
+      status: project?.momentumStatus || 'needs_team_decision',
       note: project?.teamCheckIn?.note || ''
     })
   }, [projectId, project?.lifecycleStage, project?.momentumStatus, project?.teamCheckIn?.note])
@@ -209,9 +209,9 @@ export default function VentureExecutionPanel({ project, isContributor, onProjec
   if (!isContributor) {
     return (
       <Card hover={false}>
-        <h2 className="text-xl font-bold text-text-primary mb-2">Execution Systems</h2>
+        <h2 className="text-xl font-bold text-text-primary mb-2">Startup Execution</h2>
         <p className="text-sm text-text-secondary">
-          Join this venture to see milestones, blockers, team check-ins, contribution history, and continuation paths.
+          Startup execution tools are private to the team: milestones, blockers, check-ins, progress logs, and next steps.
         </p>
       </Card>
     )
@@ -222,13 +222,13 @@ export default function VentureExecutionPanel({ project, isContributor, onProjec
       <Card hover={false}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-text-primary">Execution Systems</h2>
+            <h2 className="text-xl font-bold text-text-primary">Startup Execution</h2>
             <p className="text-sm text-text-secondary mt-1">
-              Milestones, blockers, contribution history, team health, and continuation paths for this startup.
+              Simple guided tools for milestones, blockers, progress history, team health, and the next startup step.
             </p>
           </div>
           <Badge variant={MOMENTUM_VARIANTS[project?.momentumStatus] || 'default'}>
-            {MOMENTUM_LABELS[project?.momentumStatus] || 'Need Contributors'}
+            {MOMENTUM_LABELS[project?.momentumStatus] || 'Needs Team Decision'}
           </Badge>
         </div>
         {loading && <p className="mt-4 text-sm text-text-secondary">Loading execution systems...</p>}
@@ -291,7 +291,7 @@ function MilestoneSystem({ contributors, form, milestones, saving, onFormChange,
             <option value="">Unassigned owner</option>
             {contributors.map((contributor) => (
               <option key={contributor._id || contributor.id} value={contributor._id || contributor.id}>
-                {contributor.name || contributor.email || 'Contributor'}
+                {contributor.name || contributor.email || 'Team Member'}
               </option>
             ))}
           </select>
@@ -362,7 +362,7 @@ function BlockerSystem({ blockers, onResolve }) {
     <Card hover={false}>
       <h3 className="text-lg font-semibold text-text-primary mb-3">Blocker System</h3>
       <p className="text-sm text-text-secondary mb-4">
-        Track technical, design, validation, and contributor blockers so the venture stays alive and visible.
+        Track technical, design, validation, and team blockers so the startup stays clear and moving.
       </p>
       {blockers.length > 0 ? (
         <div className="space-y-3">
@@ -419,7 +419,7 @@ function ContributionLogSystem({ logs, milestones, form, onFormChange, onSubmit 
       <h3 className="text-lg font-semibold text-text-primary mb-3">Contribution Logs</h3>
       <div className="space-y-3">
         <select value={form.milestoneId} onChange={(event) => onFormChange((prev) => ({ ...prev, milestoneId: event.target.value }))} className="w-full rounded-xl border border-border bg-bg-card px-3 py-2 text-text-primary">
-          <option value="">General venture contribution</option>
+          <option value="">General startup progress</option>
           {milestones.map((milestone) => (
             <option key={milestone._id} value={milestone._id}>{milestone.title}</option>
           ))}
@@ -429,7 +429,7 @@ function ContributionLogSystem({ logs, milestones, form, onFormChange, onSubmit 
           rows={3}
           value={form.impact}
           onChange={(event) => onFormChange((prev) => ({ ...prev, impact: event.target.value }))}
-          placeholder="What changed for the venture?"
+          placeholder="What changed for the startup?"
           className="w-full resize-none px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary"
         />
         <Button size="sm" onClick={onSubmit} disabled={!form.action.trim()}>Add Execution Log</Button>
@@ -440,7 +440,7 @@ function ContributionLogSystem({ logs, milestones, form, onFormChange, onSubmit 
             <p className="text-sm font-semibold text-text-primary">{log.action}</p>
             {log.impact && <p className="text-sm text-text-secondary mt-1">{log.impact}</p>}
             <p className="text-xs text-text-muted mt-2">
-              {log.contributor?.name || 'Contributor'}
+              {log.contributor?.name || 'Team Member'}
               {log.milestoneId?.title ? ` · ${log.milestoneId.title}` : ''}
               {' · '}{formatDate(log.timestamp)}
             </p>
@@ -459,9 +459,9 @@ function ContinuationEngine({ continuation, note, onNoteChange, onContinue }) {
     <Card hover={false} className="border-primary/25">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-text-primary">Continuation Engine</h3>
+          <h3 className="text-lg font-semibold text-text-primary">Next Step Guide</h3>
           <p className="text-sm text-text-secondary mt-1">
-            The venture does not end after a checkpoint. Choose the next startup path.
+            Choose the next guided startup step. The workspace keeps moving until the team is incubation-ready.
           </p>
         </div>
         <Badge variant="accent">{continuation?.readinessScore || 0}% readiness</Badge>

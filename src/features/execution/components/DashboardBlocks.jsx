@@ -28,7 +28,7 @@ export function VentureOverviewCard({ project }) {
       <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Current Venture</p>
+          <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Current Startup</p>
           <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
           <p className="text-text-secondary mt-2 max-w-3xl">{project.shortPitch || project.description}</p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -36,11 +36,11 @@ export function VentureOverviewCard({ project }) {
             <Badge variant={MOMENTUM_VARIANTS[project.momentumStatus] || 'default'}>
               {formatMomentum(project.momentumStatus)}
             </Badge>
-            <Badge variant="default">{teamMembers.length}/{project.numberOfTeammates || 1} contributors</Badge>
+            <Badge variant="default">{teamMembers.length}/{project.numberOfTeammates || 1} team members</Badge>
           </div>
         </div>
         <Link to={`/project/${project._id || project.id}`}>
-          <Button className="w-full lg:w-auto">Open Venture Workspace</Button>
+          <Button className="w-full lg:w-auto">Open Startup Workspace</Button>
         </Link>
       </div>
     </Card>
@@ -55,7 +55,7 @@ export function ContinueBuildingPanel({ project, nextMilestone, pendingTasks = [
           <p className="text-xs uppercase tracking-wide text-primary mb-2">Continue Building</p>
           <h2 className="text-2xl font-semibold text-text-primary">{nextMilestone.title}</h2>
           <p className="text-sm text-text-secondary mt-2">
-            Next action from the venture operating system. Keep the team focused on the most important milestone.
+            Next action from the guided startup pipeline. Keep the team focused on the most important milestone.
           </p>
         </div>
         <Link to={`/project/${project._id || project.id}`}>
@@ -69,7 +69,7 @@ export function ContinueBuildingPanel({ project, nextMilestone, pendingTasks = [
             <p className="text-xs text-text-muted mt-1">{task.source} {task.dueDate ? `- due ${formatDate(task.dueDate)}` : ''}</p>
           </div>
         )) : (
-          <p className="text-sm text-text-secondary">No pending tasks yet. Create a milestone in the venture workspace.</p>
+        <p className="text-sm text-text-secondary">No pending tasks yet. Create a milestone in the startup workspace.</p>
         )}
       </div>
     </Card>
@@ -83,7 +83,7 @@ export function ReadinessProgress({ project }) {
 
   return (
     <Card hover={false}>
-      <h2 className="text-lg font-semibold text-text-primary mb-4">Venture Readiness</h2>
+      <h2 className="text-lg font-semibold text-text-primary mb-4">Incubation Readiness</h2>
       <div className="grid gap-4 sm:grid-cols-3">
         <Metric label="Current Stage" value={getLifecycleLabel(lifecycleStage)} />
         <Metric label="Next Stage" value={getNextLifecycleLabel(lifecycleStage) || 'Keep growing'} />
@@ -140,7 +140,7 @@ export function MomentumIndicator({ project }) {
       <h2 className="text-lg font-semibold text-text-primary mb-3">Team Momentum</h2>
       <Badge variant={MOMENTUM_VARIANTS[status] || 'default'}>{formatMomentum(status)}</Badge>
       <p className="text-sm text-text-secondary mt-4">
-        {project?.teamCheckIn?.note || 'No team check-in yet. Add one from the venture workspace to make momentum visible.'}
+        {project?.teamCheckIn?.note || 'No team check-in yet. Add one from the startup workspace to make momentum visible.'}
       </p>
       {project?.teamCheckIn?.updatedAt && (
         <p className="text-xs text-text-muted mt-3">Updated {formatDate(project.teamCheckIn.updatedAt)}</p>
@@ -175,7 +175,7 @@ export function BlockerPanel({ blockers = [] }) {
 export function ContributorActivityFeed({ logs = [] }) {
   return (
     <Card hover={false}>
-      <h2 className="text-lg font-semibold text-text-primary mb-3">Contributor Activity</h2>
+      <h2 className="text-lg font-semibold text-text-primary mb-3">Team Progress Log</h2>
       {logs.length > 0 ? (
         <div className="space-y-3">
           {logs.slice(0, 8).map((log) => (
@@ -183,13 +183,13 @@ export function ContributorActivityFeed({ logs = [] }) {
               <p className="text-sm font-semibold text-text-primary">{log.action}</p>
               {log.impact && <p className="text-sm text-text-secondary mt-1">{log.impact}</p>}
               <p className="text-xs text-text-muted mt-2">
-                {log.contributor?.name || 'Contributor'} · {formatDate(log.timestamp || log.createdAt)}
+                {log.contributor?.name || 'Team Member'} · {formatDate(log.timestamp || log.createdAt)}
               </p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-text-secondary">Execution logs will appear as contributors complete milestones, resolve blockers, and ship updates.</p>
+        <p className="text-sm text-text-secondary">Progress logs will appear as the team completes milestones, resolves blockers, and ships updates.</p>
       )}
     </Card>
   )
@@ -200,7 +200,7 @@ export function TeamCheckInPanel({ project }) {
     <Card hover={false}>
       <h2 className="text-lg font-semibold text-text-primary mb-3">Latest Team Check-In</h2>
       <p className="text-sm text-text-secondary">
-        {project?.teamCheckIn?.note || 'No check-in yet. Add one to clarify whether the venture is moving, blocked, recruiting, pivoting, or preparing launch.'}
+        {project?.teamCheckIn?.note || 'No check-in yet. Add one to clarify whether the startup is moving, blocked, pivoting, or preparing for incubation.'}
       </p>
       <div className="mt-4">
         <Link to={`/project/${project._id || project.id}`}>
@@ -217,7 +217,7 @@ export function VentureTimeline({ project }) {
 
   return (
     <Card hover={false}>
-      <h2 className="text-lg font-semibold text-text-primary mb-3">Venture Timeline</h2>
+      <h2 className="text-lg font-semibold text-text-primary mb-3">Startup Pipeline</h2>
       <div className="space-y-2">
         {LINEAR_LIFECYCLE.map((stage) => {
           const index = LINEAR_LIFECYCLE.indexOf(stage)

@@ -7,25 +7,21 @@ import Modal from '../components/common/Modal'
 import Input from '../components/common/Input'
 import {
   fetchProject,
-  expressInterest,
-  respondToJoinRequest,
-  addTeamMember,
   removeTeamMember,
   addProjectMessage,
   deleteProject,
   uploadProjectFile,
   sendProjectToValidation,
   extendValidationTimeline,
-  markReviewHelpful,
   updateProjectRequirements,
   updateProjectDetails,
   deleteProjectFile,
   updateValidationWorkspace
 } from '../features/projects/projectAPI'
 import useAuth from '../hooks/useAuth'
-import checkIcon from '../assets/icons/check.svg'
 import { uploadsBaseUrl } from '../config/api'
 import VentureExecutionPanel from '../features/ventures/components/VentureExecutionPanel'
+import IncubationReadinessPanel from '../features/ventures/components/IncubationReadinessPanel'
 import {
   LINEAR_LIFECYCLE,
   getLifecycleLabel,
@@ -38,14 +34,13 @@ import {
 
 const WORKSPACE_SECTIONS = [
   { id: 'overview', label: 'Overview' },
-  { id: 'validation', label: 'Validation' },
-  { id: 'team', label: 'Team' },
+  { id: 'roadmap', label: 'Roadmap' },
   { id: 'milestones', label: 'Milestones' },
   { id: 'build-progress', label: 'Build Progress' },
+  { id: 'validation', label: 'Validation' },
+  { id: 'readiness', label: 'Readiness' },
   { id: 'assets', label: 'Assets' },
-  { id: 'updates', label: 'Updates' },
-  { id: 'contributors', label: 'Contributors' },
-  { id: 'roadmap', label: 'Roadmap' },
+  { id: 'team', label: 'Team' },
   { id: 'settings', label: 'Settings' }
 ]
 
@@ -74,13 +69,9 @@ export default function ProjectDetail() {
   const [validationError, setValidationError] = useState('')
   const [extendingTimeline, setExtendingTimeline] = useState(false)
   const [extendTimelineError, setExtendTimelineError] = useState('')
-  const [helpfulError, setHelpfulError] = useState('')
-  const [helpfulLoading, setHelpfulLoading] = useState(null)
   const [validationLink, setValidationLink] = useState('')
   const [validationNotes, setValidationNotes] = useState('')
   const [sharedFileIds, setSharedFileIds] = useState([])
-  const [timeLeft, setTimeLeft] = useState('')
-  const [timeExpired, setTimeExpired] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
@@ -105,13 +96,18 @@ export default function ProjectDetail() {
     problemStatement: '',
     targetUsers: '',
     assumptionsText: '',
+    whoSpokenTo: '',
+    repeatedProblems: '',
+    surprisingInsights: '',
+    useOrPaySignal: '',
+    feedbackChanges: '',
     confidenceScore: 0,
     tasks: [],
     evidence: []
   })
   const [workspaceTaskInput, setWorkspaceTaskInput] = useState('')
   const [workspaceEvidenceInput, setWorkspaceEvidenceInput] = useState({
-    kind: 'feedback',
+    kind: 'screenshot',
     title: '',
     summary: '',
     link: ''
@@ -126,11 +122,11 @@ export default function ProjectDetail() {
       if (response?.data) {
         setProject(response.data)
       } else {
-        setError('Venture not found')
+        setError('Startup workspace not found')
       }
     } catch (err) {
-      console.error('Error loading venture', err)
-      setError('Failed to load venture')
+      console.error('Error loading startup workspace', err)
+      setError('Failed to load startup workspace')
     } finally {
       setLoading(false)
     }
@@ -153,6 +149,11 @@ export default function ProjectDetail() {
       problemStatement: workspace.problemStatement || '',
       targetUsers: workspace.targetUsers || '',
       assumptionsText: assumptions.join('\n'),
+      whoSpokenTo: workspace.whoSpokenTo || '',
+      repeatedProblems: workspace.repeatedProblems || '',
+      surprisingInsights: workspace.surprisingInsights || '',
+      useOrPaySignal: workspace.useOrPaySignal || '',
+      feedbackChanges: workspace.feedbackChanges || '',
       confidenceScore: Number.isFinite(Number(workspace.confidenceScore))
         ? Number(workspace.confidenceScore)
         : 0,
@@ -164,28 +165,18 @@ export default function ProjectDetail() {
   const userId = user?._id || user?.id
   const ownerId = project?.owner?._id || project?.owner?.id
   const isOwner = Boolean(userId && ownerId && userId === ownerId)
-  const hasInterest = project?.interestedUsers?.some((u) => (u._id === userId || u.id === userId))
   const isTeamMember = project?.teamMembers?.some((u) => (u._id === userId || u.id === userId))
   const canChat = Boolean(isTeamMember)
   const maxTeamMembers = project?.numberOfTeammates || 1
   const teamCount = project?.teamMembers?.length || 0
-  const teamFull = teamCount >= maxTeamMembers
   const validationData = project?.validation || {}
   const lifecycleStage = normalizeLifecycleStage(project?.lifecycleStage || project?.status || project?.phase)
   const lifecycleProgress = getLifecycleProgress(lifecycleStage)
   const lifecycleIndex = LINEAR_LIFECYCLE.indexOf(lifecycleStage)
   const canSubmitForValidation = isOwner
-    && ['prototype', 'mvp', 'growth'].includes(lifecycleStage)
+    && ['building', 'mvp'].includes(lifecycleStage)
     && !['in_review', 'passed'].includes(validationData.validationStatus)
-    && !timeExpired
-  const hasValidationFeedback = Boolean(
-    validationData.reviews?.length
-    || ['in_review', 'passed', 'failed'].includes(validationData.validationStatus)
-  )
   const needsValidationRework = validationData.validationStatus === 'failed' || lifecycleStage === 'pivoted'
-  const validationReviewCount = validationData.currentReviews || validationData.reviews?.length || 0
-  const validationRequired = validationData.reviewsRequired || 30
-  const criteriaAverages = validationData.criteriaAverages || {}
   const hasExtendedTimeline = Boolean(project?.buildPhase?.isExtendedTimeline)
   const extensionCount = project?.buildPhase?.extensionCount || 0
   const canSeeOnlineStatus = Boolean(isOwner || isTeamMember)
@@ -250,36 +241,6 @@ export default function ProjectDetail() {
     if (file.downloadUrl) return file.downloadUrl
     if (file.filename) return `${uploadsBaseUrl}/uploads/${file.filename}`
     return ''
-  }
-
-  const handleInterest = async () => {
-    if (!userId) return
-    try {
-      await expressInterest(id, userId)
-      await loadProject()
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const handleAddMember = async (memberId) => {
-    if (!userId) return
-    try {
-      await addTeamMember(id, userId, memberId)
-      await loadProject()
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const handleRejectMember = async (memberId) => {
-    if (!userId) return
-    try {
-      await respondToJoinRequest(id, memberId, 'reject')
-      await loadProject()
-    } catch (err) {
-      console.error(err)
-    }
   }
 
   const handleSendMessage = async () => {
@@ -350,7 +311,7 @@ export default function ProjectDetail() {
       setDetailsOpen(false)
     } catch (err) {
       console.error(err)
-      setDetailsError(err?.response?.data?.message || 'Unable to update venture details.')
+      setDetailsError(err?.response?.data?.message || 'Unable to update startup details.')
     } finally {
       setDetailsSaving(false)
     }
@@ -452,7 +413,7 @@ export default function ProjectDetail() {
     }
     setWorkspaceForm((prev) => ({ ...prev, evidence: [evidence, ...prev.evidence] }))
     setWorkspaceEvidenceInput({
-      kind: 'feedback',
+      kind: 'screenshot',
       title: '',
       summary: '',
       link: ''
@@ -481,6 +442,11 @@ export default function ProjectDetail() {
         problemStatement: workspaceForm.problemStatement,
         targetUsers: workspaceForm.targetUsers,
         coreAssumptions,
+        whoSpokenTo: workspaceForm.whoSpokenTo,
+        repeatedProblems: workspaceForm.repeatedProblems,
+        surprisingInsights: workspaceForm.surprisingInsights,
+        useOrPaySignal: workspaceForm.useOrPaySignal,
+        feedbackChanges: workspaceForm.feedbackChanges,
         validationTasks: workspaceForm.tasks,
         validationEvidence: workspaceForm.evidence,
         confidenceScore: workspaceForm.confidenceScore
@@ -507,7 +473,7 @@ export default function ProjectDetail() {
       closeRemoveModal()
     } catch (err) {
       console.error(err)
-      setRemoveError(err?.response?.data?.message || 'Unable to remove this contributor. Please try again.')
+      setRemoveError(err?.response?.data?.message || 'Unable to remove this team member. Please try again.')
     } finally {
       setRemoving(false)
     }
@@ -531,46 +497,11 @@ export default function ProjectDetail() {
       navigate('/dashboard')
     } catch (err) {
       console.error(err)
-      setDeleteError(err?.response?.data?.message || 'Unable to delete venture.')
+      setDeleteError(err?.response?.data?.message || 'Unable to delete startup workspace.')
     } finally {
       setDeleting(false)
     }
   }
-
-  const handleMarkHelpful = async (reviewId) => {
-    if (!reviewId) return
-    try {
-      setHelpfulError('')
-      setHelpfulLoading(reviewId)
-      await markReviewHelpful(id, reviewId)
-      await loadProject()
-    } catch (err) {
-      console.error(err)
-      setHelpfulError(err?.response?.data?.message || 'Unable to mark feedback helpful.')
-    } finally {
-      setHelpfulLoading(null)
-    }
-  }
-
-  const updateTimeLeft = useCallback(() => {
-    const endDate = project?.buildPhase?.endDate
-    if (!endDate) {
-      setTimeLeft('')
-      setTimeExpired(false)
-      return
-    }
-    const diff = new Date(endDate).getTime() - Date.now()
-    if (diff <= 0) {
-      setTimeExpired(true)
-      setTimeLeft('Time expired')
-      return
-    }
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24)
-    const minutes = Math.floor((diff / (1000 * 60)) % 60)
-    setTimeExpired(false)
-    setTimeLeft(`${days}d ${hours}h ${minutes}m`)
-  }, [project?.buildPhase?.endDate])
 
   const handleFileUpload = async () => {
     if (!selectedFile) return
@@ -616,10 +547,10 @@ export default function ProjectDetail() {
       })
       await loadProject()
       setActiveSection('validation')
-      setWorkspaceSuccess('Venture moved into validation inside this workspace.')
+      setWorkspaceSuccess('Self-conducted validation started inside this workspace.')
     } catch (err) {
       console.error(err)
-      setValidationError(err?.response?.data?.message || 'Unable to send venture to validation.')
+      setValidationError(err?.response?.data?.message || 'Unable to start validation.')
     } finally {
       setValidating(false)
     }
@@ -647,25 +578,19 @@ export default function ProjectDetail() {
     return () => clearInterval(interval)
   }, [canChat, loadProject])
 
-  useEffect(() => {
-    updateTimeLeft()
-    const interval = setInterval(updateTimeLeft, 60000)
-    return () => clearInterval(interval)
-  }, [updateTimeLeft])
-
   const sectionCardClass = (sectionId) => (
     activeSection === sectionId ? 'border-primary/35 ring-1 ring-primary/30' : ''
   )
 
   if (loading) {
-    return <div>Loading venture...</div>
+    return <div>Loading startup workspace...</div>
   }
 
   if (error || !project) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center space-y-4">
-        <h1 className="text-2xl font-bold text-text-primary">{error || 'Venture not found'}</h1>
-        <p className="text-text-secondary max-w-md">Please go back and select another venture.</p>
+        <h1 className="text-2xl font-bold text-text-primary">{error || 'Startup workspace not found'}</h1>
+        <p className="text-text-secondary max-w-md">Please go back and select another startup workspace.</p>
         <Link to="/dashboard">
           <Button variant="primary">Back to Dashboard</Button>
         </Link>
@@ -695,10 +620,10 @@ export default function ProjectDetail() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          {!isOwner && !isTeamMember && !hasInterest && (
-            <Button className="w-full sm:w-auto" onClick={handleInterest}>Show Interest</Button>
+          {!isOwner && !isTeamMember && (
+            <Badge variant="accent">Private team workspace</Badge>
           )}
-          {isTeamMember && <Badge variant="primary">Joined</Badge>}
+          {isTeamMember && <Badge variant="primary">Team Member</Badge>}
           {isOwner && <Badge variant="primary">Team Lead</Badge>}
           {isOwner && (
             <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={openEditDetails}>
@@ -707,7 +632,7 @@ export default function ProjectDetail() {
           )}
           {isOwner && (
             <Button variant="danger" size="sm" className="w-full sm:w-auto" onClick={openDeleteModal}>
-              Delete Venture
+              Delete Startup
             </Button>
           )}
         </div>
@@ -716,8 +641,8 @@ export default function ProjectDetail() {
       <Card className="p-4" hover={false}>
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
-            <h2 className="text-base font-semibold text-text-primary">Venture Workspace</h2>
-            <p className="text-xs text-text-muted">Your startup HQ: discovery, execution, and validation in one place.</p>
+            <h2 className="text-base font-semibold text-text-primary">Startup Workspace</h2>
+            <p className="text-xs text-text-muted">Your guided startup workspace: planning, building, validation, and incubation readiness in one place.</p>
           </div>
           <Badge variant="default">Current: {activeSection.replace(/-/g, ' ')}</Badge>
         </div>
@@ -742,29 +667,29 @@ export default function ProjectDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-6">
           <Card id="workspace-overview" className={sectionCardClass('overview')}>
-            <h2 className="text-xl font-bold text-text-primary mb-3">Venture Overview</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-3">Startup Overview</h2>
             <p className="text-text-secondary leading-relaxed">{project.description}</p>
           </Card>
 
           <Card className={sectionCardClass('overview')}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold text-text-primary">Requirements</h2>
+              <h2 className="text-xl font-bold text-text-primary">Team Setup</h2>
               {isOwner && (
                 <Button variant="secondary" size="sm" onClick={openEditRequirements}>
-                  Edit Requirements
+                  Edit Team Setup
                 </Button>
               )}
             </div>
             <div className="space-y-4">
               <div>
-                <div className="text-sm font-medium text-text-primary mb-2">Roles Needed</div>
+                <div className="text-sm font-medium text-text-primary mb-2">Current Responsibilities</div>
                 <div className="flex flex-wrap gap-2">
                   {(project.rolesNeeded || []).length ? (
                     project.rolesNeeded.map((role) => (
                       <Badge variant="default" key={role}>{role}</Badge>
                     ))
                   ) : (
-                    <span className="text-xs text-text-muted">No roles listed</span>
+                    <span className="text-xs text-text-muted">No roles listed yet</span>
                   )}
                 </div>
               </div>
@@ -780,8 +705,11 @@ export default function ProjectDetail() {
                   )}
                 </div>
               </div>
+              <div className="rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
+                Find Team Members is coming soon. For launch, Collab supports existing student teams and private workspace execution.
+              </div>
               <div className="text-xs text-text-muted">
-                Team size (including lead): {maxTeamMembers} · Visibility: {visibilityLabel(project.visibility || 'private')}
+                Team size (including lead): {maxTeamMembers} · Workspace visibility: {visibilityLabel(project.visibility || 'private')}
               </div>
             </div>
           </Card>
@@ -827,7 +755,7 @@ export default function ProjectDetail() {
           <Card id="workspace-roadmap" className={sectionCardClass('roadmap')}>
             <h2 className="text-xl font-bold text-text-primary mb-2">Roadmap</h2>
             <p className="text-sm text-text-secondary mb-4">
-              Idea to validation, team formation, prototype, MVP, growth, and incubation readiness.
+              Idea to planning, building, MVP, self-conducted validation, and incubation readiness.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {LINEAR_LIFECYCLE.map((stage, index) => (
@@ -855,7 +783,7 @@ export default function ProjectDetail() {
               <div>
                 <h2 className="text-xl font-bold text-text-primary">Validation</h2>
                 <p className="text-sm text-text-secondary">
-                  Discovery work inside the venture lifecycle. No separate validation workflow.
+                  Self-conducted validation for your team: surveys, interviews, testing, feedback, and evidence.
                 </p>
               </div>
               <Badge variant="default">{validationProgress}% confidence</Badge>
@@ -902,6 +830,44 @@ export default function ProjectDetail() {
                     placeholder={'Users struggle to find technical cofounders.\nStudents need structured startup collaboration.'}
                     className="mt-2 w-full resize-none px-4 py-3 rounded-xl border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
+                </div>
+
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <h3 className="text-sm font-semibold text-text-primary mb-3">Guided Validation Questions</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PromptTextarea
+                      label="Who did you speak to?"
+                      value={workspaceForm.whoSpokenTo}
+                      onChange={(value) => setWorkspaceForm((prev) => ({ ...prev, whoSpokenTo: value }))}
+                      placeholder="Example: 12 hostel students, 3 canteen operators, 2 faculty mentors"
+                    />
+                    <PromptTextarea
+                      label="What repeated problems appeared?"
+                      value={workspaceForm.repeatedProblems}
+                      onChange={(value) => setWorkspaceForm((prev) => ({ ...prev, repeatedProblems: value }))}
+                      placeholder="What pain came up again and again?"
+                    />
+                    <PromptTextarea
+                      label="What surprised you?"
+                      value={workspaceForm.surprisingInsights}
+                      onChange={(value) => setWorkspaceForm((prev) => ({ ...prev, surprisingInsights: value }))}
+                      placeholder="What did feedback reveal that your team did not expect?"
+                    />
+                    <PromptTextarea
+                      label="Would users actually use or pay for this?"
+                      value={workspaceForm.useOrPaySignal}
+                      onChange={(value) => setWorkspaceForm((prev) => ({ ...prev, useOrPaySignal: value }))}
+                      placeholder="Capture usage intent, payment intent, or adoption signal."
+                    />
+                    <div className="md:col-span-2">
+                      <PromptTextarea
+                        label="What changed after feedback?"
+                        value={workspaceForm.feedbackChanges}
+                        onChange={(value) => setWorkspaceForm((prev) => ({ ...prev, feedbackChanges: value }))}
+                        placeholder="What did the team change in the problem, feature scope, MVP, or roadmap?"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -952,12 +918,12 @@ export default function ProjectDetail() {
                         onChange={(event) => setWorkspaceEvidenceInput((prev) => ({ ...prev, kind: event.target.value }))}
                         className="w-full px-3 py-2 rounded-lg border border-border-default bg-bg-card text-text-primary text-sm"
                       >
-                        <option value="survey">Survey</option>
-                        <option value="interview">Interview</option>
-                        <option value="waitlist">Waitlist</option>
-                        <option value="feedback">Beta Feedback</option>
-                        <option value="experiment">Experiment</option>
-                        <option value="insight">Insight</option>
+                        <option value="screenshot">Screenshot</option>
+                        <option value="survey_pdf">Survey PDF</option>
+                        <option value="interview_notes">Interview Notes</option>
+                        <option value="feedback_form">Feedback Form</option>
+                        <option value="recording">Recording</option>
+                        <option value="testing_proof">Testing Proof</option>
                         <option value="other">Other</option>
                       </select>
                       <Input
@@ -975,7 +941,7 @@ export default function ProjectDetail() {
                       <Input
                         value={workspaceEvidenceInput.link}
                         onChange={(event) => setWorkspaceEvidenceInput((prev) => ({ ...prev, link: event.target.value }))}
-                        placeholder="Link to screenshot/doc/video"
+                        placeholder="Link to uploaded screenshot, PDF, notes, recording, or testing proof"
                       />
                       <Button variant="secondary" size="sm" onClick={addValidationEvidence}>Add Evidence</Button>
                     </div>
@@ -1026,7 +992,7 @@ export default function ProjectDetail() {
                 {workspaceSuccess && <p className="text-xs text-success">{workspaceSuccess}</p>}
                 <div className="flex justify-end">
                   <Button variant="primary" size="sm" onClick={saveValidationWorkspace} disabled={workspaceSaving}>
-                    {workspaceSaving ? 'Saving...' : 'Save Validation Workspace'}
+                    {workspaceSaving ? 'Saving...' : 'Save Validation Evidence'}
                   </Button>
                 </div>
               </div>
@@ -1034,12 +1000,12 @@ export default function ProjectDetail() {
               <div className="space-y-3">
                 <p className="text-sm text-text-secondary">{workspaceForm.problemStatement || 'Problem statement not shared yet.'}</p>
                 <p className="text-sm text-text-secondary">{workspaceForm.targetUsers || 'Target users not shared yet.'}</p>
-                <p className="text-xs text-text-muted">Only venture contributors can edit validation workspace.</p>
+                <p className="text-xs text-text-muted">Only startup team members can edit validation evidence.</p>
               </div>
             )}
 
             <div className="mt-4 rounded-xl border border-border-default bg-bg-secondary/30 p-3">
-              <h3 className="text-sm font-semibold text-text-primary mb-2">Validation Timeline</h3>
+              <h3 className="text-sm font-semibold text-text-primary mb-2">Validation Evidence Timeline</h3>
               {validationTimelineEntries.length > 0 ? (
                 <div className="space-y-2">
                   {validationTimelineEntries.map((entry, index) => (
@@ -1058,9 +1024,14 @@ export default function ProjectDetail() {
             </div>
           </Card>
 
+          <IncubationReadinessPanel
+            project={project}
+            isTeamMember={Boolean(isOwner || isTeamMember)}
+          />
+
           <Card id="workspace-team" className={sectionCardClass('team')}>
             <h2 className="text-xl font-bold text-text-primary mb-3">
-              Team Contributors ({teamCount}/{maxTeamMembers})
+              Team Members ({teamCount}/{maxTeamMembers})
             </h2>
             <div className="space-y-2">
               {(project.teamMembers || []).map((member) => {
@@ -1106,81 +1077,11 @@ export default function ProjectDetail() {
 
           </Card>
 
-          {(isOwner || isTeamMember) && hasValidationFeedback && (
-            <Card className={sectionCardClass('validation')}>
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-text-primary">Validation Feedback</h2>
-                  <p className="text-sm text-text-secondary">
-                    {validationReviewCount}/{validationRequired} reviews · Avg {validationData.averageRating || 0}
-                  </p>
-                  <p className="text-xs text-text-muted mt-1">
-                    Problem Fit {criteriaAverages.solutionFit || 0}/5 · Innovation {criteriaAverages.innovation || 0}/5 · Usefulness {criteriaAverages.usefulness || 0}/5 · Execution {criteriaAverages.executionReadiness || 0}/5
-                  </p>
-                </div>
-                <Badge variant={validationData.validationStatus === 'passed' ? 'success' : 'default'}>
-                  {validationData.validationStatus || 'pending'}
-                </Badge>
-              </div>
-
-              {needsValidationRework && validationData.lastFailureReason && (
-                <div className="mb-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
-                  {validationData.lastFailureReason}
-                </div>
-              )}
-
-              {(validationData.reviews || []).length > 0 ? (
-                <div className="space-y-3">
-                  {validationData.reviews.map((review) => (
-                    <div key={review._id} className="rounded-lg border border-border-default bg-bg-card/70 p-3 space-y-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="text-sm font-medium text-text-primary">
-                          {review.reviewer?.name || 'Reviewer'}
-                        </div>
-                        <div className="text-xs text-text-muted">Rating: {review.rating}/5</div>
-                      </div>
-                      <div className="text-xs text-text-muted">
-                        Problem Clarity {review.criteria?.problemClarity || 0}/5 · Solution Fit {review.criteria?.solutionFit || 0}/5 · Innovation {review.criteria?.innovation || 0}/5 · Execution {review.criteria?.executionReadiness || 0}/5
-                      </div>
-                      <p className="text-sm text-text-secondary">{review.feedback}</p>
-                      <div className="text-xs text-text-muted space-y-1">
-                        {review.topStrengths && <p><span className="font-medium text-text-primary">Strengths:</span> {review.topStrengths}</p>}
-                        {review.topGaps && <p><span className="font-medium text-text-primary">Gaps:</span> {review.topGaps}</p>}
-                        {review.biggestRisk && <p><span className="font-medium text-text-primary">Biggest Risk:</span> {review.biggestRisk}</p>}
-                        {review.next7DayAction && <p><span className="font-medium text-text-primary">7-Day Action:</span> {review.next7DayAction}</p>}
-                      </div>
-                      {isOwner && (
-                        <div className="flex justify-end">
-                          <Button
-                            variant={review.helpful ? 'default' : 'secondary'}
-                            size="xs"
-                            onClick={() => handleMarkHelpful(review._id)}
-                            disabled={review.helpful || helpfulLoading === review._id}
-                          >
-                            {review.helpful ? (
-                              <span className="inline-flex items-center gap-2">
-                                <img src={checkIcon} alt="Helpful" className="h-4 w-4" />
-                                Helpful
-                              </span>
-                            ) : helpfulLoading === review._id ? 'Marking...' : 'Mark Helpful'}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-text-muted">No feedback submitted yet.</p>
-              )}
-          {helpfulError && <p className="text-xs text-error mt-3">{helpfulError}</p>}
-            </Card>
-          )}
-
           {needsValidationRework && (
             <Card className={sectionCardClass('validation')}>
               <h2 className="text-xl font-bold text-text-primary mb-2">Validation Rework Required</h2>
               <p className="text-sm text-text-secondary">
-                This venture did not pass validation yet. Improve based on feedback and choose your next step.
+                This startup is not incubation-ready yet. Improve based on feedback and choose the next build step.
               </p>
               {validationData.lastFailureReason && (
                 <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
@@ -1195,40 +1096,35 @@ export default function ProjectDetail() {
                     disabled={extendingTimeline}
                     onClick={handleExtendTimeline}
                   >
-                    {extendingTimeline ? 'Reopening...' : 'Reopen Prototype Work'}
+                    {extendingTimeline ? 'Reopening...' : 'Reopen Build Work'}
                   </Button>
                   <Button variant="danger" size="sm" onClick={openDeleteModal}>
-                    Delete Venture
+                    Delete Startup
                   </Button>
                 </div>
               ) : (
                 <p className="mt-3 text-xs text-text-muted">
-                  Venture lead can either delete the venture or reopen it with a 7-day extension.
+                  Startup lead can either archive the workspace or reopen focused build work.
                 </p>
               )}
               {extendTimelineError && <p className="mt-3 text-xs text-error">{extendTimelineError}</p>}
             </Card>
           )}
 
-          {teamFull && isTeamMember && (
+          {(isOwner || isTeamMember) && (
             <Card id="workspace-build-progress" className={sectionCardClass('build-progress')}>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-bold text-text-primary">Team Workspace</h2>
-                    <p className="text-sm text-text-secondary">Collaborate, share files, and ship an MVP.</p>
+                    <h2 className="text-xl font-bold text-text-primary">Build Progress</h2>
+                    <p className="text-sm text-text-secondary">Upload progress, share assets, summarize MVP work, and keep the team moving.</p>
                     {hasExtendedTimeline && (
                       <p className="text-xs text-warning mt-1">
-                        Extended timeline active (+{project.buildPhase?.extensionDaysGranted || 0} days total).
+                        Focused rework active after validation feedback.
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs text-text-muted uppercase tracking-wide">Time Remaining</span>
-                    <span className={`text-lg font-semibold ${timeExpired ? 'text-error' : 'text-primary'}`}>
-                      {timeLeft || '—'}
-                    </span>
-                  </div>
+                  <Badge variant={getLifecycleVariant(lifecycleStage)}>{getLifecycleLabel(lifecycleStage)}</Badge>
                 </div>
 
                 <div
@@ -1238,8 +1134,8 @@ export default function ProjectDetail() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-text-primary">Venture Files</h3>
-                    <span className="text-xs text-text-muted">Upload any format</span>
+                    <h3 className="text-sm font-semibold text-text-primary">Startup Assets</h3>
+                    <span className="text-xs text-text-muted">Prototype, evidence, reports</span>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <input
@@ -1291,7 +1187,7 @@ export default function ProjectDetail() {
                               )}
                             </div>
                             <div className="text-xs text-text-muted">
-                              {file.uploadedBy?.name || 'Team contributor'} · {(file.size / 1024).toFixed(1)} KB
+                              {file.uploadedBy?.name || 'Team member'} · {(file.size / 1024).toFixed(1)} KB
                             </div>
                           </div>
                         )
@@ -1311,12 +1207,12 @@ export default function ProjectDetail() {
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-text-primary">Team Chat</h3>
-                    <span className="text-xs text-text-muted">Private to team contributors</span>
+                    <span className="text-xs text-text-muted">Private to team members</span>
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
                     {(project.messages || []).length > 0 ? (
                       (project.messages || []).map((message) => {
-                        const senderName = message.sender?.name || 'Team Contributor'
+                        const senderName = message.sender?.name || 'Team Member'
                         const timestamp = message.createdAt
                           ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                           : ''
@@ -1340,7 +1236,7 @@ export default function ProjectDetail() {
                       rows={2}
                       value={chatMessage}
                       onChange={(event) => setChatMessage(event.target.value)}
-                      placeholder={canChat ? 'Type a message...' : 'Join the team to chat.'}
+                      placeholder={canChat ? 'What did the team decide, build, or unblock?' : 'Only team members can post updates.'}
                       disabled={!canChat}
                       className={`w-full resize-none px-4 py-3 rounded-xl border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 ${!canChat ? 'opacity-60 cursor-not-allowed' : ''}`}
                     />
@@ -1359,12 +1255,12 @@ export default function ProjectDetail() {
                 {isOwner && (
                   <div className="rounded-xl border border-border-default bg-bg-secondary/50 p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-text-primary">Validation Pack</h3>
-                      <span className="text-xs text-text-muted">Shown to validators</span>
+                      <h3 className="text-sm font-semibold text-text-primary">MVP & Validation Summary</h3>
+                      <span className="text-xs text-text-muted">Stored in readiness packet</span>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-xs font-medium text-text-secondary">Demo / Website Link</label>
+                        <label className="text-xs font-medium text-text-secondary">Prototype / MVP Link</label>
                         <Input
                           value={validationLink}
                           onChange={(event) => setValidationLink(event.target.value)}
@@ -1373,17 +1269,17 @@ export default function ProjectDetail() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-text-secondary">Notes for validators</label>
+                        <label className="text-xs font-medium text-text-secondary">Guided validation notes</label>
                         <textarea
                           rows={3}
                           value={validationNotes}
                           onChange={(event) => setValidationNotes(event.target.value)}
-                          placeholder="Share what to focus on during validation."
+                          placeholder="What did your team build? What should be tested? What user feedback matters most?"
                           className="mt-2 w-full resize-none px-4 py-3 rounded-xl border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-text-secondary">Share files</label>
+                        <label className="text-xs font-medium text-text-secondary">Include files in validation evidence</label>
                         {(project.files || []).length > 0 ? (
                           <div className="mt-2 space-y-2">
                             {project.files.map((file) => {
@@ -1402,7 +1298,7 @@ export default function ProjectDetail() {
                             })}
                           </div>
                         ) : (
-                          <p className="text-xs text-text-muted mt-2">Upload files above to share with validators.</p>
+                          <p className="text-xs text-text-muted mt-2">Upload files above to include screenshots, PDFs, recordings, or testing proof.</p>
                         )}
                       </div>
                     </div>
@@ -1418,7 +1314,7 @@ export default function ProjectDetail() {
                       onClick={handleSendToValidation}
                       disabled={validating}
                     >
-                      {validating ? 'Sending...' : 'Validate Venture'}
+                      {validating ? 'Starting...' : 'Start Self-Conducted Validation'}
                     </Button>
                   </div>
                 )}
@@ -1426,12 +1322,12 @@ export default function ProjectDetail() {
             </Card>
           )}
 
-          {!(teamFull && isTeamMember) && (
+          {!(isOwner || isTeamMember) && (
             <>
               <Card id="workspace-build-progress" className={sectionCardClass('build-progress')}>
                 <h2 className="text-xl font-bold text-text-primary mb-2">Build Progress</h2>
                 <p className="text-sm text-text-secondary">
-                  Build execution tools unlock once your startup team is complete and active.
+                  Build execution tools are private to the startup team.
                 </p>
               </Card>
               <Card id="workspace-assets" className={sectionCardClass('assets')}>
@@ -1443,7 +1339,7 @@ export default function ProjectDetail() {
               <Card id="workspace-updates" className={sectionCardClass('updates')}>
                 <h2 className="text-xl font-bold text-text-primary mb-2">Updates</h2>
                 <p className="text-sm text-text-secondary">
-                  Team build updates and internal execution chat are shown in this section.
+                  Team build updates and internal execution notes are shown in this section.
                 </p>
               </Card>
             </>
@@ -1451,74 +1347,35 @@ export default function ProjectDetail() {
         </div>
 
         <div className="space-y-6">
-          <Card id="workspace-contributors" className={sectionCardClass('contributors')}>
-            <h2 className="text-xl font-bold text-text-primary mb-3">Interest Queue</h2>
-            {project.interestedUsers?.length > 0 ? (
-              <div className="space-y-2">
-                {project.interestedUsers.map((interested) => (
-                  <div
-                    key={interested._id}
-                    className="flex flex-col gap-3 p-3 border border-border-default rounded-lg sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <div className="font-medium text-text-primary">{interested.name || 'Unknown'}</div>
-                      <div className="text-sm text-text-muted">{interested.email || 'No email provided'}</div>
-                      {isOwner && interested.phone && (
-                        <div className="text-sm text-text-muted">Phone: {interested.phone}</div>
-                      )}
-                    </div>
-                    {isOwner ? (
-                      <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
-                        <Button
-                          variant="primary"
-                          size="xs"
-                          className="w-full sm:w-auto whitespace-nowrap"
-                          onClick={() => handleAddMember(interested._id)}
-                          disabled={teamFull}
-                        >
-                          {teamFull ? 'Team Full' : 'Add to Team'}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          className="w-full sm:w-auto whitespace-nowrap text-error"
-                          onClick={() => handleRejectMember(interested._id)}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    ) : (
-                      <Badge variant="default" className="whitespace-nowrap">Earliest Interest</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-text-secondary">No users have shown interest yet.</p>
-            )}
+          <Card hover={false}>
+            <h2 className="text-xl font-bold text-text-primary mb-3">Find Team Members</h2>
+            <Badge variant="accent">Coming Soon</Badge>
+            <p className="mt-3 text-sm text-text-secondary">
+              Public team matching is intentionally paused for launch. Use this workspace with your existing student team and keep role gaps documented in Team Setup.
+            </p>
           </Card>
 
           <Card id="workspace-settings" className={sectionCardClass('settings')}>
             <h2 className="text-xl font-bold text-text-primary mb-3">Workspace Settings</h2>
             <p className="text-sm text-text-secondary mb-4">
-              Manage venture details, team requirements, and lifecycle controls from one place.
+              Manage startup details, team setup, and pipeline controls from one place.
             </p>
             <div className="flex flex-col gap-2">
               {isOwner && (
                 <>
                   <Button variant="secondary" size="sm" onClick={openEditDetails}>
-                    Edit Venture Details
+                    Edit Startup Details
                   </Button>
                   <Button variant="secondary" size="sm" onClick={openEditRequirements}>
                     Edit Team Requirements
                   </Button>
                   <Button variant="danger" size="sm" onClick={openDeleteModal}>
-                    Delete Venture
+                    Delete Startup
                   </Button>
                 </>
               )}
               {!isOwner && (
-                <p className="text-xs text-text-muted">Only venture lead can change workspace settings.</p>
+                <p className="text-xs text-text-muted">Only the startup lead can change workspace settings.</p>
               )}
             </div>
           </Card>
@@ -1528,7 +1385,7 @@ export default function ProjectDetail() {
       <Modal open={editOpen} onClose={closeEditRequirements} size="sm">
         <h3 className="text-lg font-semibold text-text-primary">Update Requirements</h3>
         <p className="text-sm text-text-secondary mt-2">
-          Edit roles, skills, team size, or visibility without deleting the venture.
+          Edit roles, skills, team size, or visibility without deleting the startup workspace.
         </p>
         <div className="space-y-4 mt-4">
           <div>
@@ -1592,9 +1449,9 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={detailsOpen} onClose={closeEditDetails} size="sm">
-        <h3 className="text-lg font-semibold text-text-primary">Update Venture Details</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Update Startup Details</h3>
         <p className="text-sm text-text-secondary mt-2">
-          Edit the venture title, pitch, description, tags, or execution plan.
+          Edit the startup name, pitch, description, tags, or execution plan.
         </p>
         <div className="space-y-4 mt-4">
           <div>
@@ -1603,7 +1460,7 @@ export default function ProjectDetail() {
               type="text"
               value={detailsForm.title}
               onChange={(e) => setDetailsForm((prev) => ({ ...prev, title: e.target.value }))}
-              placeholder="Venture title"
+              placeholder="Startup name"
             />
           </div>
           <div>
@@ -1623,7 +1480,7 @@ export default function ProjectDetail() {
               onChange={(e) => setDetailsForm((prev) => ({ ...prev, description: e.target.value }))}
               rows={4}
               className="w-full px-4 py-3 rounded-xl border border-border bg-bg-card text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-              placeholder="Describe the venture"
+              placeholder="Describe the startup"
             />
           </div>
           <div>
@@ -1664,11 +1521,11 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={removeOpen} onClose={closeRemoveModal} size="sm">
-        <h3 className="text-lg font-semibold text-text-primary">Remove Team Contributor</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Remove Team Member</h3>
         <p className="text-sm text-text-secondary mt-2">
           Are you sure you want to remove{' '}
           <span className="text-text-primary font-medium">
-            {removeTarget?.name || 'this contributor'}
+            {removeTarget?.name || 'this team member'}
           </span>{' '}
           from the team? This action cannot be undone.
         </p>
@@ -1690,9 +1547,9 @@ export default function ProjectDetail() {
       </Modal>
 
       <Modal open={deleteOpen} onClose={closeDeleteModal} size="sm">
-        <h3 className="text-lg font-semibold text-text-primary">Delete Venture</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Delete Startup Workspace</h3>
         <p className="text-sm text-text-secondary mt-2">
-          This will permanently delete the venture and remove it for all contributors. This action cannot be undone.
+          This will permanently delete the startup workspace and remove it for all team members. This action cannot be undone.
         </p>
         {deleteError && <p className="text-xs text-error mt-3">{deleteError}</p>}
         <div className="flex flex-col gap-2 mt-5 sm:flex-row sm:justify-end">
@@ -1711,5 +1568,20 @@ export default function ProjectDetail() {
         </div>
       </Modal>
     </div>
+  )
+}
+
+function PromptTextarea({ label, value, onChange, placeholder }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-text-secondary">{label}</span>
+      <textarea
+        rows={3}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="mt-2 w-full resize-none px-3 py-2 rounded-lg border border-border-default bg-bg-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+      />
+    </label>
   )
 }

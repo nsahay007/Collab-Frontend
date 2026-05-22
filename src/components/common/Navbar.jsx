@@ -38,9 +38,9 @@ export default function Navbar() {
   }, [user])
 
   const navLinks = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/discover', label: 'Discover Ventures' },
-    { to: '/create', label: 'Create Venture' },
+    { to: '/dashboard', label: 'Pipeline' },
+    { to: '/create', label: 'Create Workspace' },
+    { to: '/discover', label: 'Find Team Members' },
     { to: '/profile', label: 'Execution Profile' }
   ]
 
