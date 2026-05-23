@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import ThemeSwitch from '../components/common/ThemeSwitch'
+import AnimatedNumber from '../components/common/AnimatedNumber'
+import { staggerContainer, staggerItem } from '../utils/motion'
 import { getUserProjects, getProfile, updateProfile, getExecutionProfile } from '../features/user/userAPI'
 import { deleteProject as deleteVenture } from '../features/projects/projectAPI'
 import { setupAdminTwoFactor, confirmAdminTwoFactor, disableAdminTwoFactor } from '../features/auth/authAPI'
@@ -65,12 +68,25 @@ function ProjectCard({
   )
 }
 
-function ExecutionMetric({ label, value }) {
+function ExecutionMetric({ label, value, numeric = false, suffix = '' }) {
+  const raw = typeof value === 'string' ? parseInt(value, 10) : value
+  const isPercent = typeof value === 'string' && value.includes('%')
+  const num = Number.isFinite(raw) ? raw : 0
+
   return (
-    <div className="rounded-xl border border-border bg-bg-secondary/50 px-4 py-3 text-center">
-      <div className="text-2xl font-bold text-primary mb-1">{value}</div>
+    <motion.div
+      variants={staggerItem}
+      className="rounded-xl border border-border bg-bg-secondary/50 px-4 py-3 text-center"
+    >
+      <div className="text-2xl font-bold text-primary mb-1">
+        {numeric || Number.isFinite(raw) ? (
+          <AnimatedNumber value={num} suffix={isPercent ? '%' : suffix} />
+        ) : (
+          value
+        )}
+      </div>
       <div className="text-xs uppercase tracking-wide text-text-muted">{label}</div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -450,17 +466,17 @@ export default function Profile() {
           </div>
           <Badge variant="accent">{reputation.executionCredibility ?? 0}% credibility</Badge>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <ExecutionMetric label="Startup Workspaces" value={reputation.venturesContributedTo ?? projects.length} />
-          <ExecutionMetric label="Milestones Completed" value={reputation.milestonesCompleted ?? 0} />
-          <ExecutionMetric label="Blockers Resolved" value={reputation.blockerResolutions ?? 0} />
+        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <ExecutionMetric label="Startup Workspaces" value={reputation.venturesContributedTo ?? projects.length} numeric />
+          <ExecutionMetric label="Milestones Completed" value={reputation.milestonesCompleted ?? 0} numeric />
+          <ExecutionMetric label="Blockers Resolved" value={reputation.blockerResolutions ?? 0} numeric />
           <ExecutionMetric label="Consistency" value={`${reputation.contributionConsistency ?? 0}%`} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        </motion.div>
+        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ExecutionMetric label="Execution Reliability" value={`${reputation.executionReliability ?? 0}%`} />
           <ExecutionMetric label="Team Reliability" value={`${reputation.collaborationQuality ?? 0}%`} />
           <ExecutionMetric label="Progression Impact" value={`${reputation.ventureProgressionImpact ?? 0}%`} />
-        </div>
+        </motion.div>
         <div>
           <h3 className="text-sm font-semibold text-text-primary mb-2">Execution Strengths</h3>
           <div className="flex flex-wrap gap-2">

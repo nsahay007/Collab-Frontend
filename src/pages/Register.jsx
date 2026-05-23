@@ -183,7 +183,7 @@ export default function Register() {
           <p className="text-text-secondary">Join Collab and build startups with your college collaborators</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={`space-y-6 ${error ? 'shake-error' : ''}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">

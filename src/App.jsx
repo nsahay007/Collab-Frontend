@@ -1,8 +1,10 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { MotionToastProvider } from './components/common/MotionToast'
+import PageTransition from './components/common/PageTransition'
+import { AuthSkeleton } from './components/common/Skeleton'
 import useAuth from './hooks/useAuth'
 import Navbar from './components/common/Navbar'
 import Button from './components/common/Button'
@@ -21,37 +23,41 @@ import ResetPassword from './pages/ResetPassword'
 import Legal from './pages/Legal'
 import LegalDoc from './pages/LegalDoc'
 
-// Protected route for authenticated users
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
-  
-  if (loading) return <div>Loading...</div>
+
+  if (loading) {
+    return (
+      <div className="relative min-h-screen bg-bg-main">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <AuthSkeleton />
+        </main>
+      </div>
+    )
+  }
   return user ? children : <Navigate to="/login" />
 }
 
-// Route for unauthenticated users (redirect if already logged in)
 function PublicRoute({ children }) {
   const { user, loading } = useAuth()
-  
-  if (loading) return <div>Loading...</div>
+
+  if (loading) {
+    return (
+      <div className="relative min-h-screen bg-bg-main flex items-center justify-center px-4">
+        <AuthSkeleton />
+      </div>
+    )
+  }
   return user ? <Navigate to="/dashboard" /> : children
 }
 
 function Layout({ children }) {
-  const location = useLocation()
-
   return (
     <div className="relative min-h-screen bg-bg-main">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {children}
-        </motion.div>
+        <PageTransition>{children}</PageTransition>
       </main>
     </div>
   )
@@ -97,11 +103,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
-      </AuthProvider>
+      <MotionToastProvider>
+        <AuthProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </AuthProvider>
+      </MotionToastProvider>
     </ThemeProvider>
   )
 }

@@ -1,8 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import Card from '../../../components/common/Card'
 import Button from '../../../components/common/Button'
 import Badge from '../../../components/common/Badge'
+import ReadinessRing from '../../../components/common/ReadinessRing'
+import CheckDraw from '../../../components/common/CheckDraw'
 import {
   LINEAR_LIFECYCLE,
   getLifecycleLabel,
@@ -27,6 +30,7 @@ export function VentureOverviewCard({ project }) {
   return (
     <Card hover={false} className="relative overflow-hidden">
       <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <div className="momentum-line mb-4 max-w-xs" />
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Current Startup</p>
@@ -53,17 +57,17 @@ export function ContinueBuildingPanel({ project, nextMilestone, pendingTasks = [
   const nextAction = getLifecycleNextAction(lifecycleStage)
 
   return (
-    <Card hover={false} className="border-primary/30">
+    <Card hover={false} className="next-action-panel border-l-4 border-l-primary">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-primary mb-2">Next Action</p>
           <h2 className="text-2xl font-semibold text-text-primary">{nextAction}</h2>
           <p className="text-sm text-text-secondary mt-2">
-            Latest milestone: {nextMilestone.title}
+            Latest milestone: {nextMilestone?.title || 'Define your next milestone'}
           </p>
         </div>
         <Link to={`/project/${project._id || project.id}`}>
-          <Button size="sm" className="w-full sm:w-auto">Build Next</Button>
+          <Button size="sm" className="w-full sm:w-auto next-action-cta-pulse">Build Next</Button>
         </Link>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -86,17 +90,21 @@ export function ReadinessProgress({ project }) {
   const readiness = Number(project?.readinessScore || lifecycleProgress)
 
   return (
-    <Card hover={false}>
+    <Card hover={false} className="innovation-surface">
       <h2 className="text-lg font-semibold text-text-primary mb-4">Incubation Readiness</h2>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Metric label="Current Stage" value={getLifecycleLabel(lifecycleStage)} />
-        <Metric label="Next Stage" value={getNextLifecycleLabel(lifecycleStage) || 'Keep growing'} />
-        <Metric label="Readiness" value={`${readiness}%`} />
+      <div className="flex flex-col sm:flex-row gap-6 items-center">
+        <ReadinessRing value={readiness} />
+        <div className="flex-1 grid gap-4 sm:grid-cols-2 w-full">
+          <Metric label="Current Stage" value={getLifecycleLabel(lifecycleStage)} />
+          <Metric label="Next Stage" value={getNextLifecycleLabel(lifecycleStage) || 'Keep growing'} />
+        </div>
       </div>
       <div className="mt-5 progress-bar">
-        <div
+        <motion.div
           className="progress-bar-fill"
-          style={{ width: `${Math.max(0, Math.min(100, readiness))}%` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.max(0, Math.min(100, readiness))}%` }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         />
       </div>
     </Card>
@@ -118,9 +126,17 @@ export function MilestoneTracker({ milestones = [], nextMilestone }) {
       </div>
       <div className="space-y-3">
         {milestones.length > 0 ? milestones.slice(0, 5).map((milestone) => (
-          <div key={milestone._id || milestone.title} className="rounded-xl border border-border bg-bg-secondary/40 px-4 py-3">
+          <div
+            key={milestone._id || milestone.title}
+            className={`rounded-xl border border-border bg-bg-secondary/40 px-4 py-3 ${
+              milestone.status === 'completed' ? 'border-success/25' : ''
+            }`}
+          >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-text-primary">{milestone.title}</p>
+              <div className="flex items-center gap-2">
+                {milestone.status === 'completed' && <CheckDraw />}
+                <p className="text-sm font-semibold text-text-primary">{milestone.title}</p>
+              </div>
               <Badge variant={milestone.status === 'completed' ? 'success' : milestone.status === 'blocked' ? 'warning' : 'default'}>
                 {milestone.status}
               </Badge>
@@ -130,7 +146,7 @@ export function MilestoneTracker({ milestones = [], nextMilestone }) {
             </p>
           </div>
         )) : (
-          <p className="text-sm text-text-secondary">No milestones yet. Suggested next milestone: {nextMilestone.title}</p>
+          <p className="text-sm text-text-secondary">No milestones yet. Suggested next milestone: {nextMilestone?.title || 'Plan your first milestone'}</p>
         )}
       </div>
     </Card>
@@ -160,7 +176,10 @@ export function BlockerPanel({ blockers = [] }) {
       {blockers.length > 0 ? (
         <div className="space-y-2">
           {blockers.map((blocker, index) => (
-            <div key={`${blocker.title}-${index}`} className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3">
+            <div
+              key={`${blocker.title}-${index}`}
+              className="blocker-attention rounded-xl border border-warning/30 bg-warning/10 px-4 py-3"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-medium text-warning">{blocker.title}</p>
                 <Badge variant="warning">{blocker.type}</Badge>
@@ -228,18 +247,21 @@ export function VentureTimeline({ project }) {
           const active = stage === lifecycleStage
           const completed = currentIndex >= 0 && index < currentIndex
           return (
-            <div
+            <motion.div
               key={stage}
-              className={`rounded-xl border px-4 py-3 text-sm ${
+              layout
+              initial={false}
+              animate={{ opacity: 1, x: 0 }}
+              className={`rounded-xl border px-4 py-3 text-sm transition-colors ${
                 active
-                  ? 'border-primary bg-primary/10 text-primary'
+                  ? 'border-primary bg-primary/10 text-primary shadow-glow-blue'
                   : completed
                     ? 'border-success/30 bg-success/10 text-success'
                     : 'border-border bg-bg-secondary/40 text-text-secondary'
               }`}
             >
               {completed ? 'Complete' : active ? 'Current' : 'Upcoming'}: {getLifecycleLabel(stage)}
-            </div>
+            </motion.div>
           )
         })}
       </div>

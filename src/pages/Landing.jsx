@@ -300,8 +300,8 @@ export default function Landing() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
-        <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-secondary/20 blur-3xl animate-pulse" />
+        <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl ambient-drift" />
+        <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-secondary/12 blur-3xl ambient-drift" style={{ animationDelay: '-8s' }} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div

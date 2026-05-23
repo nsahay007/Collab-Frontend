@@ -153,7 +153,7 @@ export default function Login() {
           <p className="text-text-secondary mb-4">Sign in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={`space-y-6 ${error ? 'shake-error' : ''}`}>
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
               Email

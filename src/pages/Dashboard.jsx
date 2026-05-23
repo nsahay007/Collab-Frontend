@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import { DashboardSkeleton } from '../components/common/Skeleton'
 import useAuth from '../hooks/useAuth'
 import api from '../services/api'
 import {
@@ -22,43 +23,7 @@ import {
   getNextMilestone,
   getPrimaryProject
 } from '../features/execution/executionUtils'
-import {
-  getLifecycleLabel,
-  getLifecycleNextAction,
-  getLifecycleProgress,
-  normalizeLifecycleStage
-} from '../utils/ventureLifecycle'
-
-const STAGGER_CONTAINER = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      delayChildren: 0.04,
-      staggerChildren: 0.06
-    }
-  }
-}
-
-const STAGGER_ITEM = {
-  hidden: { opacity: 0, y: 8 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.24,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  }
-}
-
-function LoadingState() {
-  return (
-    <Card className="max-w-3xl mx-auto" hover={false}>
-      <p className="text-text-secondary">Loading your startup pipeline...</p>
-    </Card>
-  )
-}
+import { staggerContainer, staggerItem } from '../utils/motion'
 
 function ErrorState({ message, onRetry }) {
   return (
@@ -139,62 +104,18 @@ export default function Dashboard() {
     loadDashboardData()
   }, [user?.id, user?._id])
 
-  if (loading) return <LoadingState />
+  if (loading) return <DashboardSkeleton />
   if (error) return <ErrorState message={error} onRetry={loadDashboardData} />
   if (!primaryProject) return <EmptyVentureState />
-
-  const lifecycleStage = normalizeLifecycleStage(primaryProject.lifecycleStage || primaryProject.status || primaryProject.phase)
-  const progress = getLifecycleProgress(lifecycleStage)
-  const nextAction = getLifecycleNextAction(lifecycleStage)
-
-  return (
-    <motion.div
-      className="mx-auto max-w-4xl space-y-6"
-      variants={STAGGER_CONTAINER}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={STAGGER_ITEM}>
-        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup Progression Center</p>
-        <h1 className="text-3xl font-bold text-text-primary">What should this team do next?</h1>
-        <p className="mt-2 text-text-secondary">A simple guided path from idea to incubation readiness.</p>
-      </motion.div>
-
-      <motion.div variants={STAGGER_ITEM}>
-        <Card hover={false} className="border-primary/25">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-text-muted">Current startup</p>
-              <h2 className="text-2xl font-bold text-text-primary">{primaryProject.title}</h2>
-              <p className="mt-3 text-sm text-text-secondary">Stage: {getLifecycleLabel(lifecycleStage)}</p>
-              <p className="mt-2 text-lg font-semibold text-text-primary">{nextAction}</p>
-            </div>
-            <Link to={`/project/${primaryProject._id || primaryProject.id}`}>
-              <Button className="w-full sm:w-auto">Continue</Button>
-            </Link>
-          </div>
-          <div className="mt-6">
-            <div className="flex justify-between text-xs text-text-muted">
-              <span>Startup completion</span>
-              <span>{progress}%</span>
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-bg-secondary">
-              <div className="h-2 rounded-full bg-primary" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-    </motion.div>
-  )
 
   return (
     <motion.div
       className="max-w-7xl mx-auto space-y-6"
-      variants={STAGGER_CONTAINER}
+      variants={staggerContainer}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={STAGGER_ITEM}>
+      <motion.div variants={staggerItem}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup Pipeline Control Center</p>
@@ -211,12 +132,12 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <motion.div variants={STAGGER_ITEM}>
+      <motion.div variants={staggerItem}>
         <VentureOverviewCard project={primaryProject} />
       </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <motion.div variants={STAGGER_ITEM} className="lg:col-span-2 space-y-6">
+        <motion.div variants={staggerItem} className="lg:col-span-2 space-y-6">
           <ContinueBuildingPanel
             project={primaryProject}
             nextMilestone={nextMilestone}
@@ -227,7 +148,7 @@ export default function Dashboard() {
           <ContributorActivityFeed logs={logs} />
         </motion.div>
 
-        <motion.div variants={STAGGER_ITEM} className="space-y-6">
+        <motion.div variants={staggerItem} className="space-y-6">
           <ReadinessProgress project={primaryProject} />
           <MomentumIndicator project={primaryProject} />
           <TeamCheckInPanel project={primaryProject} />

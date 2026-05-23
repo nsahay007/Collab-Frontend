@@ -166,7 +166,7 @@ body,
   }
 
   .card-interactive {
-    @apply rounded-2xl border border-border bg-bg-card;
+    @apply relative rounded-2xl border border-border bg-bg-card overflow-hidden;
     box-shadow: var(--shadow);
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
   }
@@ -175,6 +175,71 @@ body,
     transform: translateY(-3px);
     box-shadow: var(--shadow-hover);
     border-color: color-mix(in srgb, var(--primary) 22%, var(--border));
+    box-shadow: var(--shadow-hover), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .card-interactive::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 40%);
+  }
+
+  .card-interactive:hover::before {
+    opacity: 1;
+  }
+
+  .next-action-panel {
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+    box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--primary) 12%, transparent), 0 12px 40px var(--primary-glow);
+  }
+
+  .next-action-cta-pulse {
+    animation: ctaPulse 2.4s ease-in-out 1;
+  }
+
+  .blocker-attention {
+    animation: blockerPulse 1.6s ease-out 2;
+  }
+
+  .momentum-line {
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--primary));
+    background-size: 200% 100%;
+    animation: momentumDrift 10s ease-in-out infinite;
+    opacity: 0.65;
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--bg-secondary) 90%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elevated) 95%, transparent) 50%,
+      color-mix(in srgb, var(--bg-secondary) 90%, transparent) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  .ambient-drift {
+    animation: ambientDrift 22s ease-in-out infinite alternate;
+  }
+
+  .shake-error {
+    animation: shakeError 0.42s ease;
+  }
+
+  .glow-success {
+    box-shadow: 0 8px 28px color-mix(in srgb, var(--success) 22%, transparent);
+  }
+
+  .innovation-surface {
+    box-shadow: var(--shadow), 0 0 24px var(--secondary-glow);
   }
 
   .card-elevated {
@@ -269,9 +334,48 @@ body,
   100% { background-color: transparent; }
 }
 
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes ambientDrift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(12px, -10px); }
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes blockerPulse {
+  0%, 100% { border-color: color-mix(in srgb, var(--warning) 30%, var(--border)); }
+  50% { border-color: color-mix(in srgb, var(--warning) 55%, var(--border)); box-shadow: 0 0 20px color-mix(in srgb, var(--warning) 15%, transparent); }
+}
+
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 8px 24px var(--primary-glow); }
+  50% { box-shadow: 0 12px 36px var(--primary-glow); }
+}
+
+@keyframes momentumDrift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float-gentle,
-  .animate-status-flash {
+  .animate-status-flash,
+  .skeleton-shimmer,
+  .ambient-drift,
+  .next-action-cta-pulse,
+  .blocker-attention,
+  .momentum-line,
+  .shake-error {
     animation: none;
   }
 

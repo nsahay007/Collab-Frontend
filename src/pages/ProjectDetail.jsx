@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import Badge from '../components/common/Badge'
 import Modal from '../components/common/Modal'
 import Input from '../components/common/Input'
+import CheckDraw from '../components/common/CheckDraw'
+import { ProjectDetailSkeleton } from '../components/common/Skeleton'
+import { useMotionToast } from '../components/common/MotionToast'
 import {
   fetchProject,
   removeTeamMember,
@@ -61,7 +65,9 @@ export default function ProjectDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { showToast } = useMotionToast()
   const [project, setProject] = useState(null)
+  const [flashedTaskId, setFlashedTaskId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [chatMessage, setChatMessage] = useState('')
@@ -138,12 +144,14 @@ export default function ProjectDetail() {
       const workspace = response?.data || response
       if (workspace?._id || workspace?.id) {
         setProject(workspace)
-      } else {
-        setError('Startup workspace not found')
+        return workspace
       }
+      setError('Startup workspace not found')
+      return null
     } catch (err) {
       console.error('Error loading startup workspace', err)
       setError('Failed to load startup workspace')
+      return null
     } finally {
       setLoading(false)
     }
@@ -432,6 +440,10 @@ export default function ProjectDetail() {
       tasks: prev.tasks.map((task) => {
         if (task.taskId !== taskId) return task
         const nextCompleted = task.status !== 'completed'
+        if (nextCompleted) {
+          setFlashedTaskId(taskId)
+          window.setTimeout(() => setFlashedTaskId(null), 1200)
+        }
         return {
           ...task,
           status: nextCompleted ? 'completed' : 'pending',
@@ -614,6 +626,7 @@ export default function ProjectDetail() {
 
   const handlePrimaryStageAction = async () => {
     if (!canUseStageFlow) return
+    const prevStage = normalizeLifecycleStage(project?.lifecycleStage || project?.status || project?.phase)
     try {
       setStageSaving(true)
       setStageError('')
@@ -645,7 +658,13 @@ export default function ProjectDetail() {
         })
       }
 
-      await loadProject()
+      const updated = await loadProject()
+      const nextStage = normalizeLifecycleStage(updated?.lifecycleStage || updated?.status || updated?.phase)
+      if (nextStage && prevStage && nextStage !== prevStage) {
+        showToast(`Stage advanced to ${getLifecycleLabel(nextStage)}`, 'success')
+      } else if (primaryStageAction.action === 'download_packet') {
+        showToast('Incubation package downloaded', 'success')
+      }
     } catch (err) {
       console.error(err)
       setStageError(err?.response?.data?.message || 'Could not complete this step.')
@@ -722,7 +741,7 @@ export default function ProjectDetail() {
   )
 
   if (loading) {
-    return <div>Loading startup workspace...</div>
+    return <ProjectDetailSkeleton />
   }
 
   if (error || !project) {
@@ -811,10 +830,12 @@ export default function ProjectDetail() {
           </div>
           <div className="text-sm text-text-muted">{lifecycleProgress}% complete</div>
         </div>
-        <div className="mt-5 h-2 rounded-full bg-bg-secondary">
-          <div
-            className="h-2 rounded-full bg-primary transition-all"
-            style={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+        <div className="mt-5 progress-bar">
+          <motion.div
+            className="progress-bar-fill"
+            initial={false}
+            animate={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           />
         </div>
       </Card>
@@ -979,13 +1000,20 @@ export default function ProjectDetail() {
               key={section.id}
               type="button"
               onClick={() => jumpToSection(section.id)}
-              className={`rounded-lg border px-3 py-2 text-xs font-medium text-left transition ${
+              className={`relative rounded-lg border px-3 py-2 text-xs font-medium text-left transition ${
                 activeSection === section.id
-                  ? 'border-primary bg-primary/10 text-primary'
+                  ? 'border-primary text-primary'
                   : 'border-border-default bg-bg-card text-text-secondary hover:border-primary/35 hover:text-text-primary'
               }`}
             >
-              {section.label}
+              {activeSection === section.id && (
+                <motion.span
+                  layoutId="workspace-section-pill"
+                  className="absolute inset-0 rounded-lg bg-primary/10 border border-primary/20"
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span className="relative z-10">{section.label}</span>
             </button>
           ))}
         </div>
@@ -1069,10 +1097,12 @@ export default function ProjectDetail() {
             <p className="text-sm text-text-secondary mb-4">
               {getLifecyclePrompt(lifecycleStage)}
             </p>
-            <div className="h-2 w-full rounded-full bg-bg-secondary mb-4">
-              <div
-                className="h-2 rounded-full bg-primary transition-all"
-                style={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+            <div className="progress-bar mb-4">
+              <motion.div
+                className="progress-bar-fill"
+                initial={false}
+                animate={{ width: `${Math.max(0, Math.min(100, lifecycleProgress))}%` }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -1233,13 +1263,20 @@ export default function ProjectDetail() {
                     </div>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {workspaceTasks.length > 0 ? workspaceTasks.map((task) => (
-                        <div key={task.taskId} className="rounded-lg border border-border-default bg-bg-card p-2 flex items-start gap-2">
-                          <input
-                            type="checkbox"
-                            className="mt-1"
-                            checked={task.status === 'completed'}
-                            onChange={() => toggleValidationTask(task.taskId)}
-                          />
+                        <div
+                          key={task.taskId}
+                          className={`rounded-lg border border-border-default bg-bg-card p-2 flex items-start gap-2 ${
+                            flashedTaskId === task.taskId ? 'animate-status-flash border-success/30' : ''
+                          }`}
+                        >
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={task.status === 'completed'}
+                              onChange={() => toggleValidationTask(task.taskId)}
+                            />
+                            {task.status === 'completed' && <CheckDraw className="h-3.5 w-3.5" />}
+                          </div>
                           <div className="flex-1">
                             <p className={`text-sm ${task.status === 'completed' ? 'text-text-muted line-through' : 'text-text-primary'}`}>{task.title}</p>
                           </div>

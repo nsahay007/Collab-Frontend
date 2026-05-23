@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import useAuth from '../../hooks/useAuth'
 import Button from './Button'
 import ThemeSwitch from './ThemeSwitch'
+import NavLinkPill from './NavLinkPill'
 import { getNotifications, markNotificationRead } from '../../features/notifications/notificationAPI'
-import { motion } from 'framer-motion'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -14,6 +15,8 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [bellWiggle, setBellWiggle] = useState(false)
+  const prevUnreadRef = useRef(0)
 
   useEffect(() => {
     if (!user) return
@@ -23,8 +26,14 @@ export default function Navbar() {
       try {
         const response = await getNotifications()
         if (!active) return
+        const count = response?.unreadCount || 0
+        if (count > prevUnreadRef.current) {
+          setBellWiggle(true)
+          window.setTimeout(() => setBellWiggle(false), 500)
+        }
+        prevUnreadRef.current = count
         setNotifications(response?.notifications || [])
-        setUnreadCount(response?.unreadCount || 0)
+        setUnreadCount(count)
       } catch (error) {
         console.error('Failed to load notifications:', error)
       }
@@ -80,19 +89,14 @@ export default function Navbar() {
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
-                <Link
+                <NavLinkPill
                   key={link.to}
                   to={link.to}
-                  className={`relative text-sm font-medium transition-all duration-200 py-2 px-3 rounded-lg ${
-                    isActive(link.to)
-                      ? 'nav-active rounded-lg'
-                      : 'text-text-secondary hover:text-primary hover:bg-primary/8 border border-transparent'
-                  }`}
-                >
-                  {link.label}
-                </Link>
+                  label={link.label}
+                  isActive={isActive(link.to)}
+                />
               ))}
             </div>
           </div>
@@ -102,9 +106,11 @@ export default function Navbar() {
             {user ? (
               <>
                 <div className="relative">
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setShowNotifications((prev) => !prev)}
+                    animate={bellWiggle ? { rotate: [0, -12, 12, -8, 8, 0] } : { rotate: 0 }}
+                    transition={{ duration: 0.45 }}
                     className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-bg-elevated text-text-primary hover:bg-bg-secondary hover:border-primary/20 transition-all duration-200"
                     aria-label="Toggle notifications"
                   >
@@ -122,11 +128,15 @@ export default function Navbar() {
                       />
                     </svg>
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-error text-white text-xs flex items-center justify-center">
+                      <motion.span
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-error text-white text-xs flex items-center justify-center"
+                      >
                         {unreadCount}
-                      </span>
+                      </motion.span>
                     )}
-                  </button>
+                  </motion.button>
                   {showNotifications && (
                     <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-3 w-[min(90vw,20rem)] sm:w-80 max-w-[90vw] rounded-xl border border-border bg-bg-elevated shadow-elevated p-3 z-50">
                       <div className="flex items-center justify-between mb-2">
