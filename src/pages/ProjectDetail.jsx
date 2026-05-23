@@ -1136,9 +1136,9 @@ export default function ProjectDetail() {
               <Badge variant="default">{validationProgress}% confidence</Badge>
             </div>
 
-            <div className="h-2 w-full rounded-full bg-bg-secondary mb-4">
+            <div className="progress-bar mb-4">
               <div
-                className="h-2 rounded-full bg-gradient-to-r from-primary to-primary-accent transition-all"
+                className="progress-bar-fill"
                 style={{ width: `${Math.max(0, Math.min(100, validationProgress))}%` }}
               />
             </div>

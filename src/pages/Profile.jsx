@@ -372,7 +372,7 @@ export default function Profile() {
 
   return (
     <div className="space-y-8">
-      <Card className="bg-gradient-to-r from-primary to-primary-accent text-white">
+      <Card hover={false} className="bg-gradient-to-r from-primary to-secondary text-white shadow-glow-blue border-primary/20">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center text-4xl font-bold">

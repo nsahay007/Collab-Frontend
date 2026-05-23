@@ -10,7 +10,7 @@ const steps = [
     title: 'Create Startup Workspace',
     description: 'Capture the startup name, problem, users, why it matters, and current team.',
     icon: 'idea',
-    accent: 'from-primary/20 to-primary-accent/30'
+    accent: 'from-primary/20 to-secondary/30'
   },
   {
     title: 'Plan the Build',
@@ -22,7 +22,7 @@ const steps = [
     title: 'Validate & Prepare Incubation',
     description: 'Track progress, organize evidence, and generate readiness material for incubation.',
     icon: 'validate',
-    accent: 'from-warning/20 to-primary-accent/30'
+    accent: 'from-warning/20 to-secondary/30'
   }
 ]
 
@@ -31,7 +31,7 @@ const featureSections = [
     title: 'Guided Startup Planning',
     description: 'Help existing student teams turn a raw idea into a clear startup roadmap.',
     bullets: ['Problem clarity', 'Role assignment', 'Milestone planning'],
-    accent: 'from-primary/20 to-primary-accent/10',
+    accent: 'from-primary/20 to-secondary/10',
     widget: 'team'
   },
   {
@@ -52,7 +52,7 @@ const featureSections = [
     title: 'Incubation Readiness',
     description: 'Generate and organize the material teams need before approaching an incubation center.',
     bullets: ['Startup summary', 'Pitch structure', 'Application packet'],
-    accent: 'from-primary-accent/20 to-primary/10',
+    accent: 'from-secondary/20 to-primary/10',
     widget: 'collab'
   },
   {
@@ -69,10 +69,8 @@ const lifecycleStages = ['Idea', 'Planning', 'Building', 'MVP', 'Validation', 'I
 function SectionHeader({ title, subtitle, align = 'center' }) {
   const alignment = align === 'center' ? 'text-center' : 'text-left'
   return (
-    <div className={`${alignment} space-y-3`}
-      style={{ fontFamily: "'Cormorant Garamond', serif" }}
-    >
-      <h2 className="text-3xl md:text-4xl font-semibold text-text-primary">
+    <div className={`${alignment} space-y-3`}>
+      <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight">
         {title}
       </h2>
       <p className="text-base md:text-lg text-text-secondary font-sans max-w-2xl mx-auto">
@@ -166,7 +164,7 @@ function GlowWidgets({ type }) {
   if (type === 'team') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <GlowWidgetCard title="Team Roles" meta="4 assigned" accent="from-primary to-primary-accent">
+        <GlowWidgetCard title="Team Roles" meta="4 assigned" accent="from-primary to-secondary">
           <div className="h-2 w-24 rounded-full bg-primary/60" />
           <div className="h-2 w-36 rounded-full bg-border" />
           <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -191,7 +189,7 @@ function GlowWidgets({ type }) {
             <div className="h-2 w-2/3 rounded-full bg-warning" />
           </div>
         </GlowWidgetCard>
-        <GlowWidgetCard title="Milestones" meta="3/5 done" accent="from-primary to-primary-accent">
+        <GlowWidgetCard title="Milestones" meta="3/5 done" accent="from-primary to-secondary">
           <div className="space-y-2">
             <div className="h-2 w-24 rounded-full bg-success/70" />
             <div className="h-2 w-32 rounded-full bg-success/40" />
@@ -210,7 +208,7 @@ function GlowWidgets({ type }) {
             <div className="h-2 w-4/5 rounded-full bg-success" />
           </div>
         </GlowWidgetCard>
-        <GlowWidgetCard title="Recent Learning" meta="2 insights" accent="from-primary-accent to-primary">
+        <GlowWidgetCard title="Recent Learning" meta="2 insights" accent="from-secondary to-primary">
           <div className="space-y-2 text-xs text-text-muted">
             <div className="rounded-lg bg-bg-secondary/60 p-2">“Clear value prop.”</div>
             <div className="rounded-lg bg-bg-secondary/60 p-2">“Tested with users.”</div>
@@ -222,7 +220,7 @@ function GlowWidgets({ type }) {
   if (type === 'collab') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <GlowWidgetCard title="Incubation Packet" meta="8/12 ready" accent="from-primary to-primary-accent">
+        <GlowWidgetCard title="Incubation Packet" meta="8/12 ready" accent="from-primary to-secondary">
           <div className="space-y-2">
             <div className="h-2 w-24 rounded-full bg-border" />
             <div className="h-2 w-32 rounded-full bg-border" />
@@ -239,7 +237,7 @@ function GlowWidgets({ type }) {
   }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <GlowWidgetCard title="Certificate" meta="ready" accent="from-primary to-primary-accent">
+      <GlowWidgetCard title="Certificate" meta="ready" accent="from-primary to-secondary">
         <div className="text-2xl font-semibold text-primary">82%</div>
         <div className="text-xs text-text-muted">Startup execution</div>
       </GlowWidgetCard>
@@ -301,9 +299,9 @@ export default function Landing() {
     <div className="min-h-screen bg-bg-main">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary-accent/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
         <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-primary/20 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-primary-accent/20 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-secondary/20 blur-3xl animate-pulse" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -313,10 +311,7 @@ export default function Landing() {
               className="space-y-6"
             >
               <Badge variant="accent" className="inline-flex">Guided Pre-Incubation Pipeline</Badge>
-              <h1
-                className="text-5xl md:text-6xl font-semibold text-text-primary leading-tight"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              >
+              <h1 className="text-5xl md:text-6xl font-bold text-text-primary leading-tight tracking-tight">
                 From student idea to incubation readiness
               </h1>
               <p className="text-lg text-text-secondary max-w-xl">
@@ -415,7 +410,7 @@ export default function Landing() {
                 transition={{ duration: 0.6 }}
               >
                 <Badge variant="accent" className="mb-3">Feature</Badge>
-                <h3 className="text-3xl font-semibold text-text-primary mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                <h3 className="text-3xl font-bold text-text-primary mb-3 tracking-tight">
                   {feature.title}
                 </h3>
                 <p className="text-text-secondary mb-4 max-w-xl">{feature.description}</p>
@@ -589,14 +584,14 @@ export default function Landing() {
 
       {/* Final CTA */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-accent to-primary" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-primary" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 text-center relative">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
               Start Building Today
             </h2>
             <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
@@ -604,8 +599,8 @@ export default function Landing() {
             </p>
             <Link to="/register">
               <Button
-                variant="secondary"
-                className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 hover:bg-white/20 px-8 py-3"
+                variant="primary"
+                className="px-8 py-3"
               >
                 Start Building
               </Button>

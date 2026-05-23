@@ -93,9 +93,9 @@ export function ReadinessProgress({ project }) {
         <Metric label="Next Stage" value={getNextLifecycleLabel(lifecycleStage) || 'Keep growing'} />
         <Metric label="Readiness" value={`${readiness}%`} />
       </div>
-      <div className="mt-5 h-2 w-full rounded-full bg-bg-secondary">
+      <div className="mt-5 progress-bar">
         <div
-          className="h-2 rounded-full bg-gradient-to-r from-primary to-primary-accent transition-all"
+          className="progress-bar-fill"
           style={{ width: `${Math.max(0, Math.min(100, readiness))}%` }}
         />
       </div>

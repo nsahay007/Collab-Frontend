@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import Button from './Button'
+import ThemeSwitch from './ThemeSwitch'
 import { getNotifications, markNotificationRead } from '../../features/notifications/notificationAPI'
 import { motion } from 'framer-motion'
 
@@ -69,7 +70,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="glass sticky top-0 z-50 border-b border-border/70">
+    <nav className="glass sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-8">
@@ -86,8 +87,8 @@ export default function Navbar() {
                   to={link.to}
                   className={`relative text-sm font-medium transition-all duration-200 py-2 px-3 rounded-lg ${
                     isActive(link.to)
-                      ? 'text-primary bg-primary/10 border border-primary/15'
-                      : 'text-text-secondary hover:text-primary hover:bg-primary/5 border border-transparent'
+                      ? 'nav-active rounded-lg'
+                      : 'text-text-secondary hover:text-primary hover:bg-primary/8 border border-transparent'
                   }`}
                 >
                   {link.label}
@@ -97,13 +98,14 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeSwitch compact />
             {user ? (
               <>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowNotifications((prev) => !prev)}
-                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-bg-card text-text-primary hover:bg-bg-secondary transition-colors duration-200"
+                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-bg-elevated text-text-primary hover:bg-bg-secondary hover:border-primary/20 transition-all duration-200"
                     aria-label="Toggle notifications"
                   >
                     <svg
@@ -126,7 +128,7 @@ export default function Navbar() {
                     )}
                   </button>
                   {showNotifications && (
-                    <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-3 w-[min(90vw,20rem)] sm:w-80 max-w-[90vw] rounded-xl border border-border bg-bg-card shadow-card p-3 z-50">
+                    <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-3 w-[min(90vw,20rem)] sm:w-80 max-w-[90vw] rounded-xl border border-border bg-bg-elevated shadow-elevated p-3 z-50">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-semibold text-text-primary">Notifications</span>
                         <button
@@ -169,8 +171,8 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-                <Link to="/profile" className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all duration-300">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-accent flex items-center justify-center">
+                <Link to="/profile" className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-primary/8 border border-primary/15 hover:bg-primary/12 hover:shadow-glow-blue transition-all duration-300">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-glow-blue">
                     <span className="text-white font-bold text-sm">
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </span>
@@ -241,8 +243,8 @@ export default function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`text-sm font-medium transition-all duration-200 py-3 px-4 rounded-xl ${
                       isActive(link.to)
-                        ? 'text-primary bg-primary/10 border border-primary/15'
-                        : 'text-text-secondary hover:text-primary hover:bg-primary/5 border border-transparent'
+                        ? 'nav-active'
+                        : 'text-text-secondary hover:text-primary hover:bg-primary/8 border border-transparent'
                     }`}
                   >
                     {link.label}
