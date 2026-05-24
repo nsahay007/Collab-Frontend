@@ -14,19 +14,6 @@ import {
   normalizeLifecycleStage
 } from '../utils/ventureLifecycle'
 
-const FOCUS_FILTERS = [
-  { id: 'ai', label: 'AI' },
-  { id: 'saas', label: 'SaaS' },
-  { id: 'hardware', label: 'Hardware' },
-  { id: 'edtech', label: 'EdTech' },
-  { id: 'healthtech', label: 'HealthTech' },
-  { id: 'fintech', label: 'FinTech' },
-  { id: 'sustainability', label: 'Sustainability' },
-  { id: 'open_source', label: 'Open Source' },
-  { id: 'early_stage', label: 'Early Stage' },
-  { id: 'mvp_ready', label: 'MVP Ready' },
-]
-
 const CATEGORY_BADGES = {
   'Tech & Product': { label: 'Tech', variant: 'primary' },
   'Business & Startup': { label: 'Business', variant: 'secondary' },
@@ -47,62 +34,11 @@ function visibilityVariant(visibility) {
   return 'default'
 }
 
-function normalizeToken(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-}
-
 function pickCategoryBadge(category) {
   const badge = CATEGORY_BADGES[category]
   if (badge) return badge
   if (!category) return { label: 'Startup', variant: 'default' }
   return { label: category, variant: 'default' }
-}
-
-function stageGroup(stage) {
-  const s = normalizeLifecycleStage(stage)
-  if (['idea', 'planning', 'building'].includes(s)) return 'early_stage'
-  if (['mvp', 'validation', 'incubation_ready'].includes(s)) return 'mvp_ready'
-  return 'early_stage'
-}
-
-function matchesFocus(project, focusId) {
-  if (!focusId) return true
-
-  const tags = Array.isArray(project?.tags) ? project.tags : []
-  const bag = [
-    project?.title,
-    project?.shortPitch,
-    project?.description,
-    project?.category,
-    ...tags
-  ]
-    .filter(Boolean)
-    .map(normalizeToken)
-
-  if (focusId === 'early_stage' || focusId === 'mvp_ready') {
-    return stageGroup(project?.lifecycleStage || project?.status || project?.phase) === focusId
-  }
-
-  return bag.includes(focusId) || bag.some((t) => t.includes(focusId))
-}
-
-function ventureSearchHaystack(project) {
-  return [
-    project?.title,
-    project?.shortPitch,
-    project?.description,
-    project?.category,
-    project?.owner?.name,
-    ...(project?.tags || []),
-    ...(project?.rolesNeeded || []),
-    ...(project?.skillsRequired || [])
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
 }
 
 export default function VentureDiscovery() {
@@ -113,8 +49,6 @@ export default function VentureDiscovery() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [focus, setFocus] = useState('')
   const [selectedId, setSelectedId] = useState(null)
 
   const loadProjects = useCallback(async () => {
@@ -134,13 +68,6 @@ export default function VentureDiscovery() {
   useEffect(() => {
     loadProjects()
   }, [loadProjects])
-
-  const showcaseProjects = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    return projects
-      .filter((project) => matchesFocus(project, focus))
-      .filter((project) => (term ? ventureSearchHaystack(project).includes(term) : true))
-  }, [projects, search, focus])
 
   const onlyPrivateVisible = useMemo(
     () => projects.length > 0 && projects.every((p) => p.visibility === 'private'),
@@ -191,62 +118,6 @@ export default function VentureDiscovery() {
           </div>
         </motion.div>
 
-        <motion.div variants={staggerItem} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <label className="block">
-            <span className="sr-only">Search startups</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search startups, founders, skills, or tags…"
-              className="w-full rounded-2xl border border-border bg-bg-elevated px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-          </label>
-          <div className="flex gap-2 justify-between sm:justify-end">
-            <Button
-              variant={focus ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setFocus('')}
-              className="whitespace-nowrap"
-            >
-              All
-            </Button>
-            <Button
-              variant={focus === 'early_stage' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setFocus((prev) => (prev === 'early_stage' ? '' : 'early_stage'))}
-              className="whitespace-nowrap"
-            >
-              Early stage
-            </Button>
-            <Button
-              variant={focus === 'mvp_ready' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setFocus((prev) => (prev === 'mvp_ready' ? '' : 'mvp_ready'))}
-              className="whitespace-nowrap"
-            >
-              MVP ready
-            </Button>
-          </div>
-        </motion.div>
-
-        <motion.div variants={staggerItem} className="flex flex-wrap gap-2">
-          {FOCUS_FILTERS.filter((f) => !['early_stage', 'mvp_ready'].includes(f.id)).map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setFocus((prev) => (prev === filter.id ? '' : filter.id))}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                focus === filter.id
-                  ? 'bg-primary text-white'
-                  : 'bg-bg-elevated text-text-secondary border border-border hover:text-text-primary'
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </motion.div>
-
         {onlyPrivateVisible && !loading && !error && (
           <motion.div variants={staggerItem}>
             <Card hover={false} className="border-warning/30 bg-warning/5">
@@ -277,7 +148,7 @@ export default function VentureDiscovery() {
           </motion.div>
         )}
 
-        {!loading && !error && showcaseProjects.length === 0 && (
+        {!loading && !error && projects.length === 0 && (
           <motion.div variants={staggerItem}>
             <Card hover={false} elevated className="innovation-surface border-border">
               <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup showcase ecosystem</p>
@@ -293,9 +164,9 @@ export default function VentureDiscovery() {
           </motion.div>
         )}
 
-        {!loading && !error && showcaseProjects.length > 0 && (
+        {!loading && !error && projects.length > 0 && (
           <motion.div variants={staggerContainer} className="grid gap-4 md:grid-cols-2">
-            {showcaseProjects.map((project) => (
+            {projects.map((project) => (
               <DiscoverCard
                 key={project._id}
                 project={project}
