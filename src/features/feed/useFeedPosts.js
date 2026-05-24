@@ -2,16 +2,37 @@ import { useCallback, useEffect, useState } from 'react'
 import { loadFeedPosts, saveFeedPosts, createPostId } from './feedStorage'
 import { sortPostsChronological } from './feedUtils'
 import { buildAuthorSnapshot } from './feedAuthor'
+import axios from '../../services/axiosInstance'
+
+const normalizePost = (post) => ({
+  ...post,
+  id: post.id || post._id || createPostId(),
+  likes: Number(post.likes || post.likedBy?.length || 0),
+  dislikes: Number(post.dislikes || post.dislikedBy?.length || 0),
+  comments: Array.isArray(post.comments) ? post.comments : [],
+  likedBy: Array.isArray(post.likedBy) ? post.likedBy : [],
+  dislikedBy: Array.isArray(post.dislikedBy) ? post.dislikedBy : [],
+})
 
 export function useFeedPosts() {
   const [posts, setPosts] = useState(() => sortPostsChronological(loadFeedPosts()))
 
-  const refresh = useCallback(() => {
-    setPosts(sortPostsChronological(loadFeedPosts()))
+  const refresh = useCallback(async () => {
+    try {
+      const response = await axios.get('/feed/posts')
+      const nextPosts = (response?.data?.posts || []).map(normalizePost)
+      saveFeedPosts(nextPosts)
+      setPosts(sortPostsChronological(nextPosts))
+    } catch (error) {
+      setPosts(sortPostsChronological(loadFeedPosts()))
+    }
   }, [])
 
   useEffect(() => {
-    const onUpdate = () => refresh()
+    refresh()
+    const onUpdate = () => {
+      setPosts(sortPostsChronological(loadFeedPosts()))
+    }
     window.addEventListener('collab-feed-updated', onUpdate)
     window.addEventListener('storage', onUpdate)
     return () => {
@@ -26,9 +47,16 @@ export function useFeedPosts() {
   }, [])
 
   const createPost = useCallback(
-    ({ type, content, venture, media, user, projectTitle }) => {
+    async ({ type, content, venture, media, user, projectTitle }) => {
       const author = buildAuthorSnapshot(user, venture || projectTitle)
-      const newPost = {
+      const response = await axios.post('/feed/posts', {
+        type,
+        content,
+        venture: venture || projectTitle || author.venture,
+        projectTitle,
+        media: media || null,
+      })
+      const newPost = normalizePost(response?.data?.post || {
         id: createPostId(),
         type,
         authorId: author.id,
@@ -37,13 +65,8 @@ export function useFeedPosts() {
         content,
         media: media || null,
         createdAt: new Date().toISOString(),
-        likes: 0,
-        dislikes: 0,
-        comments: [],
-        likedBy: [],
-        dislikedBy: [],
-      }
-      const next = [newPost, ...loadFeedPosts()]
+      })
+      const next = [newPost, ...loadFeedPosts().filter((post) => post.id !== newPost.id)]
       persist(next)
       return newPost
     },
@@ -51,7 +74,17 @@ export function useFeedPosts() {
   )
 
   const vote = useCallback(
-    (postId, voteType, currentUserId) => {
+    async (postId, voteType, currentUserId) => {
+      try {
+        const response = await axios.post(`/feed/posts/${postId}/vote`, { voteType })
+        const updated = normalizePost(response?.data?.post || {})
+        const next = loadFeedPosts().map((post) => (post.id === postId ? updated : post))
+        persist(next)
+        return
+      } catch (error) {
+        // Keep the UI responsive if the network is temporarily unavailable.
+      }
+
       const next = loadFeedPosts().map((post) => {
         if (post.id !== postId) return post
         const likedBy = [...(post.likedBy || [])].filter((id) => id !== currentUserId)
@@ -85,7 +118,17 @@ export function useFeedPosts() {
   )
 
   const addComment = useCallback(
-    (postId, content, currentUserId, authorSnapshot) => {
+    async (postId, content, currentUserId, authorSnapshot) => {
+      try {
+        const response = await axios.post(`/feed/posts/${postId}/comments`, { content })
+        const updated = normalizePost(response?.data?.post || {})
+        const next = loadFeedPosts().map((post) => (post.id === postId ? updated : post))
+        persist(next)
+        return
+      } catch (error) {
+        // Fall back to local comment persistence if the API cannot be reached.
+      }
+
       const next = loadFeedPosts().map((post) => {
         if (post.id !== postId) return post
         return {

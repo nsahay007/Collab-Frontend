@@ -167,7 +167,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   }, [sprint?.activePhaseId])
 
   const handlePublishToFeed = async ({ type, content, media }) => {
-    createPost({
+    await createPost({
       type,
       content,
       media,
