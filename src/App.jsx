@@ -23,6 +23,7 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import AdminDashboard from './pages/AdminDashboard'
 import VerifyEmail from './pages/VerifyEmail'
+import VerifyCertificate from './pages/VerifyCertificate'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Legal from './pages/Legal'
@@ -90,6 +91,7 @@ function AppRoutes() {
       <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
       <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
+      <Route path="/verify/:certificateId" element={<Layout><VerifyCertificate /></Layout>} />
       <Route path="/forgot" element={<PublicRoute><Layout><ForgotPassword /></Layout></PublicRoute>} />
       <Route path="/reset" element={<PublicRoute><Layout><ResetPassword /></Layout></PublicRoute>} />
       <Route path="/legal" element={<Layout><Legal /></Layout>} />

@@ -3,13 +3,25 @@ import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
-import { fetchProject } from '../features/projects/projectAPI'
+import { downloadCertificates, downloadStartupPackage, fetchProject } from '../features/projects/projectAPI'
+
+const saveBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
 
 export default function FinalStartupPackage() {
   const { id } = useParams()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [downloadState, setDownloadState] = useState('')
 
   useEffect(() => {
     let active = true
@@ -28,6 +40,25 @@ export default function FinalStartupPackage() {
       active = false
     }
   }, [id])
+
+  const handleDownload = async (type) => {
+    setError('')
+    setDownloadState(type)
+    try {
+      const safeTitle = (project?.title || 'startup').replace(/[^a-z0-9-_]+/gi, '_')
+      if (type === 'package') {
+        const blob = await downloadStartupPackage(id)
+        saveBlob(blob, `${safeTitle}_startup_package.zip`)
+      } else {
+        const blob = await downloadCertificates(id)
+        saveBlob(blob, `${safeTitle}_certificates.zip`)
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Download failed. Please try again.')
+    } finally {
+      setDownloadState('')
+    }
+  }
 
   if (loading) {
     return <Card hover={false}>Loading final startup package...</Card>
@@ -64,14 +95,24 @@ export default function FinalStartupPackage() {
         <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Download Package</p>
         <h2 className="text-xl font-semibold text-text-primary">Final startup documents</h2>
         <p className="mt-2 text-sm text-text-secondary">
-          Document compilation will be connected next. For now, these actions reserve the final launch flow.
+          Export your incubation documents separately from team certificates.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Button type="button" variant="secondary" disabled>
-            Download Complete Startup Package (.zip)
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={Boolean(downloadState)}
+            onClick={() => handleDownload('package')}
+          >
+            {downloadState === 'package' ? 'Preparing Package...' : 'Download Startup Package'}
           </Button>
-          <Button type="button" variant="secondary" disabled>
-            Download Certificate of Completion
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={Boolean(downloadState)}
+            onClick={() => handleDownload('certificates')}
+          >
+            {downloadState === 'certificates' ? 'Preparing Certificates...' : 'Download Certificates'}
           </Button>
         </div>
       </Card>

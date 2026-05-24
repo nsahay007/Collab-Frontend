@@ -38,6 +38,20 @@ export const fetchProject = async (projectId) => {
   return response.data
 }
 
+export const downloadStartupPackage = async (projectId) => {
+  const response = await axios.get(`/projects/${projectId}/startup-package.zip`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
+export const downloadCertificates = async (projectId) => {
+  const response = await axios.get(`/projects/${projectId}/certificates.zip`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
 export const fetchDiscoverProjects = async ({
   lifecycleStage = 'all',
   category,
