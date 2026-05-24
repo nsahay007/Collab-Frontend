@@ -1,7 +1,12 @@
 import React, { useState } from 'react'
 import Button from '../../../components/common/Button'
 import { formatFeedTime } from '../feedUtils'
-import { SEED_BUILDERS } from '../feedSeed'
+
+function commentAuthorName(comment, currentUserId, currentUserName) {
+  if (comment.author?.name) return comment.author.name
+  if (comment.authorId === currentUserId) return currentUserName || 'You'
+  return 'Builder'
+}
 
 export default function FeedComments({
   comments = [],
@@ -31,25 +36,17 @@ export default function FeedComments({
     }
   }
 
-  const resolveAuthor = (authorId) => {
-    if (authorId === currentUserId) {
-      return { name: currentUserName || 'You', id: authorId }
-    }
-    const seed = SEED_BUILDERS[authorId]
-    return seed ? { name: seed.name, id: authorId } : { name: 'Builder', id: authorId }
-  }
-
   return (
     <div className="feed-comments border-t border-border pt-3 mt-3">
       {comments.length > 0 && (
         <ul className="space-y-3 mb-3">
           {comments.map((comment) => {
-            const author = resolveAuthor(comment.authorId)
+            const name = commentAuthorName(comment, currentUserId, currentUserName)
             return (
               <li key={comment.id} className="flex gap-2">
-                <div className="feed-avatar feed-avatar-sm shrink-0">{author.name.charAt(0)}</div>
+                <div className="feed-avatar feed-avatar-sm shrink-0">{name.charAt(0)}</div>
                 <div className="min-w-0 flex-1 rounded-xl bg-bg-secondary/60 px-3 py-2">
-                  <p className="text-xs font-medium text-text-primary">{author.name}</p>
+                  <p className="text-xs font-medium text-text-primary">{name}</p>
                   <p className="text-sm text-text-secondary mt-0.5">{comment.content}</p>
                   <p className="text-[11px] text-text-muted mt-1">{formatFeedTime(comment.createdAt)}</p>
                 </div>

@@ -637,6 +637,27 @@ body,
   text-align: center;
 }
 
+.feed-empty-state {
+  padding: 4rem 1.5rem 5rem;
+  text-align: center;
+}
+
+.feed-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg-card));
+}
+
+.build-post-panel {
+  position: sticky;
+  top: 5.5rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float-gentle,
   .animate-status-flash,

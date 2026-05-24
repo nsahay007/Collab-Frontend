@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Badge from '../../../components/common/Badge'
-import { SEED_BUILDERS } from '../feedSeed'
 import { formatFeedTime, getTypeBadgeVariant, getTypeLabel } from '../feedUtils'
+import { resolvePostAuthor } from '../feedAuthor'
 import FeedComments from './FeedComments'
 
 export default function FeedPostCard({
@@ -14,14 +14,7 @@ export default function FeedPostCard({
 }) {
   const [showComments, setShowComments] = useState(false)
 
-  const author =
-    post.authorId === currentUserId
-      ? {
-          id: currentUserId,
-          name: currentUserName || 'You',
-          venture: post.venture,
-        }
-      : SEED_BUILDERS[post.authorId] || { name: 'Builder', venture: post.venture }
+  const author = resolvePostAuthor(post, currentUserId, currentUserName)
 
   const userVote = post.likedBy?.includes(currentUserId)
     ? 'like'
@@ -34,7 +27,7 @@ export default function FeedPostCard({
       <div className="flex gap-3">
         <button
           type="button"
-          onClick={() => onOpenProfile(post.authorId)}
+          onClick={onOpenProfile}
           className="feed-avatar shrink-0 hover:ring-2 hover:ring-primary/30 transition-shadow duration-150"
           aria-label={`View ${author.name}'s builder profile`}
         >
@@ -44,15 +37,15 @@ export default function FeedPostCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <button
               type="button"
-              onClick={() => onOpenProfile(post.authorId)}
+              onClick={onOpenProfile}
               className="font-semibold text-[15px] text-text-primary hover:underline text-left"
             >
               {author.name}
             </button>
-            {post.venture && (
+            {author.venture && (
               <>
                 <span className="text-text-muted text-sm">·</span>
-                <span className="text-sm text-text-muted truncate">{post.venture}</span>
+                <span className="text-sm text-text-muted truncate">{author.venture}</span>
               </>
             )}
             <span className="text-text-muted text-sm">·</span>

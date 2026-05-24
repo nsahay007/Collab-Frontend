@@ -1,10 +1,8 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Badge from '../../../components/common/Badge'
-import { SEED_BUILDERS } from '../feedSeed'
-
-export default function BuilderProfileModal({ builderId, builderOverride, open, onClose }) {
-  const builder = builderOverride || SEED_BUILDERS[builderId]
+export default function BuilderProfileModal({ builderOverride, open, onClose }) {
+  const builder = builderOverride
 
   return (
     <AnimatePresence>

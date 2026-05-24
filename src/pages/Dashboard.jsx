@@ -24,6 +24,9 @@ import {
   getPrimaryProject
 } from '../features/execution/executionUtils'
 import { staggerContainer, staggerItem } from '../utils/motion'
+import ExecutionPostPanel from '../features/feed/components/ExecutionPostPanel'
+import { useFeedPosts } from '../features/feed/useFeedPosts'
+import { useMotionToast } from '../components/common/MotionToast'
 
 function ErrorState({ message, onRetry }) {
   return (
@@ -54,6 +57,8 @@ function EmptyVentureState() {
 
 export default function Dashboard() {
   const { user, login } = useAuth()
+  const { createPost } = useFeedPosts()
+  const { showToast } = useMotionToast()
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
   const [milestones, setMilestones] = useState([])
@@ -65,6 +70,20 @@ export default function Dashboard() {
   const nextMilestone = useMemo(() => getNextMilestone(primaryProject, milestones), [primaryProject, milestones])
   const blockers = useMemo(() => getBlockers(primaryProject, milestones), [primaryProject, milestones])
   const pendingTasks = useMemo(() => buildDashboardTasks(primaryProject, milestones), [primaryProject, milestones])
+
+  const handlePublishToFeed = async ({ type, content, media }) => {
+    createPost({
+      type,
+      content,
+      media,
+      user,
+      projectTitle: primaryProject?.title,
+    })
+    showToast(
+      type === 'milestone' ? 'Milestone published to ecosystem feed' : 'Blocker shared with builders',
+      type === 'milestone' ? 'success' : 'primary'
+    )
+  }
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -149,6 +168,10 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div variants={staggerItem} className="space-y-6">
+          <ExecutionPostPanel
+            ventureName={primaryProject.title}
+            onPost={handlePublishToFeed}
+          />
           <ReadinessProgress project={primaryProject} />
           <MomentumIndicator project={primaryProject} />
           <TeamCheckInPanel project={primaryProject} />
