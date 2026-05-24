@@ -167,8 +167,12 @@ export default function Register() {
           : formData.customCollegeName
       }
       const response = await registerAPI(payload)
-      // Redirect to OTP verification instead of direct login
-      navigate('/verify-email', { state: { email: formData.email, message: response?.data?.message } })
+      if (response?.data?.user) {
+        login(response.data.user)
+        navigate('/build')
+        return
+      }
+      navigate('/login')
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.')
     } finally {
