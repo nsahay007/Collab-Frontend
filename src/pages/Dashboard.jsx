@@ -1,3 +1,4 @@
+import React from 'react'
 import StartupWorkspacePage from '../features/execution/StartupWorkspacePage'
 
 export default function Dashboard() {
