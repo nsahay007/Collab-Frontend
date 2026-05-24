@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
+import BrandLogo from '../components/common/BrandLogo'
 import useAuth from '../hooks/useAuth'
 import { register as registerAPI } from '../features/auth/authAPI'
 import { getAllColleges } from '../features/college/collegeAPI'
@@ -178,7 +179,8 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-8">
       <Card className="w-full max-w-4xl">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <BrandLogo size="md" className="mb-5 mx-auto" />
           <h1 className="text-3xl font-bold text-text-primary mb-2">Create Account</h1>
           <p className="text-text-secondary">Join Collab and build startups with your college collaborators</p>
         </div>

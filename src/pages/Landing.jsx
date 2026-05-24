@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import Badge from '../components/common/Badge'
+import BrandLogo from '../components/common/BrandLogo'
 import api from '../services/api'
 const steps = [
   {
@@ -611,6 +612,7 @@ export default function Landing() {
 
       <footer className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-xs text-text-muted">
+          <BrandLogo size="sm" className="mx-auto mb-4 opacity-90" />
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
             <span>© {currentYear} Collab. All rights reserved.</span>
             <span className="hidden sm:inline">•</span>

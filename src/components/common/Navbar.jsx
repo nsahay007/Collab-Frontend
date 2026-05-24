@@ -7,6 +7,7 @@ import NavLinkPill from './NavLinkPill'
 import ProfileMenu from './ProfileMenu'
 import SearchPanel from './SearchPanel'
 import ThemeSwitch from './ThemeSwitch'
+import BrandLogo from './BrandLogo'
 import { getNotifications, markNotificationRead } from '../../features/notifications/notificationAPI'
 
 const AUTH_NAV = [
@@ -132,10 +133,12 @@ export default function Navbar() {
         <div className="collab-navbar-inner max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-[68px] items-center gap-6">
             {/* Left — logo */}
-            <Link to={homeTo} className="shrink-0 group flex items-center">
-              <span className="collab-logo-text gradient-text transition-opacity duration-200 group-hover:opacity-85">
-                CoLlab
-              </span>
+            <Link
+              to={homeTo}
+              className="collab-logo-link shrink-0 group flex items-center mr-1 sm:mr-2"
+              aria-label="Collab home"
+            >
+              <BrandLogo size="nav" className="transition-opacity duration-200 group-hover:opacity-90" />
             </Link>
 
             {/* Center — primary nav (authenticated) */}

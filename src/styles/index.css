@@ -125,11 +125,43 @@ body,
 }
 
 @layer components {
-  .collab-logo-text {
-    @apply font-sans font-bold tracking-tight;
-    font-size: clamp(1.25rem, 3.5vw, 1.65rem);
-    line-height: 1;
-    letter-spacing: -0.03em;
+  .collab-logo-link {
+    line-height: 0;
+  }
+
+  .collab-brand-logo {
+    display: block;
+    width: auto;
+    max-width: none;
+    object-fit: contain;
+    object-position: center;
+    flex-shrink: 0;
+  }
+
+  .collab-brand-logo--nav {
+    height: 36px;
+  }
+
+  .collab-brand-logo--sm {
+    height: 28px;
+  }
+
+  .collab-brand-logo--md {
+    height: 40px;
+  }
+
+  @media (max-width: 639px) {
+    .collab-brand-logo--nav {
+      height: 32px;
+    }
+  }
+
+  .dark .collab-brand-logo {
+    filter: brightness(1.06) contrast(1.03);
+  }
+
+  :root:not(.dark) .collab-brand-logo {
+    filter: contrast(1.05) saturate(1.06);
   }
 
   .gradient-text {

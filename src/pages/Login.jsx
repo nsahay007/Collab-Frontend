@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
+import BrandLogo from '../components/common/BrandLogo'
 import useAuth from '../hooks/useAuth'
 import { login as loginAPI, googleAuth as googleAuthAPI, verifyAdminTwoFactor } from '../features/auth/authAPI'
 
@@ -148,7 +149,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6">
       <Card className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <BrandLogo size="md" className="mb-5 mx-auto" />
           <h1 className="text-2xl font-bold text-text-primary mb-2">Welcome Back</h1>
           <p className="text-text-secondary mb-4">Sign in to your account</p>
         </div>
