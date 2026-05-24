@@ -466,6 +466,177 @@ body,
   100% { background-position: 100% 50%; }
 }
 
+/* ─── Execution Feed ─── */
+.feed-page {
+  margin: -1.5rem -1rem 0;
+}
+
+@media (min-width: 640px) {
+  .feed-page {
+    margin: -2rem -1.5rem 0;
+  }
+}
+
+.feed-column {
+  max-width: 600px;
+  width: 100%;
+}
+
+.feed-header {
+  margin-bottom: 0;
+}
+
+.feed-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.feed-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.feed-tab {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: color 150ms ease;
+}
+
+.feed-tab:hover:not([aria-selected='true']) {
+  color: var(--text-secondary);
+}
+
+.feed-composer-wrap {
+  padding: 1rem 1rem 1.25rem;
+}
+
+.feed-composer {
+  padding: 0;
+}
+
+.feed-composer-input {
+  min-height: 4.5rem;
+}
+
+.feed-type-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 150ms ease;
+}
+
+.feed-type-chip--active.feed-type-chip--milestone {
+  border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success);
+}
+
+.feed-type-chip--active.feed-type-chip--blocker {
+  border-color: color-mix(in srgb, var(--warning) 35%, transparent);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  color: var(--warning);
+}
+
+.feed-stream {
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-post {
+  padding: 1rem 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 150ms ease;
+}
+
+.feed-post:hover {
+  background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
+}
+
+.feed-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  flex-shrink: 0;
+}
+
+.feed-avatar-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.6875rem;
+}
+
+.feed-avatar-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1rem;
+}
+
+.feed-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 20rem;
+}
+
+.feed-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  transition: all 150ms ease;
+}
+
+.feed-action:hover {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.feed-action--active-like {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.feed-action--active-dislike {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+}
+
+.feed-action--active-comment {
+  color: var(--secondary);
+  background: color-mix(in srgb, var(--secondary) 10%, transparent);
+}
+
+.feed-icon-action {
+  display: inline-flex;
+  padding: 0.35rem;
+  border-radius: 0.5rem;
+  transition: color 150ms ease;
+}
+
+.feed-empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float-gentle,
   .animate-status-flash,

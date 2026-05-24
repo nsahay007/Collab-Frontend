@@ -1,65 +1,203 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import Card from '../components/common/Card'
-import Button from '../components/common/Button'
-import Badge from '../components/common/Badge'
-import { staggerContainer, staggerItem } from '../utils/motion'
-
-const PLACEHOLDER_ACTIVITY = [
-  { type: 'milestone', title: 'MVP milestone shipped', venture: 'CampusPay', time: '2h ago' },
-  { type: 'blocker', title: 'API integration blocked', venture: 'HealthBridge', time: '5h ago' },
-  { type: 'launch', title: 'Beta waitlist opened', venture: 'StudySync', time: '1d ago' },
-  { type: 'update', title: 'Validation interviews completed', venture: 'EcoCart', time: '2d ago' },
-]
-
-const typeVariant = {
-  milestone: 'success',
-  blocker: 'warning',
-  launch: 'primary',
-  update: 'accent',
-}
+import React, { useCallback, useMemo, useState } from 'react'
+import useAuth from '../hooks/useAuth'
+import { useMotionToast } from '../components/common/MotionToast'
+import FeedComposer from '../features/feed/components/FeedComposer'
+import FeedTabs from '../features/feed/components/FeedTabs'
+import FeedPostCard from '../features/feed/components/FeedPostCard'
+import BuilderProfileModal from '../features/feed/components/BuilderProfileModal'
+import { SEED_BUILDERS } from '../features/feed/feedSeed'
+import { loadFeedPosts, saveUserPosts, createPostId } from '../features/feed/feedStorage'
+import {
+  filterFeedPosts,
+  sortPostsChronological,
+} from '../features/feed/feedUtils'
 
 export default function Feed() {
+  const { user } = useAuth()
+  const { showToast } = useMotionToast()
+  const [posts, setPosts] = useState(() => sortPostsChronological(loadFeedPosts()))
+  const [activeTab, setActiveTab] = useState('all')
+  const [profileBuilderId, setProfileBuilderId] = useState(null)
+  const [profileOverride, setProfileOverride] = useState(null)
+
+  const currentUserId = user?.id || user?._id || 'current-user'
+  const currentUserName = user?.name || 'You'
+
+  const persistUserPosts = useCallback((nextPosts) => {
+    saveUserPosts(nextPosts)
+  }, [])
+
+  const displayedPosts = useMemo(() => {
+    const filtered = filterFeedPosts(posts, activeTab)
+    return activeTab === 'trending' ? filtered : sortPostsChronological(filtered)
+  }, [posts, activeTab])
+
+  const handlePost = useCallback(
+    async ({ type, content, venture, media }) => {
+      const newPost = {
+        id: createPostId(),
+        type,
+        authorId: currentUserId,
+        venture: venture || user?.primaryCategory || undefined,
+        content,
+        media: media || null,
+        createdAt: new Date().toISOString(),
+        likes: 0,
+        dislikes: 0,
+        comments: [],
+        likedBy: [],
+        dislikedBy: [],
+      }
+      setPosts((prev) => {
+        const next = [newPost, ...prev]
+        persistUserPosts(next)
+        return next
+      })
+      showToast(
+        type === 'milestone' ? 'Milestone shared with the ecosystem' : 'Blocker posted — builders can help',
+        type === 'milestone' ? 'success' : 'primary'
+      )
+    },
+    [currentUserId, user?.primaryCategory, persistUserPosts, showToast]
+  )
+
+  const handleVote = useCallback(
+    (postId, voteType) => {
+      setPosts((prev) => {
+        const next = prev.map((post) => {
+          if (post.id !== postId) return post
+          const likedBy = [...(post.likedBy || [])].filter((id) => id !== currentUserId)
+          const dislikedBy = [...(post.dislikedBy || [])].filter((id) => id !== currentUserId)
+          let likes = post.likes || 0
+          let dislikes = post.dislikes || 0
+          const hadLike = post.likedBy?.includes(currentUserId)
+          const hadDislike = post.dislikedBy?.includes(currentUserId)
+
+          if (voteType === 'like') {
+            if (hadLike) {
+              likes = Math.max(0, likes - 1)
+            } else {
+              likes += 1
+              if (hadDislike) dislikes = Math.max(0, dislikes - 1)
+              likedBy.push(currentUserId)
+            }
+          } else if (voteType === 'dislike') {
+            if (hadDislike) {
+              dislikes = Math.max(0, dislikes - 1)
+            } else {
+              dislikes += 1
+              if (hadLike) likes = Math.max(0, likes - 1)
+              dislikedBy.push(currentUserId)
+            }
+          }
+
+          return { ...post, likes, dislikes, likedBy, dislikedBy }
+        })
+        persistUserPosts(next)
+        return next
+      })
+    },
+    [currentUserId, persistUserPosts]
+  )
+
+  const handleAddComment = useCallback(
+    async (postId, content) => {
+      setPosts((prev) => {
+        const next = prev.map((post) => {
+          if (post.id !== postId) return post
+          return {
+            ...post,
+            comments: [
+              ...(post.comments || []),
+              {
+                id: `comment-${Date.now()}`,
+                authorId: currentUserId,
+                content,
+                createdAt: new Date().toISOString(),
+              },
+            ],
+          }
+        })
+        persistUserPosts(next)
+        return next
+      })
+    },
+    [currentUserId, persistUserPosts]
+  )
+
+  const handleOpenProfile = useCallback(
+    (authorId) => {
+      if (authorId === currentUserId) {
+        setProfileOverride({
+          id: currentUserId,
+          name: currentUserName,
+          role: user?.role === 'admin' ? 'Admin' : 'Builder',
+          skills: user?.skills?.length ? user.skills : ['Building'],
+          venture: user?.primaryCategory || 'Your startup workspace',
+          email: user?.showContactToTeam ? user?.email : undefined,
+        })
+        setProfileBuilderId(null)
+      } else {
+        setProfileOverride(null)
+        setProfileBuilderId(authorId)
+      }
+    },
+    [currentUserId, currentUserName, user]
+  )
+
+  const closeProfile = () => {
+    setProfileBuilderId(null)
+    setProfileOverride(null)
+  }
+
   return (
-    <motion.div className="max-w-3xl mx-auto space-y-6" variants={staggerContainer} initial="hidden" animate="show">
-      <motion.div variants={staggerItem}>
-        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Ecosystem Feed</p>
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Execution heartbeat</h1>
-        <p className="text-text-secondary mt-2 max-w-2xl">
-          Milestone posts, blocker updates, launches, and public execution activity from ambitious builders.
-        </p>
-      </motion.div>
-
-      <motion.div variants={staggerItem}>
-        <Card hover={false} className="border-primary/20">
-          <Badge variant="accent" className="mb-3">Coming online</Badge>
-          <p className="text-sm text-text-secondary">
-            The live feed is rolling out next. For now, continue building in your workspace and track progress on the Build tab.
+    <div className="feed-page">
+      <header className="feed-header sticky top-[68px] z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 border-b border-border bg-bg-main/85 backdrop-blur-xl">
+        <div className="feed-column mx-auto">
+          <p className="text-xs uppercase tracking-wide text-text-muted mb-1">Ecosystem</p>
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">Execution Feed</h1>
+          <p className="text-sm text-text-muted mt-1 hidden sm:block">
+            Public building activity — milestones, blockers, and collaborative problem-solving.
           </p>
-          <Link to="/build" className="inline-block mt-4">
-            <Button size="sm">Go to Build</Button>
-          </Link>
-        </Card>
-      </motion.div>
+          <div className="mt-4">
+            <FeedTabs activeTab={activeTab} onChange={setActiveTab} />
+          </div>
+        </div>
+      </header>
 
-      <motion.div variants={staggerItem} className="space-y-3">
-        <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Preview</h2>
-        {PLACEHOLDER_ACTIVITY.map((item) => (
-          <Card key={item.title} hover className="opacity-80">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Badge variant={typeVariant[item.type] || 'default'} className="mb-2 capitalize">
-                  {item.type}
-                </Badge>
-                <p className="font-medium text-text-primary">{item.title}</p>
-                <p className="text-sm text-text-muted mt-1">{item.venture}</p>
-              </div>
-              <span className="text-xs text-text-muted shrink-0">{item.time}</span>
+      <div className="feed-column mx-auto pb-12">
+        <section className="feed-composer-wrap border-b border-border">
+          <FeedComposer onPost={handlePost} />
+        </section>
+
+        <section className="feed-stream" aria-label="Execution updates">
+          {displayedPosts.length === 0 ? (
+            <div className="feed-empty">
+              <p className="text-text-secondary text-sm">No posts in this view yet.</p>
+              <p className="text-text-muted text-xs mt-1">Share a milestone or ask for help on a blocker.</p>
             </div>
-          </Card>
-        ))}
-      </motion.div>
-    </motion.div>
+          ) : (
+            displayedPosts.map((post) => (
+              <FeedPostCard
+                key={post.id}
+                post={post}
+                currentUserId={currentUserId}
+                currentUserName={currentUserName}
+                onVote={handleVote}
+                onAddComment={handleAddComment}
+                onOpenProfile={handleOpenProfile}
+              />
+            ))
+          )}
+        </section>
+      </div>
+
+      <BuilderProfileModal
+        builderId={profileBuilderId}
+        builderOverride={profileOverride}
+        open={Boolean(profileBuilderId || profileOverride)}
+        onClose={closeProfile}
+      />
+    </div>
   )
 }
