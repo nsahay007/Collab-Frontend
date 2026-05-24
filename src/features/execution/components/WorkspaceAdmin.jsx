@@ -9,7 +9,6 @@ import {
   removeTeamMember,
   deleteProject,
 } from '../../projects/projectAPI'
-import { fetchIncubationPacket } from '../../ventures/ventureAPI'
 
 function normalizeList(value) {
   if (!value) return []
@@ -140,21 +139,6 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
     }
   }
 
-  const downloadPackage = async () => {
-    try {
-      const data = await fetchIncubationPacket(projectId)
-      const blob = new Blob([JSON.stringify(data?.packet || data, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${project?.title || 'startup'}-incubation-package.json`
-      link.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      setError('Could not download package.')
-    }
-  }
-
   if (!isOwner) return null
 
   return (
@@ -162,9 +146,6 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
       <div className="flex flex-wrap gap-2">
         <Button variant="ghost" size="sm" onClick={openDetails}>
           Settings
-        </Button>
-        <Button variant="ghost" size="sm" onClick={downloadPackage}>
-          Export
         </Button>
         <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
           Delete

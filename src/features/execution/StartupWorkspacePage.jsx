@@ -11,7 +11,6 @@ import GuidedPipelineWorkspace from './pipeline/GuidedPipelineWorkspace'
 import BuildRightSidebar from './components/BuildRightSidebar'
 import WorkspaceAdmin from './components/WorkspaceAdmin'
 import { buildSprintState, SPRINT_PHASES } from './sprintPipeline'
-import { getPrimaryProject } from './executionUtils'
 import { formatMomentum, MOMENTUM_VARIANTS } from './executionUtils'
 import { getLifecycleLabel, getLifecycleVariant, normalizeLifecycleStage } from '../../utils/ventureLifecycle'
 import ExecutionPostPanel from '../feed/components/ExecutionPostPanel'
@@ -44,40 +43,71 @@ function EmptyVentureState() {
   )
 }
 
-function BuildProjectLists({ projects = [] }) {
-  if (!projects.length) return null
+function BuildHubView({ profile, projects = [] }) {
   const active = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready')
   const completed = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === 'incubation_ready')
 
+  if (!projects.length) {
+    return <EmptyVentureState />
+  }
+
   return (
-    <Card className="max-w-3xl mx-auto mt-5" hover={false}>
-      <h2 className="text-lg font-semibold text-text-primary mb-3">Your startup workspaces</h2>
-      <div className="grid gap-4 md:grid-cols-2">
+    <div className="max-w-6xl mx-auto space-y-6">
+      <Card hover={false} className="innovation-surface">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Build</p>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight truncate">
+              {profile?.name ? `${profile.name}'s startup workspaces` : 'Your startup workspaces'}
+            </h1>
+            <p className="text-text-secondary mt-2 max-w-2xl">
+              Choose a startup to continue building. The workspace opens only after you select a project.
+            </p>
+          </div>
+          <Link to="/create" className="shrink-0">
+            <Button size="sm" className="w-full sm:w-auto">New workspace</Button>
+          </Link>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Badge variant="primary">{active.length} active</Badge>
+          <Badge variant="success">{completed.length} completed</Badge>
+          <Badge variant="default">{projects.length} total</Badge>
+        </div>
+      </Card>
+
+      <div className="grid gap-5 lg:grid-cols-2">
         <ProjectList title="Active projects" projects={active} packageView={false} />
         <ProjectList title="Completed projects" projects={completed} packageView />
       </div>
-    </Card>
+    </div>
   )
 }
 
 function ProjectList({ title, projects, packageView }) {
   return (
-    <div className="min-w-0">
-      <p className="text-sm font-semibold text-text-primary mb-2">{title}</p>
+    <Card hover={false} className="min-w-0 h-full">
+      <p className="text-lg font-semibold text-text-primary mb-3">{title}</p>
       <div className="space-y-2">
         {projects.length ? projects.map((project) => {
           const id = project._id || project.id
           return (
-            <Link key={id} to={packageView ? `/project/${id}/package` : `/project/${id}`} className="block rounded-xl border border-border bg-bg-secondary/40 px-3 py-2 hover:border-primary/40">
-              <p className="truncate text-sm font-medium text-text-primary">{project.title}</p>
-              <p className="text-xs text-text-muted">{packageView ? 'Read-only final package' : getLifecycleLabel(project.lifecycleStage)}</p>
+            <Link key={id} to={packageView ? `/project/${id}/package` : `/project/${id}`} className="block rounded-xl border border-border bg-bg-secondary/40 px-4 py-3 hover:border-primary/40">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-text-primary">{project.title}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-text-secondary">{project.shortPitch || project.description || 'Open startup workspace'}</p>
+                </div>
+                <Badge variant={packageView ? 'success' : getLifecycleVariant(normalizeLifecycleStage(project.lifecycleStage))}>
+                  {packageView ? 'Final package' : getLifecycleLabel(project.lifecycleStage)}
+                </Badge>
+              </div>
             </Link>
           )
         }) : (
           <p className="rounded-xl border border-dashed border-border px-3 py-2 text-sm text-text-muted">None yet</p>
         )}
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -140,14 +170,15 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
       setProfile(profileResponse?.data || null)
 
       let targetId = fixedProjectId
-      let listProject = null
 
       if (!targetId) {
         const projectsResponse = await api.get('/users/projects?lifecycleStage=all&limit=30&page=1')
         const projectList = Array.isArray(projectsResponse?.data?.projects) ? projectsResponse.data.projects : []
         setProjectList(projectList)
-        listProject = getPrimaryProject(projectList.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready'))
-        targetId = listProject?._id || listProject?.id
+        setProject(null)
+        setMilestones([])
+        setLogs([])
+        return
       }
 
       if (!targetId) {
@@ -164,8 +195,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
       ])
 
       const loaded = detail.status === 'fulfilled' ? detail.value : null
-      const resolved =
-        loaded && (loaded._id || loaded.id) ? loaded : listProject
+      const resolved = loaded && (loaded._id || loaded.id) ? loaded : null
 
       if (!resolved?._id && !resolved?.id) {
         const fetchMessage =
@@ -232,8 +262,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   if (!project || !activePhase) {
     return (
       <div className="build-page max-w-[1440px] mx-auto min-h-[40vh]">
-        <EmptyVentureState />
-        {isBuildView && <BuildProjectLists projects={projectList} />}
+        {isBuildView ? <BuildHubView profile={profile} projects={projectList} /> : <EmptyVentureState />}
       </div>
     )
   }
@@ -275,9 +304,6 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
                   <Button variant="secondary" size="sm" className="w-full sm:w-auto">
                     New workspace
                   </Button>
-                </Link>
-                <Link to={`/project/${projectId}`}>
-                  <Button size="sm" className="w-full sm:w-auto">Open this workspace</Button>
                 </Link>
               </>
             ) : (
@@ -341,11 +367,10 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             activePhaseId={resolvedActivePhaseId}
             ventureName={project.title}
             onPost={handlePublishToFeed}
+            milestones={milestones}
           />
         </div>
       </div>
-
-      {isBuildView && <BuildProjectLists projects={projectList} />}
 
       <div className="lg:hidden mt-8">
         <ExecutionPostPanel ventureName={project.title} onPost={handlePublishToFeed} />
