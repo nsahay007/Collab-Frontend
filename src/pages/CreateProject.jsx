@@ -21,6 +21,7 @@ const STEPS = [
 ]
 
 const emptyMember = () => ({ name: '', role: '' })
+const LONG_TEXT_LIMIT = 3000
 
 const splitLines = (value) => String(value || '')
   .split('\n')
@@ -401,15 +402,23 @@ function Field({ label, children }) {
   )
 }
 
-function Textarea({ value, onChange, placeholder }) {
+function Textarea({ value, onChange, placeholder, maxLength = LONG_TEXT_LIMIT }) {
+  const count = String(value || '').length
+  const nearLimit = count > maxLength * 0.9
   return (
-    <textarea
-      rows={4}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      placeholder={placeholder}
-      className="w-full resize-none rounded-xl border border-border bg-bg-card px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
-    />
+    <>
+      <textarea
+        rows={4}
+        value={value}
+        maxLength={maxLength}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="w-full resize-none rounded-xl border border-border bg-bg-card px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+      />
+      <span className={`mt-1 block text-right text-xs ${nearLimit ? 'text-warning' : 'text-text-muted'}`}>
+        {count}/{maxLength} characters
+      </span>
+    </>
   )
 }
 
