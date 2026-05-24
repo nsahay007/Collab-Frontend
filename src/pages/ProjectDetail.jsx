@@ -548,7 +548,7 @@ export default function ProjectDetail() {
     try {
       setDeleting(true)
       await deleteProject(id)
-      navigate('/dashboard')
+      navigate('/build')
     } catch (err) {
       console.error(err)
       setDeleteError(err?.response?.data?.message || 'Unable to delete startup workspace.')
@@ -749,8 +749,8 @@ export default function ProjectDetail() {
       <div className="min-h-screen flex flex-col items-center justify-center text-center space-y-4">
         <h1 className="text-2xl font-bold text-text-primary">{error || 'Startup workspace not found'}</h1>
         <p className="text-text-secondary max-w-md">Please go back and select another startup workspace.</p>
-        <Link to="/dashboard">
-          <Button variant="primary">Back to Dashboard</Button>
+        <Link to="/build">
+          <Button variant="primary">Back to Build</Button>
         </Link>
       </div>
     )
@@ -793,8 +793,8 @@ export default function ProjectDetail() {
           <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
           <p className="mt-2 text-text-secondary">{project.shortPitch || project.description}</p>
         </div>
-        <Link to="/dashboard">
-          <Button variant="secondary" size="sm" className="w-full sm:w-auto">Dashboard</Button>
+        <Link to="/build">
+          <Button variant="secondary" size="sm" className="w-full sm:w-auto">Build</Button>
         </Link>
       </div>
 
@@ -929,7 +929,7 @@ export default function ProjectDetail() {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="secondary" onClick={handleSaveStageProgress} disabled={stageSaving || !canUseStageFlow}>Save Progress</Button>
-            <Link to="/dashboard"><Button variant="secondary" className="w-full sm:w-auto">Continue Later</Button></Link>
+            <Link to="/build"><Button variant="secondary" className="w-full sm:w-auto">Continue Later</Button></Link>
             {activeGuideIndex > 0 && <Button variant="secondary" onClick={() => setSelectedStage(LINEAR_LIFECYCLE[activeGuideIndex - 1])}>Return Previous</Button>}
             <Button
               variant="primary"

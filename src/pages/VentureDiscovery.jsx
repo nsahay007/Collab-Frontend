@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
-import { fadeInView, staggerContainer, staggerItem } from '../utils/motion'
+import { staggerContainer, staggerItem } from '../utils/motion'
 
 export default function VentureDiscovery() {
   return (
@@ -15,68 +15,52 @@ export default function VentureDiscovery() {
       animate="show"
     >
       <motion.div variants={staggerItem}>
-        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Coming Soon</p>
-        <h1 className="text-3xl font-bold text-text-primary">Find Team Members is not live yet</h1>
+        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Discover</p>
+        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Find builders, teams & ventures</h1>
         <p className="text-text-secondary mt-2 max-w-3xl">
-          Collab&apos;s public launch is focused on existing student startup teams. For now, bring your own team and use Collab to plan, build, validate, and prepare for incubation.
+          Explore the ecosystem — discover ambitious builders, forming teams, and startups at every execution stage.
         </p>
       </motion.div>
 
       <motion.div variants={staggerItem}>
-        <Card hover={false} className="border-primary/25 innovation-surface">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <Badge variant="innovation">Team Formation Coming Soon</Badge>
-              <h2 className="mt-4 text-2xl font-semibold text-text-primary">What you can do today</h2>
-              <p className="mt-2 text-text-secondary">
-                Create a private startup workspace with your current team, assign responsibilities, track milestones, store validation evidence, and generate incubation-readiness material.
-              </p>
-            </div>
+        <Card hover={false} className="border-primary/20">
+          <Badge variant="primary" className="mb-3">Rolling out</Badge>
+          <h2 className="text-xl font-semibold text-text-primary">Discovery is expanding</h2>
+          <p className="mt-2 text-text-secondary max-w-2xl">
+            Public browsing of builders and ventures is launching soon. Until then, create a workspace with your team and execute on the Build tab.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row mt-5">
+            <Link to="/build">
+              <Button className="w-full sm:w-auto">Open Build</Button>
+            </Link>
             <Link to="/create">
-              <Button className="w-full lg:w-auto">Create Startup Workspace</Button>
+              <Button variant="secondary" className="w-full sm:w-auto">New Workspace</Button>
             </Link>
           </div>
         </Card>
       </motion.div>
 
       <motion.div variants={staggerContainer} className="grid gap-4 md:grid-cols-3">
-        <InfoCard
-          title="No browsing feed"
-          text="Collab is not a startup social network. Public discovery is intentionally paused for launch focus."
+        <DiscoverCard
+          title="Builders"
+          text="Find students by skills, domain interest, and execution track record."
         />
-        <InfoCard
-          title="Existing teams first"
-          text="The current product guides teams that already have members, roles, and a startup idea."
+        <DiscoverCard
+          title="Teams"
+          text="See teams forming around ideas — roles open, momentum visible."
         />
-        <InfoCard
-          title="Pipeline over networking"
-          text="The priority is execution clarity, validation evidence, and incubation readiness."
+        <DiscoverCard
+          title="Startups"
+          text="Browse ventures by stage, category, and incubation readiness."
         />
-      </motion.div>
-
-      <motion.div variants={staggerItem}>
-        <Card hover={false}>
-          <h2 className="text-xl font-semibold text-text-primary mb-3">Suggested next step</h2>
-          <p className="text-text-secondary mb-4">
-            If your team is ready, create a workspace and start with the planning phase. If you still need members, keep a note of the missing roles and come back when team formation opens.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link to="/dashboard">
-              <Button variant="secondary" className="w-full sm:w-auto">Back to Pipeline</Button>
-            </Link>
-            <Link to="/create">
-              <Button className="w-full sm:w-auto">Start Workspace</Button>
-            </Link>
-          </div>
-        </Card>
       </motion.div>
     </motion.div>
   )
 }
 
-function InfoCard({ title, text }) {
+function DiscoverCard({ title, text }) {
   return (
-    <motion.div variants={fadeInView} whileInView="visible" viewport={{ once: true, margin: '-40px' }} initial="hidden">
+    <motion.div variants={staggerItem}>
       <Card>
         <h3 className="font-semibold text-text-primary">{title}</h3>
         <p className="mt-2 text-sm text-text-secondary">{text}</p>

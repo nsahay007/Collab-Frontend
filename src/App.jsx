@@ -11,9 +11,11 @@ import Button from './components/common/Button'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
+import Feed from './pages/Feed'
+import Build from './pages/Build'
+import Discover from './pages/Discover'
+import Opportunities from './pages/Opportunities'
 import CreateProject from './pages/CreateProject'
-import VentureDiscovery from './pages/VentureDiscovery'
 import ProjectDetail from './pages/ProjectDetail'
 import Profile from './pages/Profile'
 import AdminDashboard from './pages/AdminDashboard'
@@ -49,7 +51,7 @@ function PublicRoute({ children }) {
       </div>
     )
   }
-  return user ? <Navigate to="/dashboard" /> : children
+  return user ? <Navigate to="/feed" /> : children
 }
 
 function Layout({ children }) {
@@ -69,8 +71,11 @@ function AppRoutes() {
       <Route path="/" element={<PublicRoute><Layout><Landing /></Layout></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Layout><Login /></Layout></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Layout><Register /></Layout></PublicRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-      <Route path="/discover" element={<ProtectedRoute><Layout><VentureDiscovery /></Layout></ProtectedRoute>} />
+      <Route path="/feed" element={<ProtectedRoute><Layout><Feed /></Layout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<Navigate to="/build" replace />} />
+      <Route path="/build" element={<ProtectedRoute><Layout><Build /></Layout></ProtectedRoute>} />
+      <Route path="/discover" element={<ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>} />
+      <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
       <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
@@ -89,8 +94,8 @@ function AppRoutes() {
               <p className="text-text-secondary max-w-md">
                 The page you are looking for doesn&apos;t exist or has moved.
               </p>
-              <Link to="/dashboard">
-                <Button variant="primary" size="sm">Go to Dashboard</Button>
+              <Link to="/build">
+                <Button variant="primary" size="sm">Go to Build</Button>
               </Link>
             </div>
           </Layout>
