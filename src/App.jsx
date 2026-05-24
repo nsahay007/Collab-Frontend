@@ -55,7 +55,7 @@ function PublicRoute({ children }) {
       </div>
     )
   }
-  return user ? <Navigate to="/feed" /> : children
+  return user ? <Navigate to="/build" /> : children
 }
 
 function Layout({ children }) {

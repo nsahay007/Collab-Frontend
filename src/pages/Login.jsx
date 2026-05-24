@@ -53,7 +53,7 @@ export default function Login() {
         throw new Error('Invalid Google login response')
       }
       login(response.data.user)
-      navigate('/feed')
+      navigate('/build')
     } catch (err) {
       setError(err?.response?.data?.message || 'Google login failed. Please try again.')
     } finally {
@@ -123,7 +123,7 @@ export default function Login() {
           throw new Error('Invalid 2FA response')
         }
         login(response.data.user)
-        navigate('/feed')
+        navigate('/build')
         return
       }
 
@@ -138,7 +138,7 @@ export default function Login() {
         throw new Error('Invalid login response')
       }
       login(response.data.user)
-      navigate('/feed')
+      navigate('/build')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.')
     } finally {

@@ -45,7 +45,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
 
-  const homeTo = user ? '/feed' : '/'
+  const homeTo = user ? '/build' : '/'
 
   const isNavActive = (link) => {
     const path = location.pathname
