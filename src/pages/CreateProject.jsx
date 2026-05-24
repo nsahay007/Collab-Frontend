@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
-import { createProject } from '../features/projects/projectAPI'
+import { createMilestone, createProject } from '../features/projects/projectAPI'
 
 const CATEGORIES = [
   'Tech & Product',
@@ -21,6 +21,7 @@ const STEPS = [
 ]
 
 const emptyMember = () => ({ name: '', role: '' })
+const emptyMilestone = () => ({ title: '', description: '' })
 const LONG_TEXT_LIMIT = 3000
 
 const splitLines = (value) => String(value || '')
@@ -44,7 +45,7 @@ export default function CreateProject() {
     teamMembers: [emptyMember()],
     startupGoals: '',
     featurePlan: '',
-    milestonePlan: '',
+    milestones: [emptyMilestone()],
     executionTimeline: ''
   })
 
@@ -85,6 +86,38 @@ export default function CreateProject() {
     }))
   }
 
+  const updateMilestone = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      milestones: prev.milestones.map((milestone, milestoneIndex) => (
+        milestoneIndex === index ? { ...milestone, [field]: value } : milestone
+      ))
+    }))
+    setError('')
+  }
+
+  const addMilestone = () => {
+    setForm((prev) => ({ ...prev, milestones: [...prev.milestones, emptyMilestone()] }))
+  }
+
+  const removeMilestone = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      milestones: prev.milestones.length === 1
+        ? [emptyMilestone()]
+        : prev.milestones.filter((_, milestoneIndex) => milestoneIndex !== index)
+    }))
+  }
+
+  const plannedMilestones = useMemo(() => (
+    form.milestones
+      .map((milestone) => ({
+        title: milestone.title.trim(),
+        description: milestone.description.trim()
+      }))
+      .filter((milestone) => milestone.title)
+  ), [form.milestones])
+
   const validateCurrentStep = () => {
     if (step === 0) {
       if (!form.startupName.trim() || !form.problemStatement.trim() || !form.targetUsers.trim() || !form.category || !form.whyMatters.trim()) {
@@ -95,8 +128,8 @@ export default function CreateProject() {
       return 'Add at least one team member or role. Collab is built for existing student teams.'
     }
     if (step === 2) {
-      if (!form.startupGoals.trim() || !form.featurePlan.trim() || !form.milestonePlan.trim() || !form.executionTimeline.trim()) {
-        return 'Add goals, feature plan, milestone plan, and execution timeline.'
+      if (!form.startupGoals.trim() || !form.featurePlan.trim() || plannedMilestones.length === 0 || !form.executionTimeline.trim()) {
+        return 'Add goals, feature plan, at least one milestone, and execution timeline.'
       }
     }
     return ''
@@ -129,7 +162,7 @@ export default function CreateProject() {
     ...splitLines(form.featurePlan).map((item) => `- ${item}`),
     '',
     'Milestone Plan:',
-    ...splitLines(form.milestonePlan).map((item) => `- ${item}`),
+    ...plannedMilestones.map((item, index) => `- Milestone ${index + 1}: ${item.title}${item.description ? ` - ${item.description}` : ''}`),
     '',
     'Execution Timeline:',
     form.executionTimeline.trim()
@@ -179,6 +212,14 @@ export default function CreateProject() {
       const response = await createProject(payload)
       const projectId = response?.data?.project?._id || response?.data?._id || response?.project?._id
       if (!projectId) throw new Error('Startup workspace was created, but no id was returned.')
+      await Promise.all(plannedMilestones.map((milestone) => (
+        createMilestone(projectId, {
+          title: milestone.title,
+          description: milestone.description,
+          lifecycleStage: 'mvp',
+          status: 'pending'
+        })
+      )))
       navigate(`/project/${projectId}`)
     } catch (err) {
       const firstIssue = err?.response?.data?.errors?.[0]
@@ -236,11 +277,17 @@ export default function CreateProject() {
         )}
 
         {step === 2 && (
-          <PlanningStep form={form} updateField={updateField} />
+          <PlanningStep
+            form={form}
+            updateField={updateField}
+            updateMilestone={updateMilestone}
+            addMilestone={addMilestone}
+            removeMilestone={removeMilestone}
+          />
         )}
 
         {step === 3 && (
-          <ReviewStep form={form} activeMembers={activeMembers} />
+          <ReviewStep form={form} activeMembers={activeMembers} plannedMilestones={plannedMilestones} />
         )}
 
         {error && (
@@ -333,12 +380,12 @@ function TeamStep({ members, updateMember, addMember, removeMember }) {
   )
 }
 
-function PlanningStep({ form, updateField }) {
+function PlanningStep({ form, updateField, updateMilestone, addMilestone, removeMilestone }) {
   return (
     <div className="space-y-5">
       <SectionIntro
         title="Step 3: Planning phase"
-        text="Keep it simple: goals, features, milestones, and timeline. This becomes your first startup roadmap."
+        text="Keep it simple: goals, features, execution milestones, and timeline. These milestones become your MVP checklist later."
       />
       <Field label="Startup goals *">
         <Textarea value={form.startupGoals} onChange={(value) => updateField('startupGoals', value)} placeholder={'Validate student demand\nBuild clickable prototype\nPrepare MVP demo'} />
@@ -346,9 +393,36 @@ function PlanningStep({ form, updateField }) {
       <Field label="Feature plan *">
         <Textarea value={form.featurePlan} onChange={(value) => updateField('featurePlan', value)} placeholder={'Core feature 1\nCore feature 2\nFeature intentionally postponed'} />
       </Field>
-      <Field label="Milestone plan *">
-        <Textarea value={form.milestonePlan} onChange={(value) => updateField('milestonePlan', value)} placeholder={'Week 1: Finalize problem and interview script\nWeek 2: Build prototype flow\nWeek 3: Test with 10 users'} />
-      </Field>
+      <div>
+        <span className="mb-2 block text-sm font-medium text-text-primary">Execution milestones *</span>
+        <div className="space-y-3">
+          {form.milestones.map((milestone, index) => (
+            <div key={index} className="rounded-2xl border border-border bg-bg-secondary/40 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-text-primary">Milestone {index + 1}</p>
+                <Button type="button" variant="ghost" size="xs" onClick={() => removeMilestone(index)}>
+                  Remove
+                </Button>
+              </div>
+              <div className="grid gap-3">
+                <Input
+                  value={milestone.title}
+                  onChange={(event) => updateMilestone(index, 'title', event.target.value)}
+                  placeholder={index === 0 ? 'Build Landing Page' : 'Milestone title'}
+                />
+                <Input
+                  value={milestone.description}
+                  onChange={(event) => updateMilestone(index, 'description', event.target.value)}
+                  placeholder="Optional short description"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button type="button" variant="secondary" size="sm" onClick={addMilestone} className="mt-3">
+          Add Milestone
+        </Button>
+      </div>
       <Field label="Execution timeline *">
         <Textarea value={form.executionTimeline} onChange={(value) => updateField('executionTimeline', value)} placeholder="Describe the next 2-4 weeks in plain language." />
       </Field>
@@ -356,7 +430,7 @@ function PlanningStep({ form, updateField }) {
   )
 }
 
-function ReviewStep({ form, activeMembers }) {
+function ReviewStep({ form, activeMembers, plannedMilestones }) {
   return (
     <div className="space-y-5">
       <SectionIntro title="Step 4: Review" text="This structured concept will become your startup workspace." />
@@ -374,7 +448,17 @@ function ReviewStep({ form, activeMembers }) {
         </SummaryCard>
         <SummaryCard title="Planning">
           <SummaryRow label="Goals" value={form.startupGoals} />
-          <SummaryRow label="Milestones" value={form.milestonePlan} />
+          <div>
+            <p className="text-xs uppercase tracking-wide text-text-muted">Milestones</p>
+            <div className="mt-2 space-y-2">
+              {plannedMilestones.map((milestone, index) => (
+                <div key={`${milestone.title}-${index}`} className="rounded-xl border border-border bg-bg-card px-3 py-2">
+                  <p className="text-sm font-semibold text-text-primary">Milestone {index + 1}: {milestone.title}</p>
+                  {milestone.description && <p className="text-xs text-text-secondary mt-1">{milestone.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
         </SummaryCard>
         <SummaryCard title="Next Timeline">
           <p className="whitespace-pre-wrap text-sm text-text-secondary">{form.executionTimeline}</p>

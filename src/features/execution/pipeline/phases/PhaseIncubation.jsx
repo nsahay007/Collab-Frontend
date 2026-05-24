@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   PhaseHero,
   QuestionCard,
@@ -18,13 +19,14 @@ const CHECKLIST = [
   { id: 'identity', label: 'Startup identity & pitch', field: 'foundation' },
   { id: 'validation', label: 'Validation proof collected', field: 'validation' },
   { id: 'mvp', label: 'MVP / demo evidence', field: 'execution' },
-  { id: 'public', label: 'Public execution on Feed', field: 'public' },
   { id: 'readiness', label: 'Incubation readiness score', field: 'score' },
 ]
 
 export default function PhaseIncubation({ phase, project, phases, onSaved, showToast }) {
+  const navigate = useNavigate()
   const projectId = project._id || project.id
   const [saving, setSaving] = useState(false)
+  const [uploadedKinds, setUploadedKinds] = useState([])
   const [form, setForm] = useState({
     pitchDeckLink: '',
     demoVideoLink: '',
@@ -40,8 +42,15 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
     })
   }, [project, projectId])
 
-  const readiness = Number(project.readinessScore || 0)
+  const executionProgress = Number(phases?.find((item) => item.id === 'execution')?.progress || 0)
+  const readiness = Math.max(Number(project.readinessScore || 0), Math.round(40 + (executionProgress * 0.4)))
   const stage = normalizeLifecycleStage(project.lifecycleStage)
+  const projectFiles = Array.isArray(project.files) ? project.files : []
+  const pitchFiles = projectFiles.filter((file) => /pdf|presentation|slide|deck/i.test(`${file.mimetype || ''} ${file.originalName || ''}`))
+  const demoFiles = projectFiles.filter((file) => /video/i.test(`${file.mimetype || ''} ${file.originalName || ''}`))
+  const hasPitchAsset = Boolean(form.pitchDeckLink || pitchFiles.length || uploadedKinds.includes('pitch'))
+  const hasDemoAsset = Boolean(form.demoVideoLink || demoFiles.length || uploadedKinds.includes('demo'))
+  const hasOverview = form.overviewNotes.trim().length > 30 || Boolean(project.description || project.shortPitch)
 
   const checklistStatus = (item) => {
     const p = phases?.find((x) => x.id === item.field)
@@ -50,11 +59,25 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
   }
 
   const handleSave = async () => {
+    if (!hasPitchAsset) {
+      showToast?.('Add a pitch deck link or upload a deck first.', 'error')
+      return
+    }
+    if (!hasDemoAsset) {
+      showToast?.('Add a demo video link or upload a demo file first.', 'error')
+      return
+    }
+    if (!hasOverview) {
+      showToast?.('Add a short startup overview before completing.', 'error')
+      return
+    }
+
     setSaving(true)
     try {
       await saveIncubationPhase(projectId, form)
-      showToast?.('Incubation assets saved', 'success')
+      showToast?.('Startup marked incubation ready', 'success')
       onSaved?.()
+      navigate(`/project/${projectId}/package`, { replace: true })
     } catch (err) {
       showToast?.('Could not save', 'error')
     } finally {
@@ -66,7 +89,9 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
     if (!file) return
     try {
       await uploadProjectFile(projectId, file)
+      setUploadedKinds((current) => [...new Set([...current, /demo/i.test(label) ? 'demo' : 'pitch'])])
       showToast?.(`${label} uploaded`, 'success')
+      onSaved?.()
     } catch {
       showToast?.('Upload failed', 'error')
     }
@@ -102,7 +127,7 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
         number={1}
         title="Pitch deck upload"
         why="Programs review how you tell the story — deck link or PDF proof."
-        complete={Boolean(form.pitchDeckLink)}
+        complete={hasPitchAsset}
       >
         <LinkProofRow
           label="Pitch deck link"
@@ -111,13 +136,14 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
           placeholder="Google Slides, Canva, or Drive"
         />
         <FileProofZone hint="Or upload PDF deck" accept=".pdf" onFile={(f) => handleFile(f, 'Pitch deck')} />
+        <AssetList title="Uploaded pitch files" files={pitchFiles} />
       </QuestionCard>
 
       <QuestionCard
         number={2}
         title="Demo video upload"
         why="A short demo proves the product exists."
-        complete={Boolean(form.demoVideoLink)}
+        complete={hasDemoAsset}
       >
         <LinkProofRow
           label="Demo video link"
@@ -126,14 +152,22 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
           placeholder="Loom, YouTube, or Drive"
         />
         <FileProofZone hint="Optional video file" accept="video/*" onFile={(f) => handleFile(f, 'Demo video')} />
+        <AssetList title="Uploaded demo files" files={demoFiles} />
       </QuestionCard>
 
       <QuestionCard
         number={3}
         title="Startup overview review"
         why="Auto-compiled from earlier phases — add final polish for incubators."
-        complete={form.overviewNotes.trim().length > 30}
+        complete={hasOverview}
       >
+        <div className="mb-4 rounded-xl border border-border bg-bg-secondary/40 p-4">
+          <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Generated startup info</p>
+          <p className="text-sm font-semibold text-text-primary">{project.title}</p>
+          <p className="mt-1 text-sm text-text-secondary whitespace-pre-wrap">
+            {project.description || project.shortPitch || 'Your startup overview will appear here as earlier phases are completed.'}
+          </p>
+        </div>
         <TextArea
           id="inc-overview"
           rows={5}
@@ -151,7 +185,32 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
         </p>
       </section>
 
-      <SavePhaseBar saving={saving} onSave={handleSave} label="Save incubation package" />
+      <SavePhaseBar saving={saving} onSave={handleSave} label="Save Incubation Package" />
+    </div>
+  )
+}
+
+function AssetList({ title, files }) {
+  if (!files.length) {
+    return <p className="mt-3 text-xs text-text-muted">{title}: no uploaded files yet.</p>
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-bg-secondary/40 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">{title}</p>
+      <div className="mt-2 space-y-2">
+        {files.map((file) => (
+          <a
+            key={file._id || file.filename || file.originalName}
+            href={file.downloadUrl || '#'}
+            target="_blank"
+            rel="noreferrer"
+            className="block rounded-lg bg-bg-card px-3 py-2 text-sm text-text-primary hover:text-primary"
+          >
+            {file.originalName || file.filename || 'Uploaded file'}
+          </a>
+        ))}
+      </div>
     </div>
   )
 }

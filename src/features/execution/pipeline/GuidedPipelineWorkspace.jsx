@@ -4,7 +4,6 @@ import PhasePurpose from './phases/PhasePurpose'
 import PhaseReadiness from './phases/PhaseReadiness'
 import PhaseValidation from './phases/PhaseValidation'
 import PhaseMvp from './phases/PhaseMvp'
-import PhasePublic from './phases/PhasePublic'
 import PhaseIncubation from './phases/PhaseIncubation'
 
 export default function GuidedPipelineWorkspace({
@@ -15,7 +14,6 @@ export default function GuidedPipelineWorkspace({
   logs,
   onSaved,
   onMilestonesRefresh,
-  onPost,
   showToast,
 }) {
   if (!phase || !project) return null
@@ -40,8 +38,6 @@ export default function GuidedPipelineWorkspace({
           onMilestonesRefresh={onMilestonesRefresh}
         />
       )
-    case 'public':
-      return <PhasePublic {...common} onPost={onPost} />
     case 'incubation':
       return <PhaseIncubation {...common} phases={phases} />
     default:

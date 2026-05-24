@@ -53,17 +53,8 @@ export const SPRINT_PHASES = [
     theme: 'mvp',
   },
   {
-    id: 'public',
-    number: 6,
-    title: 'Public Building',
-    subtitle: 'Build With The Ecosystem',
-    goal: 'Share milestones and blockers on the Feed.',
-    docSection: 'Public Execution Timeline',
-    theme: 'public',
-  },
-  {
     id: 'incubation',
-    number: 7,
+    number: 6,
     title: 'Incubation Preparation',
     subtitle: 'Become Incubation Ready',
     goal: 'Pitch assets, demo, and application-ready documentation.',
@@ -77,7 +68,7 @@ const hasText = (value, min = 8) => typeof value === 'string' && value.trim().le
 export function getPhaseProgress(phaseId, project, context = {}) {
   if (!project) return 0
   const meta = loadSprintMeta(project._id || project.id)
-  const { milestones = [], logs = [], feedPostCount = 0 } = context
+  const { milestones = [] } = context
   const v = project.validation?.workspace || {}
   const evidence = v.evidence || []
 
@@ -115,25 +106,19 @@ export function getPhaseProgress(phaseId, project, context = {}) {
       return Math.round((n / 3) * 100)
     },
     execution: () => {
-      let n = 0
-      if (hasText(project.executionPlan, 40) || hasText(meta.roadmap, 40)) n++
-      if (milestones.length > 0) n++
-      if (milestones.some((m) => m.status === 'completed')) n++
-      if (meta.mvpDemo || meta.mvpGithub || meta.mvpFigma || (project.files || []).length) n++
-      if (logs.length > 0) n++
-      return Math.round((n / 5) * 100)
-    },
-    public: () => {
-      if (feedPostCount >= 2) return 100
-      if (feedPostCount >= 1) return 50
-      return 0
+      const roadmapScore = hasText(project.executionPlan, 40) || hasText(meta.roadmap, 40) ? 25 : 0
+      const milestoneScore = milestones.length
+        ? Math.round((milestones.filter((m) => m.status === 'completed').length / milestones.length) * 50)
+        : 0
+      const assetScore = meta.mvpDemo || meta.mvpGithub || meta.mvpFigma || (project.files || []).length ? 25 : 0
+      return Math.min(100, roadmapScore + milestoneScore + assetScore)
     },
     incubation: () => {
       let n = 0
       if (hasText(meta.pitchDeckLink, 6)) n++
       if (hasText(meta.demoVideoLink, 6) || hasText(project.validation?.demoLink, 6)) n++
       if (hasText(meta.overviewNotes, 30)) n++
-      if (Number(project.readinessScore || 0) >= 50) n++
+      if (Number(project.readinessScore || 0) >= 50 || (milestones.length > 0 && milestones.every((m) => m.status === 'completed'))) n++
       return Math.round((n / 4) * 100)
     },
   }
@@ -195,9 +180,8 @@ export function getNextSprintAction(phases, activePhaseId) {
     purpose: { title: 'Define the problem', detail: 'Use the dedicated problem field — be specific about pain.' },
     readiness: { title: 'Select your stage', detail: 'Add roles you need on the team.' },
     validation: { title: 'Upload survey proof', detail: 'Add links or files in the validation blocks.' },
-    execution: { title: 'Create your first milestone', detail: 'Add roadmap and track build progress.' },
-    public: { title: 'Post a milestone', detail: 'Share execution momentum on the Feed.' },
-    incubation: { title: 'Upload pitch deck', detail: 'Close gaps shown in the readiness checklist.' },
+    execution: { title: 'Complete your checklist', detail: 'Mark setup milestones complete as your MVP takes shape.' },
+    incubation: { title: 'Save incubation package', detail: 'Add pitch/demo assets and finish the preparation stage.' },
   }
 
   const hint = hints[active.id] || { title: active.subtitle, detail: active.goal }

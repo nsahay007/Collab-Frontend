@@ -3,6 +3,7 @@ import {
   updateProjectRequirements,
   updateValidationWorkspace,
   uploadProjectFile,
+  applyContinuationAction,
 } from '../projects/projectAPI'
 import { saveSprintMeta, getDescriptorWords } from './sprintMeta'
 
@@ -119,9 +120,10 @@ export async function saveIncubationPhase(projectId, data) {
     demoVideoLink: data.demoVideoLink,
     overviewNotes: data.overviewNotes,
   })
-  if (data.demoVideoLink) {
-    await updateValidationWorkspace(projectId, {})
-  }
+  await applyContinuationAction(projectId, {
+    action: 'prepare_incubation',
+    note: 'Saved final incubation package from the guided pipeline.'
+  })
 }
 
 export { CATEGORIES, STAGE_MAP, getDescriptorWords }

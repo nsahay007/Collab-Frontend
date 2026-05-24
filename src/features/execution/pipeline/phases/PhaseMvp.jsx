@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   PhaseHero,
   QuestionCard,
@@ -8,21 +8,15 @@ import {
   SavePhaseBar,
 } from '../PipelinePrimitives'
 import Button from '../../../../components/common/Button'
-import {
-  MilestoneTracker,
-  BlockerPanel,
-  ContributorActivityFeed,
-} from '../../components/DashboardBlocks'
-import { createMilestone, uploadProjectFile } from '../../../projects/projectAPI'
+import Badge from '../../../../components/common/Badge'
+import { createMilestone, updateMilestone, uploadProjectFile } from '../../../projects/projectAPI'
 import { updateProjectDetails } from '../../../projects/projectAPI'
-import { getBlockers, getNextMilestone } from '../../executionUtils'
 import { loadSprintMeta, saveSprintMeta } from '../../sprintMeta'
 
 export default function PhaseMvp({
   phase,
   project,
   milestones,
-  logs,
   onSaved,
   onMilestonesRefresh,
   showToast,
@@ -38,9 +32,13 @@ export default function PhaseMvp({
   })
   const [newMilestone, setNewMilestone] = useState({ title: '', description: '' })
   const [creating, setCreating] = useState(false)
+  const [updatingId, setUpdatingId] = useState('')
 
-  const blockers = getBlockers(project, milestones)
-  const nextMilestone = getNextMilestone(project, milestones)
+  const completedCount = useMemo(
+    () => milestones.filter((milestone) => milestone.status === 'completed').length,
+    [milestones]
+  )
+  const checklistProgress = milestones.length ? Math.round((completedCount / milestones.length) * 100) : 0
 
   const handleSaveRoadmap = async () => {
     setSaving(true)
@@ -72,6 +70,23 @@ export default function PhaseMvp({
       showToast?.(err?.response?.data?.message || 'Could not create milestone', 'error')
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleToggleMilestone = async (milestone) => {
+    const milestoneId = milestone._id || milestone.id
+    if (!milestoneId || updatingId) return
+    setUpdatingId(milestoneId)
+    try {
+      await updateMilestone(projectId, milestoneId, {
+        status: milestone.status === 'completed' ? 'in_progress' : 'completed'
+      })
+      showToast?.('Checklist updated', 'success')
+      onMilestonesRefresh?.()
+    } catch (err) {
+      showToast?.(err?.response?.data?.message || 'Could not update checklist', 'error')
+    } finally {
+      setUpdatingId('')
     }
   }
 
@@ -113,8 +128,8 @@ export default function PhaseMvp({
       <section className="pipeline-mvp-execution-grid space-y-6">
         <QuestionCard
           number="§"
-          title="Milestone tracking"
-          why="Create and track deliverables — this is active startup building."
+          title="Execution checklist"
+          why="This checklist comes from the milestones created during setup. Complete it as your MVP becomes real."
           complete={milestones.length > 0}
         >
           <div className="grid gap-3 sm:grid-cols-[1fr_auto] mb-4">
@@ -129,7 +144,13 @@ export default function PhaseMvp({
               Add milestone
             </Button>
           </div>
-          <MilestoneTracker milestones={milestones} nextMilestone={nextMilestone} />
+          <ExecutionChecklist
+            milestones={milestones}
+            completedCount={completedCount}
+            progress={checklistProgress}
+            updatingId={updatingId}
+            onToggle={handleToggleMilestone}
+          />
         </QuestionCard>
 
         <QuestionCard
@@ -160,9 +181,65 @@ export default function PhaseMvp({
           </div>
         </QuestionCard>
 
-        <BlockerPanel blockers={blockers} />
-        <ContributorActivityFeed logs={logs} />
       </section>
+    </div>
+  )
+}
+
+function ExecutionChecklist({ milestones, completedCount, progress, updatingId, onToggle }) {
+  return (
+    <div className="rounded-2xl border border-border bg-bg-secondary/40 p-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-text-primary">MVP execution progress</p>
+          <p className="text-xs text-text-muted">{completedCount}/{milestones.length || 0} milestones completed</p>
+        </div>
+        <Badge variant={progress >= 100 ? 'success' : progress > 0 ? 'primary' : 'default'}>
+          {progress}% complete
+        </Badge>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-bg-card">
+        <div className="h-full rounded-full bg-success transition-all duration-300" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="mt-4 space-y-3">
+        {milestones.length > 0 ? milestones.map((milestone) => {
+          const milestoneId = milestone._id || milestone.id
+          const done = milestone.status === 'completed'
+          return (
+            <button
+              key={milestoneId}
+              type="button"
+              onClick={() => onToggle(milestone)}
+              disabled={updatingId === milestoneId}
+              className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+                done
+                  ? 'border-success/30 bg-success/10'
+                  : 'border-border bg-bg-card hover:border-primary/40'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <span className={`mt-0.5 grid h-6 w-6 place-items-center rounded-full border text-sm ${
+                  done ? 'border-success bg-success text-white' : 'border-border text-text-muted'
+                }`}>
+                  {done ? '✓' : ''}
+                </span>
+                <span className="min-w-0">
+                  <span className={`block text-sm font-semibold ${done ? 'text-success' : 'text-text-primary'}`}>
+                    {milestone.title}
+                  </span>
+                  {milestone.description && (
+                    <span className="mt-1 block text-xs text-text-secondary">{milestone.description}</span>
+                  )}
+                </span>
+              </div>
+            </button>
+          )
+        }) : (
+          <p className="rounded-xl border border-dashed border-border bg-bg-card px-4 py-5 text-center text-sm text-text-secondary">
+            No setup milestones yet. Add your first MVP milestone above.
+          </p>
+        )}
+      </div>
     </div>
   )
 }

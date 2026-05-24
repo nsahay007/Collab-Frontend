@@ -18,6 +18,7 @@ import Discover from './pages/Discover'
 import Opportunities from './pages/Opportunities'
 import CreateProject from './pages/CreateProject'
 import ProjectDetail from './pages/ProjectDetail'
+import FinalStartupPackage from './pages/FinalStartupPackage'
 import Profile from './pages/Profile'
 import AdminDashboard from './pages/AdminDashboard'
 import VerifyEmail from './pages/VerifyEmail'
@@ -83,6 +84,7 @@ function AppRoutes() {
       <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
       <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
+      <Route path="/project/:id/package" element={<ProtectedRoute><Layout><FinalStartupPackage /></Layout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
       <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />

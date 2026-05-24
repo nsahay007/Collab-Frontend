@@ -169,32 +169,6 @@ export function MomentumIndicator({ project }) {
   )
 }
 
-export function BlockerPanel({ blockers = [] }) {
-  return (
-    <Card hover={false}>
-      <h2 className="text-lg font-semibold text-text-primary mb-3">Active Blockers</h2>
-      {blockers.length > 0 ? (
-        <div className="space-y-2">
-          {blockers.map((blocker, index) => (
-            <div
-              key={`${blocker.title}-${index}`}
-              className="blocker-attention rounded-xl border border-warning/30 bg-warning/10 px-4 py-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium text-warning">{blocker.title}</p>
-                <Badge variant="warning">{blocker.type}</Badge>
-              </div>
-              <p className="text-xs text-text-muted mt-1">{blocker.source}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-sm text-text-secondary">No active blockers. Keep shipping and check in if anything slows the team down.</p>
-      )}
-    </Card>
-  )
-}
-
 export function ContributorActivityFeed({ logs = [] }) {
   return (
     <Card hover={false}>

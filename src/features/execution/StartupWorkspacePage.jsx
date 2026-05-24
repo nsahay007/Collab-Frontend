@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Badge from '../../components/common/Badge'
@@ -61,7 +61,7 @@ function fallbackSprintState() {
  */
 export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMode = 'build' }) {
   const { user } = useAuth()
-  const { posts, createPost } = useFeedPosts()
+  const { createPost } = useFeedPosts()
   const { showToast } = useMotionToast()
 
   const [profile, setProfile] = useState(null)
@@ -72,16 +72,9 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const [error, setError] = useState('')
   const [activePhaseId, setActivePhaseId] = useState('foundation')
 
-  const feedPostCount = useMemo(() => {
-    if (!project?.title) return posts.length
-    return posts.filter(
-      (p) => p.venture === project.title || p.projectTitle === project.title
-    ).length
-  }, [posts, project?.title])
-
   const sprintContext = useMemo(
-    () => ({ milestones, logs, feedPostCount }),
-    [milestones, logs, feedPostCount]
+    () => ({ milestones, logs }),
+    [milestones, logs]
   )
 
   const sprint = useMemo(() => {
@@ -210,6 +203,10 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const projectId = project._id || project.id
   const isBuildView = viewMode === 'build'
 
+  if (lifecycleStage === 'incubation_ready') {
+    return <Navigate to={`/project/${projectId}/package`} replace />
+  }
+
   return (
     <div className="build-page max-w-[1440px] mx-auto pb-10">
       <header className="build-page-header mb-6">
@@ -293,7 +290,6 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             logs={logs}
             onSaved={loadWorkspace}
             onMilestonesRefresh={loadWorkspace}
-            onPost={handlePublishToFeed}
             showToast={showToast}
           />
         </main>
@@ -309,11 +305,9 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
         </div>
       </div>
 
-      {resolvedActivePhaseId !== 'public' && (
-        <div className="lg:hidden mt-8">
-          <ExecutionPostPanel ventureName={project.title} onPost={handlePublishToFeed} />
-        </div>
-      )}
+      <div className="lg:hidden mt-8">
+        <ExecutionPostPanel ventureName={project.title} onPost={handlePublishToFeed} />
+      </div>
     </div>
   )
 }

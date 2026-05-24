@@ -129,6 +129,23 @@ export const createMilestone = async (projectId, payload = {}) => {
   return response.data
 }
 
+export const updateMilestone = async (projectId, milestoneId, payload = {}) => {
+  const response = await axios.patch(`/projects/${projectId}/milestones/${milestoneId}`, {
+    status: payload.status,
+    title: payload.title !== undefined ? sanitizeText(payload.title || '') : undefined,
+    description: payload.description !== undefined ? sanitizeOptionalText(payload.description || '') : undefined
+  })
+  return response.data
+}
+
+export const applyContinuationAction = async (projectId, payload = {}) => {
+  const response = await axios.post(`/projects/${projectId}/continuation`, {
+    action: payload.action,
+    note: sanitizeOptionalText(payload.note || '')
+  })
+  return response.data
+}
+
 export const uploadProjectFile = async (projectId, file) => {
   const formData = new FormData()
   formData.append('file', file)
