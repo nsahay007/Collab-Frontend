@@ -1,9 +1,10 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { MotionToastProvider } from './components/common/MotionToast'
 import PageTransition from './components/common/PageTransition'
+import RouteErrorBoundary from './components/common/RouteErrorBoundary'
 import { AuthSkeleton } from './components/common/Skeleton'
 import useAuth from './hooks/useAuth'
 import Navbar from './components/common/Navbar'
@@ -55,11 +56,15 @@ function PublicRoute({ children }) {
 }
 
 function Layout({ children }) {
+  const location = useLocation()
+
   return (
-    <div className="relative min-h-screen bg-bg-main">
+    <div className="relative min-h-screen bg-bg-main text-text-primary">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
-        <PageTransition>{children}</PageTransition>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative min-h-[50vh]">
+        <RouteErrorBoundary resetKey={location.pathname}>
+          <PageTransition>{children}</PageTransition>
+        </RouteErrorBoundary>
       </main>
     </div>
   )

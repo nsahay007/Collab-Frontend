@@ -142,14 +142,25 @@ export function getPhaseProgress(phaseId, project, context = {}) {
 }
 
 function blockDone(block) {
-  return Boolean(block?.link?.trim() || block?.notes?.trim().length > 20)
+  if (!block || typeof block !== 'object') return false
+  const link = typeof block.link === 'string' ? block.link.trim() : ''
+  const notes = typeof block.notes === 'string' ? block.notes.trim() : ''
+  return Boolean(link || notes.length > 20)
 }
 
 export function buildSprintState(project, context = {}) {
-  const phases = SPRINT_PHASES.map((phase) => ({
-    ...phase,
-    progress: getPhaseProgress(phase.id, project, context),
-  }))
+  const phases = SPRINT_PHASES.map((phase) => {
+    let progress = 0
+    try {
+      progress = getPhaseProgress(phase.id, project, context)
+    } catch (err) {
+      console.warn(`Sprint progress failed for ${phase.id}:`, err)
+    }
+    return {
+      ...phase,
+      progress: Number.isFinite(progress) ? progress : 0,
+    }
+  })
 
   let activePhaseId = phases[0]?.id
   for (const phase of phases) {

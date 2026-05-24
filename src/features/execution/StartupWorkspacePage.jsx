@@ -10,7 +10,7 @@ import BuildSprintNav from './components/BuildSprintNav'
 import GuidedPipelineWorkspace from './pipeline/GuidedPipelineWorkspace'
 import BuildRightSidebar from './components/BuildRightSidebar'
 import WorkspaceAdmin from './components/WorkspaceAdmin'
-import { buildSprintState } from './sprintPipeline'
+import { buildSprintState, SPRINT_PHASES } from './sprintPipeline'
 import { getPrimaryProject } from './executionUtils'
 import { formatMomentum, MOMENTUM_VARIANTS } from './executionUtils'
 import { getLifecycleLabel, getLifecycleVariant, normalizeLifecycleStage } from '../../utils/ventureLifecycle'
@@ -44,10 +44,20 @@ function EmptyVentureState() {
   )
 }
 
+function fallbackSprintState() {
+  return {
+    phases: SPRINT_PHASES.map((phase, index) => ({
+      ...phase,
+      progress: 0,
+      unlocked: index === 0,
+    })),
+    activePhaseId: 'foundation',
+    overallProgress: 0,
+  }
+}
+
 /**
  * Unified startup execution OS — used by /build and /project/:id
- * @param {string} [projectId] — load this venture; if omitted, uses the user&apos;s primary project
- * @param {'build'|'workspace'} viewMode — header copy only
  */
 export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMode = 'build' }) {
   const { user } = useAuth()
@@ -55,13 +65,12 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const { showToast } = useMotionToast()
 
   const [profile, setProfile] = useState(null)
-  const [projects, setProjects] = useState([])
   const [project, setProject] = useState(null)
   const [milestones, setMilestones] = useState([])
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activePhaseId, setActivePhaseId] = useState(null)
+  const [activePhaseId, setActivePhaseId] = useState('foundation')
 
   const feedPostCount = useMemo(() => {
     if (!project?.title) return posts.length
@@ -75,12 +84,17 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     [milestones, logs, feedPostCount]
   )
 
-  const sprint = useMemo(
-    () => (project ? buildSprintState(project, sprintContext) : null),
-    [project, sprintContext]
-  )
+  const sprint = useMemo(() => {
+    if (!project) return null
+    try {
+      return buildSprintState(project, sprintContext)
+    } catch (err) {
+      console.error('buildSprintState failed:', err)
+      return fallbackSprintState()
+    }
+  }, [project, sprintContext])
 
-  const phases = sprint?.phases || []
+  const phases = sprint?.phases?.length ? sprint.phases : fallbackSprintState().phases
   const overallProgress = sprint?.overallProgress ?? 0
   const resolvedActivePhaseId = activePhaseId || sprint?.activePhaseId || phases[0]?.id
   const activePhase = phases.find((p) => p.id === resolvedActivePhaseId) || phases[0]
@@ -99,7 +113,6 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
       if (!targetId) {
         const projectsResponse = await api.get('/users/projects?lifecycleStage=all&limit=30&page=1')
         const projectList = Array.isArray(projectsResponse?.data?.projects) ? projectsResponse.data.projects : []
-        setProjects(projectList)
         listProject = getPrimaryProject(projectList)
         targetId = listProject?._id || listProject?.id
       }
@@ -148,10 +161,10 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   }, [loadWorkspace])
 
   useEffect(() => {
-    if (sprint?.activePhaseId && !activePhaseId) {
+    if (sprint?.activePhaseId) {
       setActivePhaseId(sprint.activePhaseId)
     }
-  }, [sprint?.activePhaseId, activePhaseId])
+  }, [sprint?.activePhaseId])
 
   const handlePublishToFeed = async ({ type, content, media }) => {
     createPost({
@@ -167,9 +180,29 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     )
   }
 
-  if (loading) return <DashboardSkeleton />
-  if (error) return <ErrorState message={error} onRetry={loadWorkspace} />
-  if (!project || !activePhase) return <EmptyVentureState />
+  if (loading) {
+    return (
+      <div className="build-page max-w-[1440px] mx-auto min-h-[40vh]">
+        <DashboardSkeleton />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="build-page max-w-[1440px] mx-auto min-h-[40vh]">
+        <ErrorState message={error} onRetry={loadWorkspace} />
+      </div>
+    )
+  }
+
+  if (!project || !activePhase) {
+    return (
+      <div className="build-page max-w-[1440px] mx-auto min-h-[40vh]">
+        <EmptyVentureState />
+      </div>
+    )
+  }
 
   const lifecycleStage = normalizeLifecycleStage(
     project.lifecycleStage || project.status || project.phase
@@ -178,7 +211,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const isBuildView = viewMode === 'build'
 
   return (
-    <div className="build-page max-w-[1440px] mx-auto">
+    <div className="build-page max-w-[1440px] mx-auto pb-10">
       <header className="build-page-header mb-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
