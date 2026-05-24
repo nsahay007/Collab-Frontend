@@ -13,10 +13,14 @@ export default function BuildRightSidebar({
   ventureName,
   onPost,
 }) {
+  const showFeedPanel = activePhaseId !== 'public'
+
   return (
     <aside className="build-right-rail" aria-label="Execution status">
       <div className="build-right-rail-inner space-y-4">
-        <ExecutionPostPanel ventureName={ventureName} onPost={onPost} />
+        {showFeedPanel && (
+          <ExecutionPostPanel ventureName={ventureName} onPost={onPost} />
+        )}
         <ReadinessProgress project={project} />
         <MomentumIndicator project={project} />
         <StartupSprintPipeline phases={phases} activePhaseId={activePhaseId} />

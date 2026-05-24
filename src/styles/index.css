@@ -709,6 +709,223 @@ body,
   /* sticky removed — parent .build-right-rail handles scroll pinning */
 }
 
+/* Guided pipeline — phase-specific workspaces */
+.pipeline-phase-hero {
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pipeline-theme-foundation {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--bg-card)), var(--bg-card));
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+}
+
+.pipeline-theme-purpose {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--secondary) 10%, var(--bg-card)), var(--bg-card));
+  border-color: color-mix(in srgb, var(--secondary) 22%, var(--border));
+}
+
+.pipeline-theme-readiness {
+  background: var(--bg-card);
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--border));
+}
+
+.pipeline-theme-validation {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--secondary) 8%, #0f1419), var(--bg-card));
+  border-color: color-mix(in srgb, var(--secondary) 30%, var(--border));
+}
+
+.pipeline-theme-mvp {
+  background: linear-gradient(135deg, #0a0f14, color-mix(in srgb, var(--primary) 6%, var(--bg-card)));
+  border-left: 3px solid var(--primary);
+}
+
+.pipeline-theme-public {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--bg-card)), color-mix(in srgb, var(--secondary) 6%, var(--bg-card)));
+}
+
+.pipeline-theme-incubation {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--secondary) 14%, var(--bg-card)), var(--bg-card));
+  border-color: color-mix(in srgb, var(--secondary) 28%, var(--border));
+}
+
+.pipeline-question-card {
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  padding: 1.25rem 1.35rem;
+}
+
+.pipeline-question-card--done {
+  border-color: color-mix(in srgb, var(--success) 28%, var(--border));
+}
+
+.pipeline-question-card-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.pipeline-question-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--primary) 15%, var(--bg-secondary));
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.pipeline-input,
+.pipeline-textarea {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pipeline-input:focus,
+.pipeline-textarea:focus {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.pipeline-input--lg {
+  font-size: 1.125rem;
+  padding: 0.85rem 1rem;
+}
+
+.pipeline-textarea--lg {
+  min-height: 8rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.pipeline-category-card {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pipeline-category-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+}
+
+.pipeline-category-card--active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--bg-card));
+  color: var(--primary);
+}
+
+.pipeline-stage-card {
+  text-align: left;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  transition: all 0.15s ease;
+}
+
+.pipeline-stage-card--active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--bg-card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.pipeline-role-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--secondary) 15%, var(--bg-secondary));
+  border: 1px solid color-mix(in srgb, var(--secondary) 25%, var(--border));
+  color: var(--text-secondary);
+}
+
+.pipeline-role-tag button {
+  opacity: 0.7;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.pipeline-tag-add {
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--primary);
+  color: #fff;
+}
+
+.pipeline-proof-block {
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--secondary) 25%, var(--border));
+  background: color-mix(in srgb, var(--secondary) 5%, var(--bg-card));
+  padding: 1.25rem;
+}
+
+.pipeline-proof-block--done {
+  border-color: color-mix(in srgb, var(--success) 30%, var(--border));
+}
+
+.pipeline-file-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 2px dashed color-mix(in srgb, var(--primary) 25%, var(--border));
+  background: var(--bg-elevated);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pipeline-file-zone:hover {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg-elevated));
+}
+
+.pipeline-save-bar {
+  padding: 1.25rem 0 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.pipeline-feed-form {
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+
+.pipeline-feed-form--milestone {
+  background: color-mix(in srgb, var(--primary) 6%, var(--bg-secondary));
+}
+
+.pipeline-feed-form--blocker {
+  background: color-mix(in srgb, var(--warning) 8%, var(--bg-secondary));
+  border-color: color-mix(in srgb, var(--warning) 25%, var(--border));
+}
+
 .build-sprint-nav {
   border-radius: 1rem;
   border: 1px solid var(--border);

@@ -118,6 +118,17 @@ export const deleteProject = async (projectId) => {
   return response.data
 }
 
+export const createMilestone = async (projectId, payload = {}) => {
+  const response = await axios.post(`/projects/${projectId}/milestones`, {
+    title: sanitizeText(payload.title || ''),
+    description: sanitizeOptionalText(payload.description || ''),
+    lifecycleStage: payload.lifecycleStage,
+    dueDate: payload.dueDate,
+    status: payload.status || 'pending',
+  })
+  return response.data
+}
+
 export const uploadProjectFile = async (projectId, file) => {
   const formData = new FormData()
   formData.append('file', file)

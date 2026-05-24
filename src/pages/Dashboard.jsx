@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
@@ -8,12 +8,10 @@ import { DashboardSkeleton } from '../components/common/Skeleton'
 import useAuth from '../hooks/useAuth'
 import api from '../services/api'
 import BuildSprintNav from '../features/execution/components/BuildSprintNav'
-import SprintPhaseWorkspace from '../features/execution/components/SprintPhaseWorkspace'
+import GuidedPipelineWorkspace from '../features/execution/pipeline/GuidedPipelineWorkspace'
+import { fetchProject } from '../features/projects/projectAPI'
 import BuildRightSidebar from '../features/execution/components/BuildRightSidebar'
-import {
-  buildSprintState,
-  getNextSprintAction,
-} from '../features/execution/sprintPipeline'
+import { buildSprintState } from '../features/execution/sprintPipeline'
 import { getPrimaryProject } from '../features/execution/executionUtils'
 import {
   formatMomentum,
@@ -58,17 +56,19 @@ export default function Dashboard() {
   const { user, login } = useAuth()
   const { posts, createPost } = useFeedPosts()
   const { showToast } = useMotionToast()
-  const feedRailRef = useRef(null)
-
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
+  const [fullProject, setFullProject] = useState(null)
   const [milestones, setMilestones] = useState([])
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activePhaseId, setActivePhaseId] = useState(null)
 
-  const primaryProject = useMemo(() => getPrimaryProject(projects), [projects])
+  const primaryProject = useMemo(
+    () => fullProject || getPrimaryProject(projects),
+    [fullProject, projects]
+  )
 
   const feedPostCount = useMemo(() => {
     if (!primaryProject?.title) return posts.length
@@ -93,10 +93,7 @@ export default function Dashboard() {
   const resolvedActivePhaseId = activePhaseId || sprint?.activePhaseId || phases[0]?.id
   const activePhase = phases.find((p) => p.id === resolvedActivePhaseId) || phases[0]
 
-  const nextAction = useMemo(
-    () => getNextSprintAction(phases, resolvedActivePhaseId),
-    [phases, resolvedActivePhaseId]
-  )
+  const handleRefreshProject = () => loadDashboardData()
 
   const handlePublishToFeed = async ({ type, content, media }) => {
     createPost({
@@ -110,10 +107,6 @@ export default function Dashboard() {
       type === 'milestone' ? 'Milestone published to ecosystem feed' : 'Blocker shared with builders',
       type === 'milestone' ? 'success' : 'primary'
     )
-  }
-
-  const scrollToFeed = () => {
-    feedRailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const loadDashboardData = async () => {
@@ -132,15 +125,19 @@ export default function Dashboard() {
 
       const currentProject = getPrimaryProject(projectList)
       if (currentProject?._id) {
-        const [milestonesResponse, logsResponse] = await Promise.allSettled([
-          api.get(`/projects/${currentProject._id}/milestones`),
-          api.get(`/projects/${currentProject._id}/contribution-logs`),
+        const projectId = currentProject._id
+        const [detail, milestonesResponse, logsResponse] = await Promise.allSettled([
+          fetchProject(projectId),
+          api.get(`/projects/${projectId}/milestones`),
+          api.get(`/projects/${projectId}/contribution-logs`),
         ])
+        setFullProject(detail.status === 'fulfilled' ? detail.value : currentProject)
         setMilestones(
           milestonesResponse.status === 'fulfilled' ? milestonesResponse.value?.data?.milestones || [] : []
         )
         setLogs(logsResponse.status === 'fulfilled' ? logsResponse.value?.data?.logs || [] : [])
       } else {
+        setFullProject(null)
         setMilestones([])
         setLogs([])
       }
@@ -237,20 +234,22 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
-          <SprintPhaseWorkspace
+          <GuidedPipelineWorkspace
             phase={activePhase}
+            phases={phases}
             project={primaryProject}
             milestones={milestones}
             logs={logs}
-            nextAction={nextAction}
-            onScrollToFeed={scrollToFeed}
+            onSaved={handleRefreshProject}
+            onMilestonesRefresh={handleRefreshProject}
+            onPost={handlePublishToFeed}
+            showToast={showToast}
           />
         </motion.main>
 
         <motion.div
           variants={staggerItem}
           className="build-right-rail-wrap hidden lg:block"
-          ref={feedRailRef}
         >
           <BuildRightSidebar
             project={primaryProject}
@@ -262,10 +261,11 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Mobile: feed + status below workspace */}
-      <div className="xl:hidden mt-8 space-y-4">
-        <ExecutionPostPanel ventureName={primaryProject.title} onPost={handlePublishToFeed} />
-      </div>
+      {resolvedActivePhaseId !== 'public' && (
+        <div className="lg:hidden mt-8">
+          <ExecutionPostPanel ventureName={primaryProject.title} onPost={handlePublishToFeed} />
+        </div>
+      )}
     </motion.div>
   )
 }

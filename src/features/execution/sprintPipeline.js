@@ -1,4 +1,10 @@
 import { normalizeLifecycleStage } from '../../utils/ventureLifecycle'
+import {
+  loadSprintMeta,
+  getProblemFromProject,
+  getAudienceFromProject,
+  getDescriptorWords,
+} from './sprintMeta'
 
 export const SPRINT_PHASES = [
   {
@@ -6,16 +12,9 @@ export const SPRINT_PHASES = [
     number: 1,
     title: 'Foundation',
     subtitle: 'Define Your Startup',
-    goal: 'Create startup clarity and identity.',
+    goal: 'Create startup identity and clarity — exciting, lightweight, welcoming.',
     docSection: 'Identity & Positioning',
-    tasks: [
-      { id: 'startup_title', label: 'Startup title', hint: 'Clear, memorable venture name' },
-      { id: 'one_line_summary', label: 'One-line summary', hint: 'What you build in one sentence' },
-      { id: 'tagline', label: 'Tagline', hint: 'Short phrase that captures your edge' },
-      { id: 'category', label: 'Category', hint: 'Domain your startup operates in' },
-      { id: 'startup_identity', label: 'Startup identity', hint: 'What makes this venture distinct' },
-      { id: 'project_keywords', label: 'Project keywords', hint: 'Tags for discovery and focus' },
-    ],
+    theme: 'foundation',
   },
   {
     id: 'purpose',
@@ -24,56 +23,34 @@ export const SPRINT_PHASES = [
     subtitle: 'Why Does This Matter?',
     goal: 'Connect problem, audience, inspiration, and impact.',
     docSection: 'Purpose Narrative',
-    tasks: [
-      { id: 'founder_inspiration', label: 'Founder inspiration', hint: 'Why you are building this' },
-      { id: 'problem_definition', label: 'Problem definition', hint: 'The pain you are solving' },
-      { id: 'target_audience', label: 'Target audience', hint: 'Who experiences this problem' },
-      { id: 'startup_vision', label: 'Startup vision', hint: 'Where this venture is headed' },
-    ],
+    theme: 'purpose',
   },
   {
     id: 'readiness',
     number: 3,
     title: 'Execution Readiness',
     subtitle: 'Prepare to Build',
-    goal: 'Align stage, team needs, and execution direction.',
+    goal: 'Align stage and collaborator needs before you ship.',
     docSection: 'Team & Execution Setup',
-    tasks: [
-      { id: 'startup_stage', label: 'Startup stage', hint: 'Current lifecycle position' },
-      { id: 'collaborator_requirements', label: 'Collaborator requirements', hint: 'Roles and skills needed' },
-      { id: 'execution_readiness', label: 'Execution readiness setup', hint: 'Plan, team size, and scope' },
-    ],
+    theme: 'readiness',
   },
   {
     id: 'validation',
     number: 4,
     title: 'Validation',
     subtitle: 'Prove The Problem Exists',
-    goal: 'Test demand with real users and evidence.',
+    goal: 'Collect evidence that demand is real.',
     docSection: 'Market Validation Report',
-    tasks: [
-      { id: 'surveys', label: 'Surveys', hint: 'Structured demand testing' },
-      { id: 'interviews', label: 'Interviews', hint: 'Conversations with target users' },
-      { id: 'feedback_uploads', label: 'Feedback uploads', hint: 'Artifacts from user research' },
-      { id: 'user_insights', label: 'User insights', hint: 'Patterns from real feedback' },
-      { id: 'validation_evidence', label: 'Validation evidence', hint: 'Proof the problem is real' },
-    ],
+    theme: 'validation',
   },
   {
     id: 'execution',
     number: 5,
-    title: 'Execution & MVP',
+    title: 'MVP Building',
     subtitle: 'Build The Startup',
-    goal: 'Ship milestones, prototypes, and sprint work.',
+    goal: 'Roadmap, milestones, MVP assets, and active execution.',
     docSection: 'Build Log & MVP Record',
-    tasks: [
-      { id: 'roadmap', label: 'Roadmap creation', hint: 'Milestones mapped to stages' },
-      { id: 'milestone_tracking', label: 'Milestone tracking', hint: 'Track and complete key deliverables' },
-      { id: 'mvp_uploads', label: 'MVP uploads', hint: 'Demo assets and build proof' },
-      { id: 'prototype_progress', label: 'Prototype progress', hint: 'Active build phase momentum' },
-      { id: 'sprint_execution', label: 'Sprint execution', hint: 'Team contribution activity' },
-      { id: 'task_management', label: 'Task management', hint: 'Open work clearly owned' },
-    ],
+    theme: 'mvp',
   },
   {
     id: 'public',
@@ -82,139 +59,97 @@ export const SPRINT_PHASES = [
     subtitle: 'Build With The Ecosystem',
     goal: 'Share milestones and blockers on the Feed.',
     docSection: 'Public Execution Timeline',
-    tasks: [
-      { id: 'milestone_post', label: 'Share a milestone', hint: 'Publish progress to Feed' },
-      { id: 'blocker_post', label: 'Share a blocker', hint: 'Ask the ecosystem for help' },
-      { id: 'public_update', label: 'Public startup update', hint: 'Keep builders in the loop' },
-    ],
+    theme: 'public',
   },
   {
     id: 'incubation',
     number: 7,
-    title: 'Incubation Prep',
+    title: 'Incubation Preparation',
     subtitle: 'Become Incubation Ready',
-    goal: 'Prepare for incubators, grants, and showcases.',
+    goal: 'Pitch assets, demo, and application-ready documentation.',
     docSection: 'Incubation Package',
-    tasks: [
-      { id: 'pitch_deck', label: 'Pitch deck', hint: 'Story for programs and judges' },
-      { id: 'startup_overview', label: 'Startup overview', hint: 'Concise venture summary' },
-      { id: 'demo_preparation', label: 'Demo preparation', hint: 'Demo link and notes' },
-      { id: 'execution_reports', label: 'Execution reports', hint: 'Contribution and progress log' },
-      { id: 'startup_documentation', label: 'Startup documentation', hint: 'Readiness for applications' },
-    ],
+    theme: 'incubation',
   },
 ]
 
 const hasText = (value, min = 8) => typeof value === 'string' && value.trim().length >= min
 
-export function isTaskComplete(taskId, project, { milestones = [], logs = [], feedPostCount = 0 } = {}) {
-  if (!project) return false
-  const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
-  const validation = project.validation?.workspace || {}
-  const evidence = validation.evidence || project.validation?.workspace?.evidence || []
-  const validationTasks = validation.tasks || []
+export function getPhaseProgress(phaseId, project, context = {}) {
+  if (!project) return 0
+  const meta = loadSprintMeta(project._id || project.id)
+  const { milestones = [], logs = [], feedPostCount = 0 } = context
+  const v = project.validation?.workspace || {}
+  const evidence = v.evidence || []
 
-  switch (taskId) {
-    case 'startup_title':
-      return hasText(project.title, 2)
-    case 'one_line_summary':
-      return hasText(project.shortPitch, 12)
-    case 'tagline':
-      return hasText(project.shortPitch, 8) || (project.tags || []).length > 0
-    case 'category':
-      return Boolean(project.category)
-    case 'startup_identity':
-      return hasText(project.description, 24)
-    case 'project_keywords':
-      return (project.tags || []).length > 0
-
-    case 'founder_inspiration':
-      return hasText(project.description, 20) || hasText(project.executionPlan, 20)
-    case 'problem_definition':
-      return (
-        hasText(project.techProduct?.problem, 10)
-        || hasText(project.businessStartup?.marketGap, 10)
-        || hasText(validation.problemStatement, 10)
-      )
-    case 'target_audience':
-      return (
-        hasText(project.techProduct?.targetUsers, 8)
-        || hasText(project.businessStartup?.targetAudience, 8)
-        || hasText(validation.targetUsers, 8)
-      )
-    case 'startup_vision':
-      return hasText(project.executionPlan, 30) || hasText(project.description, 40)
-
-    case 'startup_stage':
-      return Boolean(stage)
-    case 'collaborator_requirements':
-      return (project.rolesNeeded || []).length > 0 || (project.skillsRequired || []).length > 0
-    case 'execution_readiness':
-      return hasText(project.executionPlan, 40) && Number(project.numberOfTeammates || 0) >= 1
-
-    case 'surveys':
-      return validationTasks.length > 0 || evidence.some((e) => /survey/i.test(e.title || e.kind || ''))
-    case 'interviews':
-      return hasText(validation.whoSpokenTo, 8) || evidence.some((e) => /interview/i.test(e.title || e.kind || ''))
-    case 'feedback_uploads':
-      return evidence.length > 0
-    case 'user_insights':
-      return hasText(validation.surprisingInsights, 12) || hasText(validation.repeatedProblems, 12)
-    case 'validation_evidence':
-      return evidence.length >= 2 || ['validation', 'incubation_ready', 'mvp'].includes(stage)
-
-    case 'roadmap':
-      return milestones.length > 0
-    case 'milestone_tracking':
-      return milestones.some((m) => m.status === 'completed')
-    case 'mvp_uploads':
-      return (project.files || []).length > 0 || ['mvp', 'validation', 'incubation_ready'].includes(stage)
-    case 'prototype_progress':
-      return project.buildPhase?.isActive || ['building', 'mvp', 'validation', 'incubation_ready'].includes(stage)
-    case 'sprint_execution':
-      return logs.length > 0
-    case 'task_management':
-      return milestones.some((m) => m.status !== 'completed') || validationTasks.some((t) => t.status !== 'completed')
-
-    case 'milestone_post':
-      return feedPostCount > 0
-    case 'blocker_post':
-      return feedPostCount > 0
-    case 'public_update':
-      return feedPostCount >= 2
-
-    case 'pitch_deck':
-      return stage === 'incubation_ready' || Number(project.readinessScore || 0) >= 75
-    case 'startup_overview':
-      return hasText(project.shortPitch, 12) && hasText(project.description, 30)
-    case 'demo_preparation':
-      return hasText(project.validation?.demoLink, 6)
-    case 'execution_reports':
-      return logs.length >= 3
-    case 'startup_documentation':
-      return Number(project.readinessScore || 0) >= 60 || stage === 'incubation_ready'
-
-    default:
-      return false
+  const checks = {
+    foundation: () => {
+      let n = 0
+      if (hasText(project.title, 2)) n++
+      if (hasText(project.shortPitch, 12)) n++
+      if (hasText(meta.tagline, 3)) n++
+      if (getDescriptorWords(project, meta).filter(Boolean).length >= 2) n++
+      if (project.category) n++
+      return Math.round((n / 5) * 100)
+    },
+    purpose: () => {
+      let n = 0
+      if (hasText(meta.founderInspiration, 20)) n++
+      if (hasText(getProblemFromProject(project), 30)) n++
+      if (hasText(getAudienceFromProject(project), 15)) n++
+      if (hasText(meta.impact, 20)) n++
+      return Math.round((n / 4) * 100)
+    },
+    readiness: () => {
+      let n = 0
+      if (normalizeLifecycleStage(project.lifecycleStage)) n++
+      if ((project.rolesNeeded || []).length > 0) n++
+      if (hasText(meta.collaboratorNotes, 10) || hasText(project.executionPlan, 30)) n++
+      return Math.round((n / 3) * 100)
+    },
+    validation: () => {
+      let n = 0
+      const blocks = meta.validationBlocks || {}
+      if (blockDone(blocks.surveys) || evidence.some((e) => /survey/i.test(e.title || ''))) n++
+      if (blockDone(blocks.interviews) || hasText(v.whoSpokenTo, 8)) n++
+      if (blockDone(blocks.feedback) || hasText(v.repeatedProblems, 12)) n++
+      return Math.round((n / 3) * 100)
+    },
+    execution: () => {
+      let n = 0
+      if (hasText(project.executionPlan, 40) || hasText(meta.roadmap, 40)) n++
+      if (milestones.length > 0) n++
+      if (milestones.some((m) => m.status === 'completed')) n++
+      if (meta.mvpDemo || meta.mvpGithub || meta.mvpFigma || (project.files || []).length) n++
+      if (logs.length > 0) n++
+      return Math.round((n / 5) * 100)
+    },
+    public: () => {
+      if (feedPostCount >= 2) return 100
+      if (feedPostCount >= 1) return 50
+      return 0
+    },
+    incubation: () => {
+      let n = 0
+      if (hasText(meta.pitchDeckLink, 6)) n++
+      if (hasText(meta.demoVideoLink, 6) || hasText(project.validation?.demoLink, 6)) n++
+      if (hasText(meta.overviewNotes, 30)) n++
+      if (Number(project.readinessScore || 0) >= 50) n++
+      return Math.round((n / 4) * 100)
+    },
   }
+
+  return checks[phaseId]?.() ?? 0
 }
 
-export function getPhaseProgress(phase, project, context = {}) {
-  const tasks = phase.tasks || []
-  if (tasks.length === 0) return 0
-  const done = tasks.filter((t) => isTaskComplete(t.id, project, context)).length
-  return Math.round((done / tasks.length) * 100)
+function blockDone(block) {
+  return Boolean(block?.link?.trim() || block?.notes?.trim().length > 20)
 }
 
 export function buildSprintState(project, context = {}) {
-  const phases = SPRINT_PHASES.map((phase) => {
-    const progress = getPhaseProgress(phase, project, context)
-    const tasks = phase.tasks.map((task) => ({
-      ...task,
-      complete: isTaskComplete(task.id, project, context),
-    }))
-    return { ...phase, progress, tasks }
-  })
+  const phases = SPRINT_PHASES.map((phase) => ({
+    ...phase,
+    progress: getPhaseProgress(phase.id, project, context),
+  }))
 
   let activePhaseId = phases[0]?.id
   for (const phase of phases) {
@@ -231,7 +166,7 @@ export function buildSprintState(project, context = {}) {
 
   const phasesWithUnlock = phases.map((phase, index) => {
     const prev = phases[index - 1]
-    const unlocked = index === 0 || !prev || prev.progress >= 50
+    const unlocked = index === 0 || !prev || prev.progress >= 40
     return { ...phase, unlocked }
   })
 
@@ -240,26 +175,20 @@ export function buildSprintState(project, context = {}) {
 
 export function getNextSprintAction(phases, activePhaseId) {
   const active = phases.find((p) => p.id === activePhaseId) || phases[0]
-  if (!active) return { title: 'Start your sprint', detail: 'Create a startup workspace.' }
-  const nextTask = active.tasks.find((t) => !t.complete)
-  if (nextTask) {
-    return {
-      title: nextTask.label,
-      detail: nextTask.hint,
-      phaseTitle: active.subtitle,
-    }
+  if (!active) {
+    return { title: 'Start your sprint', detail: 'Create a startup workspace.' }
   }
-  const nextPhase = phases.find((p) => p.unlocked && p.progress < 100 && p.id !== active.id)
-  if (nextPhase) {
-    return {
-      title: `Advance to ${nextPhase.subtitle}`,
-      detail: nextPhase.goal,
-      phaseTitle: nextPhase.subtitle,
-    }
+
+  const hints = {
+    foundation: { title: 'Name your startup', detail: 'Complete each identity question in its own section.' },
+    purpose: { title: 'Define the problem', detail: 'Use the dedicated problem field — be specific about pain.' },
+    readiness: { title: 'Select your stage', detail: 'Add roles you need on the team.' },
+    validation: { title: 'Upload survey proof', detail: 'Add links or files in the validation blocks.' },
+    execution: { title: 'Create your first milestone', detail: 'Add roadmap and track build progress.' },
+    public: { title: 'Post a milestone', detail: 'Share execution momentum on the Feed.' },
+    incubation: { title: 'Upload pitch deck', detail: 'Close gaps shown in the readiness checklist.' },
   }
-  return {
-    title: 'Incubation-ready polish',
-    detail: 'Refine your package for programs and showcases.',
-    phaseTitle: active.subtitle,
-  }
+
+  const hint = hints[active.id] || { title: active.subtitle, detail: active.goal }
+  return { ...hint, phaseTitle: active.subtitle }
 }
