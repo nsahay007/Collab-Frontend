@@ -180,7 +180,9 @@ export default function CreateProject() {
       if (!projectId) throw new Error('Startup workspace was created, but no id was returned.')
       navigate(`/project/${projectId}`)
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to create startup workspace.')
+      const firstIssue = err?.response?.data?.errors?.[0]
+      const detail = firstIssue ? `${firstIssue.path}: ${firstIssue.message}` : ''
+      setError(detail || err?.response?.data?.message || err.message || 'Failed to create startup workspace.')
     } finally {
       setLoading(false)
     }
