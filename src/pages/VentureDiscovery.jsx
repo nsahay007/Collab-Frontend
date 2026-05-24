@@ -88,11 +88,6 @@ export default function VentureDiscovery() {
 
   const closeExpanded = useCallback(() => setSelectedId(null), [])
 
-  const handleOpenWorkspace = useCallback(
-    (id) => navigate(`/project/${id}`),
-    [navigate]
-  )
-
   return (
     <LayoutGroup>
       <motion.div
@@ -184,7 +179,6 @@ export default function VentureDiscovery() {
             project={selectedProject}
             viewerId={viewerId}
             onClose={closeExpanded}
-            onOpenWorkspace={handleOpenWorkspace}
           />
         )}
       </AnimatePresence>
@@ -263,7 +257,47 @@ function DiscoverCard({ project, viewerId, onOpen }) {
   )
 }
 
-function ExpandedVentureModal({ project, viewerId, onClose, onOpenWorkspace }) {
+function FounderContactSection({ owner, isProjectOwner }) {
+  const founderRole = owner?.founderRole || 'Startup Founder'
+  const hasEmail = Boolean(owner?.email)
+  const hasPhone = Boolean(owner?.phone)
+  const contactAvailable = Boolean(owner?.contactAvailable || hasEmail || hasPhone)
+
+  return (
+    <section className="rounded-2xl border border-border bg-bg-elevated p-4">
+      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Founder</p>
+      <p className="text-sm font-semibold text-text-primary">{owner?.name || 'Founder'}</p>
+      <p className="mt-1 text-xs text-text-secondary">{founderRole}</p>
+      {owner?.primaryCategory && (
+        <p className="mt-1 text-xs text-text-muted">{owner.primaryCategory}</p>
+      )}
+
+      <p className="text-xs uppercase tracking-wide text-text-muted mt-4 mb-2">Contact</p>
+      {contactAvailable ? (
+        <div className="space-y-2 text-sm">
+          {hasEmail && (
+            <a href={`mailto:${owner.email}`} className="block text-primary hover:underline break-all">
+              {owner.email}
+            </a>
+          )}
+          {hasPhone && (
+            <a href={`tel:${owner.phone}`} className="block text-primary hover:underline">
+              {owner.phone}
+            </a>
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-text-muted leading-relaxed">
+          {isProjectOwner
+            ? 'Turn on “Show contact to teams” in your profile so builders can reach you from Discover.'
+            : 'This founder has not shared contact details yet.'}
+        </p>
+      )}
+    </section>
+  )
+}
+
+function ExpandedVentureModal({ project, viewerId, onClose }) {
   const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
   const visibility = project.visibility || 'private'
   const ownerId = project.owner?._id || project.owner
@@ -331,19 +365,12 @@ function ExpandedVentureModal({ project, viewerId, onClose, onOpenWorkspace }) {
                     <section>
                       <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Execution plan</p>
                       <p className="text-sm text-text-secondary whitespace-pre-line line-clamp-6">{project.executionPlan}</p>
-                      <p className="mt-2 text-xs text-text-muted">Open the workspace to view full milestones, blockers, and logs.</p>
                     </section>
                   )}
                 </div>
 
                 <aside className="space-y-5">
-                  <section className="rounded-2xl border border-border bg-bg-elevated p-4">
-                    <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Founder</p>
-                    <p className="text-sm font-semibold text-text-primary">{project.owner?.name || 'Founder'}</p>
-                    <p className="mt-1 text-xs text-text-muted">
-                      Connect via the workspace. Collab keeps Discover startup-first (no social profiles).
-                    </p>
-                  </section>
+                  <FounderContactSection owner={project.owner} isProjectOwner={isOwner} />
 
                   <section className="rounded-2xl border border-border bg-bg-elevated p-4">
                     <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Progress</p>
@@ -387,10 +414,9 @@ function ExpandedVentureModal({ project, viewerId, onClose, onOpenWorkspace }) {
                     </section>
                   )}
 
-                  <div className="flex flex-col gap-2">
-                    <Button onClick={() => onOpenWorkspace(project._id)}>Open workspace</Button>
-                    <Button variant="secondary" onClick={onClose}>Back to showcase</Button>
-                  </div>
+                  <Button variant="secondary" className="w-full" onClick={onClose}>
+                    Back to showcase
+                  </Button>
                 </aside>
               </div>
             </Card>
