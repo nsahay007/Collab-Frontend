@@ -103,7 +103,8 @@ export default function Profile() {
     yearOfStudy: '',
     skills: [],
     primaryCategory: '',
-    showContactToTeam: false
+    phone: '',
+    showContactToTeam: true
   })
   const [skillsInput, setSkillsInput] = useState('')
   const [projects, setProjects] = useState([])
@@ -140,7 +141,8 @@ export default function Profile() {
           yearOfStudy: data.yearOfStudy || '',
           skills: data.skills || [],
           primaryCategory: data.primaryCategory || '',
-          showContactToTeam: Boolean(data.showContactToTeam)
+          phone: data.phone || '',
+          showContactToTeam: data.showContactToTeam !== false
         })
         setSkillsInput((data.skills || []).join(', '))
         setTwoFactorEnabled(Boolean(data.twoFactorEnabled))
@@ -251,6 +253,7 @@ export default function Profile() {
         yearOfStudy: formData.yearOfStudy,
         skills: parsedSkills,
         primaryCategory: formData.primaryCategory,
+        phone: formData.phone,
         showContactToTeam: formData.showContactToTeam
       }
       await updateProfile(payload)
@@ -341,7 +344,8 @@ export default function Profile() {
       yearOfStudy: user.yearOfStudy || '',
       skills: user.skills || [],
       primaryCategory: user.primaryCategory || '',
-      showContactToTeam: Boolean(user.showContactToTeam)
+      phone: user.phone || '',
+      showContactToTeam: user.showContactToTeam !== false
     })
     setSkillsInput((user.skills || []).join(', '))
     setEditMode(false)
@@ -576,6 +580,33 @@ export default function Profile() {
                   onChange={(event) => setSkillsInput(event.target.value)}
                   className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary">Phone (optional)</label>
+                <input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+91 …"
+                  className="mt-1 block w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+                />
+              </div>
+              <div className="md:col-span-2 rounded-xl border border-border bg-bg-secondary/40 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="showContactToTeam"
+                    checked={formData.showContactToTeam}
+                    onChange={handleChange}
+                    className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-text-primary">Show contact on Discover</span>
+                    <span className="block text-xs text-text-secondary mt-1">
+                      Share your account email and phone on Discover for College and Public ventures. Private workspaces stay team-only unless you enable this.
+                    </span>
+                  </span>
+                </label>
               </div>
             </div>
           </Card>

@@ -289,8 +289,8 @@ function FounderContactSection({ owner, isProjectOwner }) {
       ) : (
         <p className="text-xs text-text-muted leading-relaxed">
           {isProjectOwner
-            ? 'Turn on “Show contact to teams” in your profile so builders can reach you from Discover.'
-            : 'This founder has not shared contact details yet.'}
+            ? 'Enable “Show contact on Discover” in your profile, or set the venture visibility to College or Public.'
+            : 'Contact is hidden for private ventures, or the founder has not shared contact details yet.'}
         </p>
       )}
     </section>
