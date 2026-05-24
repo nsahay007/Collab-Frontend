@@ -38,6 +38,24 @@ export const fetchProject = async (projectId) => {
   return response.data
 }
 
+export const fetchDiscoverProjects = async ({
+  lifecycleStage = 'all',
+  category,
+  page = 1,
+  limit = 30
+} = {}) => {
+  const query = new URLSearchParams({
+    lifecycleStage,
+    page: String(page),
+    limit: String(limit)
+  })
+  if (category && category !== 'all') {
+    query.set('category', category)
+  }
+  const response = await axios.get(`/projects?${query.toString()}`)
+  return response.data
+}
+
 export const updateProjectDetails = async (projectId, payload = {}) => {
   const response = await axios.put(`/projects/${projectId}/details`, {
     title: payload.title !== undefined ? sanitizeText(payload.title || '') : undefined,

@@ -1,70 +1,531 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
+import { CardSkeleton } from '../components/common/Skeleton'
+import useAuth from '../hooks/useAuth'
+import { fetchDiscoverProjects } from '../features/projects/projectAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
+import {
+  getLifecycleLabel,
+  getLifecycleVariant,
+  normalizeLifecycleStage
+} from '../utils/ventureLifecycle'
+
+const FOCUS_FILTERS = [
+  { id: 'ai', label: 'AI' },
+  { id: 'saas', label: 'SaaS' },
+  { id: 'hardware', label: 'Hardware' },
+  { id: 'edtech', label: 'EdTech' },
+  { id: 'healthtech', label: 'HealthTech' },
+  { id: 'fintech', label: 'FinTech' },
+  { id: 'sustainability', label: 'Sustainability' },
+  { id: 'open_source', label: 'Open Source' },
+  { id: 'early_stage', label: 'Early Stage' },
+  { id: 'mvp_ready', label: 'MVP Ready' },
+]
+
+const CATEGORY_BADGES = {
+  'Tech & Product': { label: 'Tech', variant: 'primary' },
+  'Business & Startup': { label: 'Business', variant: 'secondary' },
+  'Design & Creative': { label: 'Design', variant: 'accent' },
+  'Marketing & Content': { label: 'Marketing', variant: 'secondary' },
+  'Services & Operations': { label: 'Ops', variant: 'default' }
+}
+
+const VISIBILITY_LABELS = {
+  global: 'Public',
+  college: 'College',
+  private: 'Private'
+}
+
+function visibilityVariant(visibility) {
+  if (visibility === 'global') return 'success'
+  if (visibility === 'college') return 'secondary'
+  return 'default'
+}
+
+function normalizeToken(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+}
+
+function pickCategoryBadge(category) {
+  const badge = CATEGORY_BADGES[category]
+  if (badge) return badge
+  if (!category) return { label: 'Startup', variant: 'default' }
+  return { label: category, variant: 'default' }
+}
+
+function stageGroup(stage) {
+  const s = normalizeLifecycleStage(stage)
+  if (['idea', 'planning', 'building'].includes(s)) return 'early_stage'
+  if (['mvp', 'validation', 'incubation_ready'].includes(s)) return 'mvp_ready'
+  return 'early_stage'
+}
+
+function matchesFocus(project, focusId) {
+  if (!focusId) return true
+
+  const tags = Array.isArray(project?.tags) ? project.tags : []
+  const bag = [
+    project?.title,
+    project?.shortPitch,
+    project?.description,
+    project?.category,
+    ...tags
+  ]
+    .filter(Boolean)
+    .map(normalizeToken)
+
+  if (focusId === 'early_stage' || focusId === 'mvp_ready') {
+    return stageGroup(project?.lifecycleStage || project?.status || project?.phase) === focusId
+  }
+
+  return bag.includes(focusId) || bag.some((t) => t.includes(focusId))
+}
+
+function ventureSearchHaystack(project) {
+  return [
+    project?.title,
+    project?.shortPitch,
+    project?.description,
+    project?.category,
+    project?.owner?.name,
+    ...(project?.tags || []),
+    ...(project?.rolesNeeded || []),
+    ...(project?.skillsRequired || [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
 
 export default function VentureDiscovery() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const viewerId = user?.id || user?._id || ''
+
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [focus, setFocus] = useState('')
+  const [selectedId, setSelectedId] = useState(null)
+
+  const loadProjects = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await fetchDiscoverProjects({ lifecycleStage: 'all', limit: 50, page: 1 })
+      setProjects(Array.isArray(data?.projects) ? data.projects : [])
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Could not load ventures. Please try again.')
+      setProjects([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadProjects()
+  }, [loadProjects])
+
+  const showcaseProjects = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    return projects
+      .filter((project) => matchesFocus(project, focus))
+      .filter((project) => (term ? ventureSearchHaystack(project).includes(term) : true))
+  }, [projects, search, focus])
+
+  const onlyPrivateVisible = useMemo(
+    () => projects.length > 0 && projects.every((p) => p.visibility === 'private'),
+    [projects]
+  )
+
+  const selectedProject = useMemo(
+    () => (selectedId ? projects.find((p) => p._id === selectedId) : null),
+    [projects, selectedId]
+  )
+
+  const projectCountLabel = useMemo(() => {
+    const count = projects.length
+    if (count === 0) return 'No active ventures yet'
+    if (count === 1) return '1 active venture'
+    return `${count} active ventures`
+  }, [projects.length])
+
+  const closeExpanded = useCallback(() => setSelectedId(null), [])
+
+  const handleOpenWorkspace = useCallback(
+    (id) => navigate(`/project/${id}`),
+    [navigate]
+  )
+
   return (
-    <motion.div
-      className="max-w-5xl mx-auto space-y-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.div variants={staggerItem}>
-        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Discover</p>
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Find builders, teams & ventures</h1>
-        <p className="text-text-secondary mt-2 max-w-3xl">
-          Explore the ecosystem — discover ambitious builders, forming teams, and startups at every execution stage.
-        </p>
-      </motion.div>
-
-      <motion.div variants={staggerItem}>
-        <Card hover={false} className="border-primary/20">
-          <Badge variant="primary" className="mb-3">Rolling out</Badge>
-          <h2 className="text-xl font-semibold text-text-primary">Discovery is expanding</h2>
-          <p className="mt-2 text-text-secondary max-w-2xl">
-            Public browsing of builders and ventures is launching soon. Until then, create a workspace with your team and execute on the Build tab.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row mt-5">
-            <Link to="/build">
-              <Button className="w-full sm:w-auto">Open Build</Button>
-            </Link>
-            <Link to="/create">
-              <Button variant="secondary" className="w-full sm:w-auto">New Workspace</Button>
-            </Link>
+    <LayoutGroup>
+      <motion.div
+        className="max-w-6xl mx-auto space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={staggerItem} className="flex flex-col gap-3">
+          <p className="text-xs uppercase tracking-wide text-text-muted">Discover</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-text-primary tracking-tight">Startup showcase</h1>
+              <p className="text-text-secondary mt-2 max-w-2xl">
+                Explore execution-focused ventures on Collab. Expand a card to see goals, progress cues, and what the team needs next.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="default">{projectCountLabel}</Badge>
+              <Button variant="secondary" size="sm" onClick={loadProjects}>Refresh</Button>
+              <Button size="sm" onClick={() => navigate('/create')}>New workspace</Button>
+            </div>
           </div>
-        </Card>
+        </motion.div>
+
+        <motion.div variants={staggerItem} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="block">
+            <span className="sr-only">Search startups</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search startups, founders, skills, or tags…"
+              className="w-full rounded-2xl border border-border bg-bg-elevated px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </label>
+          <div className="flex gap-2 justify-between sm:justify-end">
+            <Button
+              variant={focus ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setFocus('')}
+              className="whitespace-nowrap"
+            >
+              All
+            </Button>
+            <Button
+              variant={focus === 'early_stage' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFocus((prev) => (prev === 'early_stage' ? '' : 'early_stage'))}
+              className="whitespace-nowrap"
+            >
+              Early stage
+            </Button>
+            <Button
+              variant={focus === 'mvp_ready' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFocus((prev) => (prev === 'mvp_ready' ? '' : 'mvp_ready'))}
+              className="whitespace-nowrap"
+            >
+              MVP ready
+            </Button>
+          </div>
+        </motion.div>
+
+        <motion.div variants={staggerItem} className="flex flex-wrap gap-2">
+          {FOCUS_FILTERS.filter((f) => !['early_stage', 'mvp_ready'].includes(f.id)).map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => setFocus((prev) => (prev === filter.id ? '' : filter.id))}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                focus === filter.id
+                  ? 'bg-primary text-white'
+                  : 'bg-bg-elevated text-text-secondary border border-border hover:text-text-primary'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </motion.div>
+
+        {onlyPrivateVisible && !loading && !error && (
+          <motion.div variants={staggerItem}>
+            <Card hover={false} className="border-warning/30 bg-warning/5">
+              <p className="text-sm text-text-secondary">
+                Everything currently listed is <strong className="text-text-primary">private</strong>, so only owners and team members can discover it.
+                If you want your venture to appear for others, change visibility to College or Public in the workspace settings.
+              </p>
+            </Card>
+          </motion.div>
+        )}
+
+        {loading && (
+          <div className="grid gap-4 md:grid-cols-2" aria-busy="true" aria-label="Loading startups">
+            <CardSkeleton lines={4} />
+            <CardSkeleton lines={4} />
+            <CardSkeleton lines={4} className="hidden md:block" />
+            <CardSkeleton lines={4} className="hidden md:block" />
+          </div>
+        )}
+
+        {!loading && error && (
+          <motion.div variants={staggerItem}>
+            <Card hover={false} className="border-error/30">
+              <h2 className="text-lg font-semibold text-text-primary">Unable to load Discover</h2>
+              <p className="text-text-secondary mt-2 mb-4">{error}</p>
+              <Button onClick={loadProjects}>Retry</Button>
+            </Card>
+          </motion.div>
+        )}
+
+        {!loading && !error && showcaseProjects.length === 0 && (
+          <motion.div variants={staggerItem}>
+            <Card hover={false} elevated className="innovation-surface border-border">
+              <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup showcase ecosystem</p>
+              <h2 className="text-xl font-semibold text-text-primary">No active projects discovered yet</h2>
+              <p className="mt-2 text-sm text-text-secondary max-w-xl">
+                Execution-focused workspaces from builders will appear here. Start a venture, publish your execution plan, and invite contributors.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row mt-5">
+                <Button onClick={() => navigate('/create')}>Create a workspace</Button>
+                <Button variant="secondary" onClick={() => navigate('/build')}>Open Build</Button>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {!loading && !error && showcaseProjects.length > 0 && (
+          <motion.div variants={staggerContainer} className="grid gap-4 md:grid-cols-2">
+            {showcaseProjects.map((project) => (
+              <DiscoverCard
+                key={project._id}
+                project={project}
+                viewerId={viewerId}
+                onOpen={() => setSelectedId(project._id)}
+              />
+            ))}
+          </motion.div>
+        )}
       </motion.div>
 
-      <motion.div variants={staggerContainer} className="grid gap-4 md:grid-cols-3">
-        <DiscoverCard
-          title="Builders"
-          text="Find students by skills, domain interest, and execution track record."
-        />
-        <DiscoverCard
-          title="Teams"
-          text="See teams forming around ideas — roles open, momentum visible."
-        />
-        <DiscoverCard
-          title="Startups"
-          text="Browse ventures by stage, category, and incubation readiness."
-        />
-      </motion.div>
+      <AnimatePresence>
+        {selectedProject && (
+          <ExpandedVentureModal
+            project={selectedProject}
+            viewerId={viewerId}
+            onClose={closeExpanded}
+            onOpenWorkspace={handleOpenWorkspace}
+          />
+        )}
+      </AnimatePresence>
+    </LayoutGroup>
+  )
+}
+
+function DiscoverCard({ project, viewerId, onOpen }) {
+  const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
+  const visibility = project.visibility || 'private'
+  const ownerId = project.owner?._id || project.owner
+  const isOwner = viewerId && ownerId && String(ownerId) === String(viewerId)
+
+  const categoryBadge = pickCategoryBadge(project.category)
+  const tags = (project.tags || []).slice(0, 4)
+
+  return (
+    <motion.div variants={staggerItem} layout>
+      <motion.button
+        type="button"
+        onClick={onOpen}
+        className="text-left w-full"
+        aria-label={`Open ${project.title || 'startup'} details`}
+      >
+        <motion.div layoutId={`venture-${project._id}`} className="w-full">
+          <Card className="h-full transition-shadow hover:shadow-glow-blue" hover={false}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-text-primary truncate">
+                  {project.title || 'Untitled venture'}
+                </h2>
+                {project.shortPitch && (
+                  <p className="mt-1 text-sm text-text-secondary line-clamp-2">
+                    {project.shortPitch}
+                  </p>
+                )}
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-1.5">
+                <Badge variant={getLifecycleVariant(stage)}>{getLifecycleLabel(stage)}</Badge>
+                <Badge variant={categoryBadge.variant}>{categoryBadge.label}</Badge>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-text-muted">
+              {project.owner?.name && <span>Founder: <span className="text-text-secondary">{project.owner.name}</span></span>}
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
+                <Badge variant={visibilityVariant(visibility)} className="!px-2 !py-0.5 !text-[10px]">
+                  {VISIBILITY_LABELS[visibility] || visibility}
+                </Badge>
+              </span>
+              {isOwner && (
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
+                  <Badge variant="innovation" className="!px-2 !py-0.5 !text-[10px]">Your workspace</Badge>
+                </span>
+              )}
+            </div>
+
+            {tags.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-bg-secondary border border-border px-2 py-0.5 text-xs text-text-secondary"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </Card>
+        </motion.div>
+      </motion.button>
     </motion.div>
   )
 }
 
-function DiscoverCard({ title, text }) {
+function ExpandedVentureModal({ project, viewerId, onClose, onOpenWorkspace }) {
+  const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
+  const visibility = project.visibility || 'private'
+  const ownerId = project.owner?._id || project.owner
+  const isOwner = viewerId && ownerId && String(ownerId) === String(viewerId)
+
+  const roles = Array.isArray(project.rolesNeeded) ? project.rolesNeeded : []
+  const skills = Array.isArray(project.skillsRequired) ? project.skillsRequired : []
+  const readiness = typeof project.readinessScore === 'number' ? project.readinessScore : null
+  const momentum = project.momentumStatus || ''
+  const categoryBadge = pickCategoryBadge(project.category)
+
   return (
-    <motion.div variants={staggerItem}>
-      <Card>
-        <h3 className="font-semibold text-text-primary">{title}</h3>
-        <p className="mt-2 text-sm text-text-secondary">{text}</p>
-      </Card>
-    </motion.div>
+    <>
+      <motion.button
+        type="button"
+        aria-label="Close expanded venture"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        role="dialog"
+        aria-label="Expanded venture view"
+        className="fixed inset-0 z-[90] overflow-y-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <div className="min-h-full flex items-start justify-center px-4 py-10 sm:py-12">
+          <motion.div
+            layoutId={`venture-${project._id}`}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="w-[min(92vw,56rem)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Card hover={false} elevated className="border-border">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup details</p>
+                  <h2 className="text-2xl font-bold text-text-primary tracking-tight">{project.title || 'Untitled venture'}</h2>
+                  {project.shortPitch && (
+                    <p className="mt-2 text-text-secondary">{project.shortPitch}</p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Badge variant={getLifecycleVariant(stage)}>{getLifecycleLabel(stage)}</Badge>
+                  <Badge variant={categoryBadge.variant}>{categoryBadge.label}</Badge>
+                  <Badge variant={visibilityVariant(visibility)}>{VISIBILITY_LABELS[visibility] || visibility}</Badge>
+                  {isOwner && <Badge variant="innovation">Your workspace</Badge>}
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-5">
+                  {project.description && (
+                    <section>
+                      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Overview</p>
+                      <p className="text-sm text-text-secondary whitespace-pre-line">{project.description}</p>
+                    </section>
+                  )}
+
+                  {project.executionPlan && (
+                    <section>
+                      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Execution plan</p>
+                      <p className="text-sm text-text-secondary whitespace-pre-line line-clamp-6">{project.executionPlan}</p>
+                      <p className="mt-2 text-xs text-text-muted">Open the workspace to view full milestones, blockers, and logs.</p>
+                    </section>
+                  )}
+                </div>
+
+                <aside className="space-y-5">
+                  <section className="rounded-2xl border border-border bg-bg-elevated p-4">
+                    <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Founder</p>
+                    <p className="text-sm font-semibold text-text-primary">{project.owner?.name || 'Founder'}</p>
+                    <p className="mt-1 text-xs text-text-muted">
+                      Connect via the workspace. Collab keeps Discover startup-first (no social profiles).
+                    </p>
+                  </section>
+
+                  <section className="rounded-2xl border border-border bg-bg-elevated p-4">
+                    <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Progress</p>
+                    <div className="space-y-2 text-sm">
+                      {readiness !== null && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-text-secondary">Readiness</span>
+                          <span className="text-text-primary font-semibold">{Math.round(readiness)}%</span>
+                        </div>
+                      )}
+                      {momentum && (
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-text-secondary">Momentum</span>
+                          <span className="text-text-primary font-medium text-right">{momentum.replace(/_/g, ' ')}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-secondary">Stage</span>
+                        <span className="text-text-primary font-medium">{getLifecycleLabel(stage)}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {(roles.length > 0 || skills.length > 0) && (
+                    <section className="rounded-2xl border border-border bg-bg-elevated p-4">
+                      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Team needed</p>
+                      {roles.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {roles.slice(0, 8).map((role) => (
+                            <Badge key={role} variant="secondary">{role}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {skills.slice(0, 10).map((skill) => (
+                            <Badge key={skill} variant="default">{skill}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  )}
+
+                  <div className="flex flex-col gap-2">
+                    <Button onClick={() => onOpenWorkspace(project._id)}>Open workspace</Button>
+                    <Button variant="secondary" onClick={onClose}>Back to showcase</Button>
+                  </div>
+                </aside>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </motion.div>
+    </>
   )
 }
