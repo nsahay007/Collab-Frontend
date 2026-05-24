@@ -150,5 +150,14 @@ export function useFeedPosts() {
     [persist]
   )
 
-  return { posts, refresh, createPost, vote, addComment }
+  const deletePost = useCallback(
+    async (postId) => {
+      await axios.delete(`/feed/posts/${postId}`)
+      const next = loadFeedPosts().filter((post) => post.id !== postId)
+      persist(next)
+    },
+    [persist]
+  )
+
+  return { posts, refresh, createPost, vote, addComment, deletePost }
 }

@@ -10,7 +10,7 @@ import { buildAuthorSnapshot, resolveProfileFromPost } from '../features/feed/fe
 
 export default function Feed() {
   const { user } = useAuth()
-  const { posts, vote, addComment } = useFeedPosts()
+  const { posts, vote, addComment, deletePost } = useFeedPosts()
   const [activeTab, setActiveTab] = useState('all')
   const [profileBuilder, setProfileBuilder] = useState(null)
 
@@ -70,6 +70,7 @@ export default function Feed() {
                 currentUserName={currentUserName}
                 onVote={handleVote}
                 onAddComment={handleAddComment}
+                onDelete={deletePost}
                 onOpenProfile={() => handleOpenProfile(post)}
               />
             ))

@@ -10,11 +10,13 @@ export default function FeedPostCard({
   currentUserName,
   onVote,
   onAddComment,
+  onDelete,
   onOpenProfile,
 }) {
   const [showComments, setShowComments] = useState(false)
 
   const author = resolvePostAuthor(post, currentUserId, currentUserName)
+  const canDelete = post.authorId === currentUserId || post.author?.id === currentUserId
 
   const userVote = post.likedBy?.includes(currentUserId)
     ? 'like'
@@ -53,6 +55,17 @@ export default function FeedPostCard({
             <Badge variant={getTypeBadgeVariant(post.type)} className="ml-auto sm:ml-1">
               {getTypeLabel(post.type)}
             </Badge>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Delete this feed post?')) onDelete?.(post.id)
+                }}
+                className="text-xs text-error hover:underline"
+              >
+                Delete
+              </button>
+            )}
           </div>
 
           <p className="mt-2 text-[15px] text-text-primary leading-relaxed whitespace-pre-wrap">
