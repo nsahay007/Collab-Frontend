@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   PhaseHero,
   QuestionCard,
@@ -131,9 +130,6 @@ export default function PhaseMvp({
             </Button>
           </div>
           <MilestoneTracker milestones={milestones} nextMilestone={nextMilestone} />
-          <Link to={`/project/${projectId}`} className="inline-block mt-3 text-sm text-primary hover:underline">
-            Manage milestones in full workspace →
-          </Link>
         </QuestionCard>
 
         <QuestionCard
