@@ -307,6 +307,24 @@ body,
     border-color: color-mix(in srgb, var(--primary) 18%, var(--border));
   }
 
+  button,
+  a,
+  .card-surface,
+  .card-elevated,
+  .feed-post,
+  .build-page-grid,
+  .build-main-rail {
+    min-width: 0;
+  }
+
+  button,
+  .btn-primary-glow,
+  .btn-secondary-surface {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .glow-blue {
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent), 0 8px 28px var(--primary-glow);
   }

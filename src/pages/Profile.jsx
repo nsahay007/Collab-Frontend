@@ -419,9 +419,9 @@ export default function Profile() {
                 <Button variant="primary" onClick={saveProfile}>Save</Button>
               </>
             ) : (
-              <Button variant="secondary" onClick={openEdit}>
-                Edit Execution Profile
-              </Button>
+              <Link to="/settings">
+                <Button variant="secondary">Account Settings</Button>
+              </Link>
             )}
           </div>
         </div>
@@ -435,6 +435,10 @@ export default function Profile() {
       <Card className="space-y-4">
         <h2 className="text-xl font-semibold text-text-primary">Execution Profile Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-text-secondary">
+          <div>
+            <div className="text-xs uppercase text-text-muted">User ID</div>
+            <div className="text-text-primary font-medium truncate">{user.id || user._id || 'Not available'}</div>
+          </div>
           <div>
             <div className="text-xs uppercase text-text-muted">College</div>
             <div className="text-text-primary font-medium">{user.college?.name || 'Not set'}</div>
@@ -512,7 +516,7 @@ export default function Profile() {
         )}
       </Card>
 
-      {editMode && (
+      {false && editMode && (
         <div ref={editSectionRef}>
           <Card className="space-y-4">
             <h2 className="text-xl font-semibold text-text-primary">Edit Execution Profile</h2>
@@ -613,16 +617,16 @@ export default function Profile() {
         </div>
       )}
       
-      <Card className="space-y-6">
+      {false && <Card className="space-y-6">
         <div>
           <h2 className="text-xl font-semibold text-text-primary mb-6">Preferences</h2>
           <div className="p-4 bg-bg-secondary rounded-xl">
             <ThemeSwitch />
           </div>
         </div>
-      </Card>
+      </Card>}
 
-      {user.role === 'admin' && (
+      {false && user.role === 'admin' && (
         <Card className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
@@ -728,15 +732,15 @@ export default function Profile() {
         </Card>
       )}
 
-      <Card className="space-y-3">
+      {false && <Card className="space-y-3">
         <h2 className="text-xl font-semibold text-text-primary">Contact Us</h2>
         <p className="text-sm text-text-secondary">
           Need help or have feedback? Reach us at
           <span className="text-text-primary font-medium"> helpdesk.collab@gmail.com</span>.
         </p>
-      </Card>
+      </Card>}
 
-      <Card className="space-y-4">
+      {false && <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
@@ -834,7 +838,7 @@ export default function Profile() {
             )}
           </div>
         )}
-      </Card>
+      </Card>}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="text-center">

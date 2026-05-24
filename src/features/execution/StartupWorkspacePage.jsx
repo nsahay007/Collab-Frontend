@@ -44,6 +44,43 @@ function EmptyVentureState() {
   )
 }
 
+function BuildProjectLists({ projects = [] }) {
+  if (!projects.length) return null
+  const active = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready')
+  const completed = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === 'incubation_ready')
+
+  return (
+    <Card className="max-w-3xl mx-auto mt-5" hover={false}>
+      <h2 className="text-lg font-semibold text-text-primary mb-3">Your startup workspaces</h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <ProjectList title="Active projects" projects={active} packageView={false} />
+        <ProjectList title="Completed projects" projects={completed} packageView />
+      </div>
+    </Card>
+  )
+}
+
+function ProjectList({ title, projects, packageView }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-sm font-semibold text-text-primary mb-2">{title}</p>
+      <div className="space-y-2">
+        {projects.length ? projects.map((project) => {
+          const id = project._id || project.id
+          return (
+            <Link key={id} to={packageView ? `/project/${id}/package` : `/project/${id}`} className="block rounded-xl border border-border bg-bg-secondary/40 px-3 py-2 hover:border-primary/40">
+              <p className="truncate text-sm font-medium text-text-primary">{project.title}</p>
+              <p className="text-xs text-text-muted">{packageView ? 'Read-only final package' : getLifecycleLabel(project.lifecycleStage)}</p>
+            </Link>
+          )
+        }) : (
+          <p className="rounded-xl border border-dashed border-border px-3 py-2 text-sm text-text-muted">None yet</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function fallbackSprintState() {
   return {
     phases: SPRINT_PHASES.map((phase, index) => ({
@@ -66,6 +103,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
 
   const [profile, setProfile] = useState(null)
   const [project, setProject] = useState(null)
+  const [projectList, setProjectList] = useState([])
   const [milestones, setMilestones] = useState([])
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -91,6 +129,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const overallProgress = sprint?.overallProgress ?? 0
   const resolvedActivePhaseId = activePhaseId || sprint?.activePhaseId || phases[0]?.id
   const activePhase = phases.find((p) => p.id === resolvedActivePhaseId) || phases[0]
+  const isBuildView = viewMode === 'build'
 
   const loadWorkspace = useCallback(async () => {
     setLoading(true)
@@ -106,7 +145,8 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
       if (!targetId) {
         const projectsResponse = await api.get('/users/projects?lifecycleStage=all&limit=30&page=1')
         const projectList = Array.isArray(projectsResponse?.data?.projects) ? projectsResponse.data.projects : []
-        listProject = getPrimaryProject(projectList)
+        setProjectList(projectList)
+        listProject = getPrimaryProject(projectList.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready'))
         targetId = listProject?._id || listProject?.id
       }
 
@@ -193,6 +233,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     return (
       <div className="build-page max-w-[1440px] mx-auto min-h-[40vh]">
         <EmptyVentureState />
+        {isBuildView && <BuildProjectLists projects={projectList} />}
       </div>
     )
   }
@@ -201,9 +242,8 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     project.lifecycleStage || project.status || project.phase
   )
   const projectId = project._id || project.id
-  const isBuildView = viewMode === 'build'
 
-  if (lifecycleStage === 'incubation_ready') {
+  if (lifecycleStage === 'incubation_ready' && !isBuildView) {
     return <Navigate to={`/project/${projectId}/package`} replace />
   }
 
@@ -304,6 +344,8 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
           />
         </div>
       </div>
+
+      {isBuildView && <BuildProjectLists projects={projectList} />}
 
       <div className="lg:hidden mt-8">
         <ExecutionPostPanel ventureName={project.title} onPost={handlePublishToFeed} />

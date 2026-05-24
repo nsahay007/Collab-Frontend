@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
-import { createMilestone, createProject } from '../features/projects/projectAPI'
+import { addTeamMember, createMilestone, createProject } from '../features/projects/projectAPI'
+import { lookupUserById } from '../features/user/userAPI'
 
 const CATEGORIES = [
   'Tech & Product',
@@ -20,7 +21,7 @@ const STEPS = [
   'Review'
 ]
 
-const emptyMember = () => ({ name: '', role: '' })
+const emptyMember = () => ({ userId: '', name: '', role: '', resolved: null, error: '' })
 const emptyMilestone = () => ({ title: '', description: '' })
 const LONG_TEXT_LIMIT = 3000
 
@@ -52,10 +53,11 @@ export default function CreateProject() {
   const activeMembers = useMemo(() => (
     form.teamMembers
       .map((member) => ({
+        userId: member.userId.trim(),
         name: member.name.trim(),
         role: member.role.trim()
       }))
-      .filter((member) => member.name || member.role)
+      .filter((member) => member.userId || member.name || member.role)
   ), [form.teamMembers])
 
   const updateField = (field, value) => {
@@ -71,6 +73,30 @@ export default function CreateProject() {
       ))
     }))
     setError('')
+  }
+
+  const resolveMember = async (index) => {
+    const userId = form.teamMembers[index]?.userId?.trim()
+    if (!userId) return
+    try {
+      const response = await lookupUserById(userId)
+      const found = response?.user
+      setForm((prev) => ({
+        ...prev,
+        teamMembers: prev.teamMembers.map((member, memberIndex) => (
+          memberIndex === index
+            ? { ...member, name: found?.name || member.name, role: member.role || found?.primaryCategory || 'Team Member', resolved: found, error: '' }
+            : member
+        ))
+      }))
+    } catch (error) {
+      setForm((prev) => ({
+        ...prev,
+        teamMembers: prev.teamMembers.map((member, memberIndex) => (
+          memberIndex === index ? { ...member, resolved: null, error: 'User ID not found' } : member
+        ))
+      }))
+    }
   }
 
   const addMember = () => {
@@ -188,7 +214,7 @@ export default function CreateProject() {
         tags: splitLines(form.startupGoals).slice(0, 6),
         rolesNeeded: roles,
         skillsRequired: [],
-        numberOfTeammates: Math.max(1, activeMembers.length),
+        numberOfTeammates: Math.min(10, Math.max(1, activeMembers.length + 1)),
         visibility: 'private',
         executionPlan: buildExecutionPlan(),
         techProduct: form.category === 'Tech & Product'
@@ -212,6 +238,8 @@ export default function CreateProject() {
       const response = await createProject(payload)
       const projectId = response?.data?.project?._id || response?.data?._id || response?.project?._id
       if (!projectId) throw new Error('Startup workspace was created, but no id was returned.')
+      const linkedUserIds = [...new Set(activeMembers.map((member) => member.userId).filter(Boolean))]
+      await Promise.allSettled(linkedUserIds.map((userId) => addTeamMember(projectId, userId)))
       await Promise.all(plannedMilestones.map((milestone) => (
         createMilestone(projectId, {
           title: milestone.title,
@@ -271,6 +299,7 @@ export default function CreateProject() {
           <TeamStep
             members={form.teamMembers}
             updateMember={updateMember}
+            resolveMember={resolveMember}
             addMember={addMember}
             removeMember={removeMember}
           />
@@ -356,7 +385,7 @@ function ConceptStep({ form, updateField }) {
   )
 }
 
-function TeamStep({ members, updateMember, addMember, removeMember }) {
+function TeamStep({ members, updateMember, resolveMember, addMember, removeMember }) {
   return (
     <div className="space-y-5">
       <SectionIntro
@@ -368,10 +397,21 @@ function TeamStep({ members, updateMember, addMember, removeMember }) {
       </div>
       <div className="space-y-3">
         {members.map((member, index) => (
-          <div key={index} className="grid gap-3 rounded-xl border border-border bg-bg-secondary/40 p-3 md:grid-cols-[1fr_1fr_auto]">
+          <div key={index} className="grid gap-3 rounded-xl border border-border bg-bg-secondary/40 p-3 md:grid-cols-[1.1fr_1fr_1fr_auto]">
+            <Input
+              value={member.userId}
+              onChange={(event) => updateMember(index, 'userId', event.target.value)}
+              onBlur={() => resolveMember(index)}
+              placeholder="Unique User ID"
+            />
             <Input value={member.name} onChange={(event) => updateMember(index, 'name', event.target.value)} placeholder="Member name" />
             <Input value={member.role} onChange={(event) => updateMember(index, 'role', event.target.value)} placeholder="Role, e.g. Product Lead" />
             <Button type="button" variant="secondary" size="sm" onClick={() => removeMember(index)}>Remove</Button>
+            {(member.resolved || member.error) && (
+              <p className={`md:col-span-4 text-xs ${member.error ? 'text-error' : 'text-success'}`}>
+                {member.error || `Linked to ${member.resolved?.name} (${member.resolved?.email})`}
+              </p>
+            )}
           </div>
         ))}
       </div>

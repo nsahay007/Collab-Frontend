@@ -113,6 +113,11 @@ export const removeTeamMember = async (projectId, requesterId, userId) => {
   return response.data
 }
 
+export const addTeamMember = async (projectId, userId) => {
+  const response = await axios.post(`/projects/${projectId}/add-member`, { userId })
+  return response.data
+}
+
 export const deleteProject = async (projectId) => {
   const response = await axios.delete(`/projects/${projectId}`)
   return response.data

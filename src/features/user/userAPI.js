@@ -51,6 +51,11 @@ export const getUserById = async (userId) => {
   return response.data
 }
 
+export const lookupUserById = async (userId) => {
+  const response = await axios.get(`/users/lookup/${userId}`)
+  return response.data
+}
+
 export const createUserByAdmin = async (payload) => {
   const sanitized = {
     ...payload,

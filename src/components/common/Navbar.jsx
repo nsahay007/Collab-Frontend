@@ -317,7 +317,7 @@ export default function Navbar() {
               </div>
             </div>
             <Link to="/profile" onClick={() => setShowProfile(false)} className="block py-2.5 text-sm text-text-secondary">Profile</Link>
-            <Link to="/profile" onClick={() => setShowProfile(false)} className="block py-2.5 text-sm text-text-secondary">Settings</Link>
+            <Link to="/settings" onClick={() => setShowProfile(false)} className="block py-2.5 text-sm text-text-secondary">Settings</Link>
             <div className="py-3 border-y border-border my-2">
               <ThemeSwitch />
             </div>
