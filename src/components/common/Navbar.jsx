@@ -5,15 +5,14 @@ import useAuth from '../../hooks/useAuth'
 import Button from './Button'
 import NavLinkPill from './NavLinkPill'
 import ProfileMenu from './ProfileMenu'
-import SearchPanel from './SearchPanel'
 import ThemeSwitch from './ThemeSwitch'
 import BrandLogo from './BrandLogo'
 import { getNotifications, markNotificationRead } from '../../features/notifications/notificationAPI'
 
 const AUTH_NAV = [
-  { to: '/feed', label: 'Feed', match: ['/feed', '/dashboard'] },
-  { to: '/discover', label: 'Discover', match: ['/discover'] },
   { to: '/build', label: 'Build', match: ['/build', '/create', '/project'], emphasis: true },
+  { to: '/discover', label: 'Discover', match: ['/discover'] },
+  { to: '/feed', label: 'Feed', match: ['/feed', '/dashboard'] },
   { to: '/opportunities', label: 'Opportunities', match: ['/opportunities'] },
 ]
 
@@ -35,7 +34,6 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
   const [bellWiggle, setBellWiggle] = useState(false)
 
   const location = useLocation()
@@ -165,12 +163,6 @@ export default function Navbar() {
             <div className="flex items-center gap-1 sm:gap-2 ml-auto">
               {user ? (
                 <>
-                  <IconButton label="Search" onClick={() => setShowSearch(true)}>
-                    <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.2-5.2M11 18a7 7 0 100-14 7 7 0 000 14z" />
-                    </svg>
-                  </IconButton>
-
                   <div className="relative" ref={notifRef}>
                     <motion.div animate={bellWiggle ? { rotate: [0, -10, 10, 0] } : { rotate: 0 }} transition={{ duration: 0.4 }}>
                       <IconButton
@@ -301,9 +293,6 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="pt-3 mt-3 border-t border-border space-y-1 sm:hidden">
-                <button type="button" onClick={() => { setShowSearch(true); setMobileOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-text-muted rounded-lg hover:bg-primary/6">
-                  Search
-                </button>
                 <button type="button" onClick={() => { setShowProfile(true); setMobileOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-text-muted rounded-lg hover:bg-primary/6">
                   Account
                 </button>
@@ -315,8 +304,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </header>
-
-      <SearchPanel open={showSearch} onClose={() => setShowSearch(false)} />
 
       {/* Mobile profile menu (when opened from drawer) */}
       {user && showProfile && (
