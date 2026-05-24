@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
 import Badge from '../../components/common/Badge'
@@ -15,7 +14,6 @@ import { buildSprintState } from './sprintPipeline'
 import { getPrimaryProject } from './executionUtils'
 import { formatMomentum, MOMENTUM_VARIANTS } from './executionUtils'
 import { getLifecycleLabel, getLifecycleVariant, normalizeLifecycleStage } from '../../utils/ventureLifecycle'
-import { staggerContainer, staggerItem } from '../../utils/motion'
 import ExecutionPostPanel from '../feed/components/ExecutionPostPanel'
 import { useFeedPosts } from '../feed/useFeedPosts'
 import { useMotionToast } from '../../components/common/MotionToast'
@@ -52,7 +50,7 @@ function EmptyVentureState() {
  * @param {'build'|'workspace'} viewMode — header copy only
  */
 export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMode = 'build' }) {
-  const { user, login } = useAuth()
+  const { user } = useAuth()
   const { posts, createPost } = useFeedPosts()
   const { showToast } = useMotionToast()
 
@@ -87,24 +85,23 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const resolvedActivePhaseId = activePhaseId || sprint?.activePhaseId || phases[0]?.id
   const activePhase = phases.find((p) => p.id === resolvedActivePhaseId) || phases[0]
 
-  const loadWorkspace = async () => {
+  const loadWorkspace = useCallback(async () => {
     setLoading(true)
     setError('')
 
     try {
       const profileResponse = await api.get('/users/me')
-      const profileData = profileResponse?.data || null
-      setProfile(profileData)
-      if (login && profileData) login(profileData)
+      setProfile(profileResponse?.data || null)
 
       let targetId = fixedProjectId
+      let listProject = null
 
       if (!targetId) {
         const projectsResponse = await api.get('/users/projects?lifecycleStage=all&limit=30&page=1')
         const projectList = Array.isArray(projectsResponse?.data?.projects) ? projectsResponse.data.projects : []
         setProjects(projectList)
-        const primary = getPrimaryProject(projectList)
-        targetId = primary?._id || primary?.id
+        listProject = getPrimaryProject(projectList)
+        targetId = listProject?._id || listProject?.id
       }
 
       if (!targetId) {
@@ -121,13 +118,20 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
       ])
 
       const loaded = detail.status === 'fulfilled' ? detail.value : null
-      if (!loaded?._id && !loaded?.id) {
-        setError('Startup workspace not found')
+      const resolved =
+        loaded && (loaded._id || loaded.id) ? loaded : listProject
+
+      if (!resolved?._id && !resolved?.id) {
+        const fetchMessage =
+          detail.status === 'rejected'
+            ? detail.reason?.response?.data?.message
+            : null
+        setError(fetchMessage || 'Startup workspace not found')
         setProject(null)
         return
       }
 
-      setProject(loaded)
+      setProject(resolved)
       setMilestones(
         milestonesResponse.status === 'fulfilled' ? milestonesResponse.value?.data?.milestones || [] : []
       )
@@ -137,12 +141,11 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     } finally {
       setLoading(false)
     }
-  }
+  }, [fixedProjectId])
 
   useEffect(() => {
-    if (!user) return
     loadWorkspace()
-  }, [user?.id, user?._id, fixedProjectId])
+  }, [loadWorkspace])
 
   useEffect(() => {
     if (sprint?.activePhaseId && !activePhaseId) {
@@ -175,13 +178,8 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const isBuildView = viewMode === 'build'
 
   return (
-    <motion.div
-      className="build-page max-w-[1440px] mx-auto"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="show"
-    >
-      <motion.header variants={staggerItem} className="build-page-header mb-6">
+    <div className="build-page max-w-[1440px] mx-auto">
+      <header className="build-page-header mb-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-text-muted mb-2">
@@ -222,19 +220,19 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             <WorkspaceAdmin project={project} projectId={projectId} onRefresh={loadWorkspace} />
           </div>
         </div>
-      </motion.header>
+      </header>
 
       <div className="build-page-grid">
-        <motion.aside variants={staggerItem} className="build-left-rail">
+        <aside className="build-left-rail">
           <BuildSprintNav
             phases={phases}
             activePhaseId={resolvedActivePhaseId}
             onSelectPhase={setActivePhaseId}
             overallProgress={overallProgress}
           />
-        </motion.aside>
+        </aside>
 
-        <motion.main variants={staggerItem} className="build-main-rail min-w-0">
+        <main className="build-main-rail min-w-0">
           <div className="lg:hidden build-sprint-nav-mobile mb-4" role="tablist" aria-label="Sprint phases">
             {phases.map((phase) => (
               <button
@@ -265,9 +263,9 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             onPost={handlePublishToFeed}
             showToast={showToast}
           />
-        </motion.main>
+        </main>
 
-        <motion.div variants={staggerItem} className="build-right-rail-wrap hidden lg:block">
+        <div className="build-right-rail-wrap hidden lg:block">
           <BuildRightSidebar
             project={project}
             phases={phases}
@@ -275,7 +273,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             ventureName={project.title}
             onPost={handlePublishToFeed}
           />
-        </motion.div>
+        </div>
       </div>
 
       {resolvedActivePhaseId !== 'public' && (
@@ -283,6 +281,6 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
           <ExecutionPostPanel ventureName={project.title} onPost={handlePublishToFeed} />
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
