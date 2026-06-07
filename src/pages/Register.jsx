@@ -137,15 +137,53 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    if (!formData.name) {
+      setError('Please enter your full name')
+      return
+    }
+
+    if (!formData.email) {
+      setError('Please enter your email address')
+      return
+    }
+
+    if (!formData.password) {
+      setError('Please enter a password')
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
     }
 
-    if (!formData.name || !formData.email || !formData.password || !formData.college_id || 
-        !formData.course || !formData.yearOfStudy || !formData.primaryCategory ||
-        (formData.college_id === 'others' && !formData.customCollegeName.trim())) {
-      setError('All fields are required')
+    if (!formData.college_id) {
+      setError('Please select your college')
+      return
+    }
+
+    if (formData.college_id === 'others' && !formData.customCollegeName.trim()) {
+      setError('Please enter your college name')
+      return
+    }
+
+    if (!formData.course) {
+      setError('Please enter your course')
+      return
+    }
+
+    if (!formData.yearOfStudy) {
+      setError('Please select your year of study')
+      return
+    }
+
+    if (!formData.primaryCategory) {
+      setError('Please select your primary interest')
       return
     }
 
