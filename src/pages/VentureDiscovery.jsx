@@ -50,6 +50,7 @@ export default function VentureDiscovery() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState(null)
+  const [filter, setFilter] = useState('active')
 
   const loadProjects = useCallback(async () => {
     setLoading(true)
@@ -79,12 +80,19 @@ export default function VentureDiscovery() {
     [projects, selectedId]
   )
 
+  const activeProjects = useMemo(() => projects.filter((p) => p.lifecycleStage !== 'incubation_ready'), [projects])
+  const completedProjects = useMemo(() => projects.filter((p) => p.lifecycleStage === 'incubation_ready'), [projects])
+
+  const filteredProjects = useMemo(() => {
+    return filter === 'active' ? activeProjects : completedProjects
+  }, [filter, activeProjects, completedProjects])
+
   const projectCountLabel = useMemo(() => {
-    const count = projects.length
-    if (count === 0) return 'No active ventures yet'
-    if (count === 1) return '1 active venture'
-    return `${count} active ventures`
-  }, [projects.length])
+    const count = filteredProjects.length
+    if (count === 0) return filter === 'active' ? 'No active ventures yet' : 'No completed ventures yet'
+    if (count === 1) return filter === 'active' ? '1 active venture' : '1 completed venture'
+    return filter === 'active' ? `${count} active ventures` : `${count} completed ventures`
+  }, [filteredProjects.length, filter])
 
   const closeExpanded = useCallback(() => setSelectedId(null), [])
 
@@ -160,8 +168,27 @@ export default function VentureDiscovery() {
         )}
 
         {!loading && !error && projects.length > 0 && (
+          <motion.div variants={staggerItem} className="flex items-center gap-2">
+            <Button
+              variant={filter === 'active' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFilter('active')}
+            >
+              Active ({activeProjects.length})
+            </Button>
+            <Button
+              variant={filter === 'completed' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => setFilter('completed')}
+            >
+              Completed ({completedProjects.length})
+            </Button>
+          </motion.div>
+        )}
+
+        {!loading && !error && projects.length > 0 && filteredProjects.length > 0 && (
           <motion.div variants={staggerContainer} className="grid gap-4 md:grid-cols-2">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <DiscoverCard
                 key={project._id}
                 project={project}
@@ -171,6 +198,15 @@ export default function VentureDiscovery() {
             ))}
           </motion.div>
         )}
+
+        {!loading && !error && projects.length > 0 && filteredProjects.length === 0 && (
+          <motion.div variants={staggerItem}>
+            <Card hover={false} className="border-border">
+              <p className="text-sm text-text-secondary">
+                No {filter === 'active' ? 'active' : 'completed'} ventures to display.
+              </p>
+            </Card>
+          </motion.div>
       </motion.div>
 
       <AnimatePresence>

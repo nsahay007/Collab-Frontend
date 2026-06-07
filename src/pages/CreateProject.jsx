@@ -215,7 +215,7 @@ export default function CreateProject() {
         rolesNeeded: roles,
         skillsRequired: [],
         numberOfTeammates: Math.min(10, Math.max(1, activeMembers.length + 1)),
-        visibility: 'private',
+        visibility: 'global',
         executionPlan: buildExecutionPlan(),
         techProduct: form.category === 'Tech & Product'
           ? {
