@@ -150,13 +150,11 @@ export default function CreateProject() {
         return 'Add the startup name, problem, users, category, and why this matters.'
       }
     }
-    if (step === 1 && activeMembers.length === 0) {
-      return 'Add at least one team member or role. Collab is built for existing student teams.'
-    }
     if (step === 2) {
-      if (!form.startupGoals.trim() || !form.featurePlan.trim() || plannedMilestones.length === 0 || !form.executionTimeline.trim()) {
-        return 'Add goals, feature plan, at least one milestone, and execution timeline.'
-      }
+      if (!form.startupGoals.trim()) return 'Please add your startup goals'
+      if (!form.featurePlan.trim()) return 'Please add your feature plan'
+      if (plannedMilestones.length === 0) return 'Please add at least one execution milestone'
+      if (!form.executionTimeline.trim()) return 'Please describe your execution timeline'
     }
     return ''
   }
