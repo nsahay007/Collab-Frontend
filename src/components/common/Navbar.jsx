@@ -35,6 +35,7 @@ export default function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [bellWiggle, setBellWiggle] = useState(false)
+  const [showMobileProfile, setShowMobileProfile] = useState(false)
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -61,6 +62,7 @@ export default function Navbar() {
     setMobileOpen(false)
     setShowNotifications(false)
     setShowProfile(false)
+    setShowMobileProfile(false)
   }, [location.pathname])
 
   useEffect(() => {
@@ -292,8 +294,8 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <div className="pt-3 mt-3 border-t border-border space-y-1 sm:hidden">
-                <button type="button" onClick={() => { setShowProfile(true); setMobileOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-text-muted rounded-lg hover:bg-primary/6">
+              <div className="pt-3 mt-3 border-t border-border space-y-1 lg:hidden">
+                <button type="button" onClick={() => { setShowMobileProfile(true); setMobileOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-text-muted rounded-lg hover:bg-primary/6">
                   Account
                 </button>
                 <button type="button" onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-error rounded-lg hover:bg-error/10">
@@ -306,8 +308,8 @@ export default function Navbar() {
       </header>
 
       {/* Mobile profile menu (when opened from drawer) */}
-      {user && showProfile && (
-        <div className="sm:hidden fixed inset-0 z-[55] flex items-end justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowProfile(false)}>
+      {user && showMobileProfile && (
+        <div className="lg:hidden fixed inset-0 z-[55] flex items-end justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileProfile(false)}>
           <div className="w-full max-w-sm rounded-2xl border border-border bg-bg-elevated p-4 shadow-elevated" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <span className="nav-avatar">{avatarInitial}</span>
@@ -316,12 +318,12 @@ export default function Navbar() {
                 <p className="text-xs text-text-muted">{user.email}</p>
               </div>
             </div>
-            <Link to="/profile" onClick={() => setShowProfile(false)} className="block py-2.5 text-sm text-text-secondary">Profile</Link>
-            <Link to="/settings" onClick={() => setShowProfile(false)} className="block py-2.5 text-sm text-text-secondary">Settings</Link>
+            <Link to="/profile" onClick={() => setShowMobileProfile(false)} className="block py-2.5 text-sm text-text-secondary">Profile</Link>
+            <Link to="/settings" onClick={() => setShowMobileProfile(false)} className="block py-2.5 text-sm text-text-secondary">Settings</Link>
             <div className="py-3 border-y border-border my-2">
               <ThemeSwitch />
             </div>
-            <button type="button" onClick={handleLogout} className="w-full py-2.5 text-sm text-error text-left">Logout</button>
+            <button type="button" onClick={() => { setShowMobileProfile(false); handleLogout() }} className="w-full py-2.5 text-sm text-error text-left">Logout</button>
           </div>
         </div>
       )}
