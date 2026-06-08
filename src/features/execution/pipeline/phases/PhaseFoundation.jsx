@@ -40,6 +40,26 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
   }
 
   const handleSave = async () => {
+    if (!form.startupName.trim() || form.startupName.trim().length < 2) {
+      showToast?.('Please enter your startup name', 'error')
+      return
+    }
+    if (!form.elevatorPitch.trim() || form.elevatorPitch.trim().length < 10) {
+      showToast?.('Please describe your project in one sentence', 'error')
+      return
+    }
+    if (!form.tagline.trim() || form.tagline.trim().length < 3) {
+      showToast?.('Please add a tagline for your project', 'error')
+      return
+    }
+    if (!form.descriptorWords.some((w) => w.trim())) {
+      showToast?.('Please add at least one descriptor word', 'error')
+      return
+    }
+    if (!form.category) {
+      showToast?.('Please select a category', 'error')
+      return
+    }
     setSaving(true)
     try {
       await saveFoundationPhase(projectId, form)
@@ -106,7 +126,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
           id="pf-tagline"
           value={form.tagline}
           onChange={(v) => setForm((p) => ({ ...p, tagline: v }))}
-          placeholder="3–8 words"
+          placeholder="3-8 words"
         />
       </QuestionCard>
 
@@ -124,7 +144,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
               type="text"
               value={form.descriptorWords[i]}
               onChange={(e) => setWord(i, e.target.value)}
-              placeholder={`Word ${i + 1}`}
+              placeholder={'Word ' + (i + 1)}
               className="pipeline-input text-center"
             />
           ))}
@@ -143,7 +163,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
               key={cat}
               type="button"
               onClick={() => setForm((p) => ({ ...p, category: cat }))}
-              className={`pipeline-category-card ${form.category === cat ? 'pipeline-category-card--active' : ''}`}
+              className={'pipeline-category-card ' + (form.category === cat ? 'pipeline-category-card--active' : '')}
             >
               {cat}
             </button>
