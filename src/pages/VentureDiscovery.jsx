@@ -228,27 +228,26 @@ function DiscoverCard({ project, viewerId, onOpen }) {
   const visibility = project.visibility || 'private'
   const ownerId = project.owner?._id || project.owner
   const isOwner = viewerId && ownerId && String(ownerId) === String(viewerId)
-
   const categoryBadge = pickCategoryBadge(project.category)
   const tags = (project.tags || []).slice(0, 4)
 
   return (
-    <motion.div variants={staggerItem} layout>
+    <motion.div variants={staggerItem} layout className="w-full min-w-0">
       <motion.button
         type="button"
         onClick={onOpen}
-        className="text-left w-full"
+        className="text-left w-full min-w-0 block"
         aria-label={`Open ${project.title || 'startup'} details`}
       >
-        <motion.div layoutId={`venture-${project._id}`} className="w-full">
-          <Card className="h-full transition-shadow hover:shadow-glow-blue" hover={false}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-text-primary truncate break-words">
+        <motion.div layoutId={`venture-${project._id}`} className="w-full min-w-0">
+          <Card className="h-full transition-shadow hover:shadow-glow-blue overflow-hidden" hover={false}>
+            <div className="flex items-start justify-between gap-3 min-w-0">
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h2 className="text-lg font-semibold text-text-primary truncate">
                   {project.title || 'Untitled venture'}
                 </h2>
                 {project.shortPitch && (
-                  <p className="mt-1 text-sm text-text-secondary line-clamp-2 break-words overflow-hidden">
+                  <p className="mt-1 text-sm text-text-secondary line-clamp-2 break-words overflow-hidden w-full">
                     {project.shortPitch}
                   </p>
                 )}
@@ -258,29 +257,31 @@ function DiscoverCard({ project, viewerId, onOpen }) {
                 <Badge variant={categoryBadge.variant}>{categoryBadge.label}</Badge>
               </div>
             </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-text-muted">
-              {project.owner?.name && <span>Founder: <span className="text-text-secondary">{project.owner.name}</span></span>}
-              <span className="inline-flex items-center gap-2">
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-text-muted overflow-hidden">
+              {project.owner?.name && (
+                <span className="truncate max-w-[150px]">
+                  Founder: <span className="text-text-secondary">{project.owner.name}</span>
+                </span>
+              )}
+              <span className="inline-flex items-center gap-2 shrink-0">
                 <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
                 <Badge variant={visibilityVariant(visibility)} className="!px-2 !py-0.5 !text-[10px]">
                   {VISIBILITY_LABELS[visibility] || visibility}
                 </Badge>
               </span>
               {isOwner && (
-                <span className="inline-flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 shrink-0">
                   <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
                   <Badge variant="innovation" className="!px-2 !py-0.5 !text-[10px]">Your workspace</Badge>
                 </span>
               )}
             </div>
-
             {tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
+              <div className="mt-4 flex flex-wrap gap-1.5 overflow-hidden">
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-md bg-bg-secondary border border-border px-2 py-0.5 text-xs text-text-secondary"
+                    className="rounded-md bg-bg-secondary border border-border px-2 py-0.5 text-xs text-text-secondary truncate max-w-[120px]"
                   >
                     {tag}
                   </span>
