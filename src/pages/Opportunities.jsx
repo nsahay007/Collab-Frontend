@@ -1,52 +1,142 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
+import { getOpportunities } from '../features/opportunities/opportunityAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
 
-const CATEGORIES = [
-  { title: 'Incubators', description: 'Campus and regional pre-incubation programs for student ventures.', tag: 'Programs' },
-  { title: 'Grants & Funding', description: 'Non-dilutive capital and innovation grants for early teams.', tag: 'Funding' },
-  { title: 'Hackathons', description: 'Build sprints, demo days, and competitive innovation events.', tag: 'Events' },
-  { title: 'Competitions', description: 'Pitch contests and startup challenges with mentorship prizes.', tag: 'Growth' },
+const TYPE_LABELS = {
+  incubator: 'Incubator',
+  grant: 'Grant',
+  hackathon: 'Hackathon',
+  achievement: 'Achievement'
+}
+
+const TYPE_VARIANTS = {
+  incubator: 'primary',
+  grant: 'success',
+  hackathon: 'secondary',
+  achievement: 'accent'
+}
+
+const TABS = [
+  { id: 'all', label: 'All' },
+  { id: 'incubator', label: 'Incubators' },
+  { id: 'grant', label: 'Grants' },
+  { id: 'hackathon', label: 'Hackathons' },
+  { id: 'achievement', label: 'Achievements' }
 ]
 
 export default function Opportunities() {
+  const [opportunities, setOpportunities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('all')
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const data = await getOpportunities(activeTab)
+        setOpportunities(data?.opportunities || [])
+      } catch (err) {
+        setOpportunities([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [activeTab])
+
   return (
     <motion.div className="max-w-5xl mx-auto space-y-6" variants={staggerContainer} initial="hidden" animate="show">
       <motion.div variants={staggerItem}>
         <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Growth Layer</p>
         <h1 className="text-3xl font-bold text-text-primary tracking-tight">Opportunities</h1>
         <p className="text-text-secondary mt-2 max-w-2xl">
-          Incubators, grants, hackathons, and startup programs — curated for teams ready to scale beyond the build phase.
+          Incubators, grants, hackathons, and achievements — curated for teams ready to scale.
         </p>
       </motion.div>
 
-      <motion.div variants={staggerItem}>
-        <Card hover={false} className="innovation-surface border-secondary/20">
-          <Badge variant="innovation" className="mb-3">Launching soon</Badge>
-          <p className="text-sm text-text-secondary max-w-2xl">
-            Opportunity matching and program applications are in development. Keep executing on Build — readiness unlocks stronger applications.
-          </p>
-          <Link to="/build" className="inline-block mt-4">
-            <Button variant="innovation" size="sm">Back to Build</Button>
-          </Link>
-        </Card>
+      <motion.div variants={staggerItem} className="flex flex-wrap gap-2">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? 'bg-primary text-white'
+                : 'bg-bg-secondary text-text-muted hover:text-text-primary'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </motion.div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {CATEGORIES.map((cat) => (
-          <motion.div key={cat.title} variants={staggerItem}>
-            <Card>
-              <Badge variant="secondary" className="mb-3">{cat.tag}</Badge>
-              <h2 className="text-lg font-semibold text-text-primary">{cat.title}</h2>
-              <p className="text-sm text-text-secondary mt-2">{cat.description}</p>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+      {loading && (
+        <motion.div variants={staggerItem}>
+          <p className="text-text-muted text-sm">Loading opportunities...</p>
+        </motion.div>
+      )}
+
+      {!loading && opportunities.length === 0 && (
+        <motion.div variants={staggerItem}>
+          <Card hover={false} className="innovation-surface border-secondary/20">
+            <Badge variant="innovation" className="mb-3">Coming soon</Badge>
+            <p className="text-sm text-text-secondary max-w-2xl">
+              No opportunities listed yet. Check back soon — we are actively adding incubators, grants, and events.
+            </p>
+          </Card>
+        </motion.div>
+      )}
+
+      {!loading && opportunities.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {opportunities.map((opp) => (
+            <motion.div key={opp._id} variants={staggerItem}>
+              <Card className="h-full space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-lg font-semibold text-text-primary">{opp.title}</h2>
+                  <Badge variant={TYPE_VARIANTS[opp.type] || 'default'}>
+                    {TYPE_LABELS[opp.type] || opp.type}
+                  </Badge>
+                </div>
+                {opp.organization && (
+                  <p className="text-xs text-text-muted">{opp.organization}</p>
+                )}
+                {opp.description && (
+                  <p className="text-sm text-text-secondary">{opp.description}</p>
+                )}
+                <div className="flex flex-wrap gap-3 text-xs text-text-muted">
+                  {opp.deadline && (
+                    <span>Deadline: <span className="text-text-secondary">{new Date(opp.deadline).toLocaleDateString()}</span></span>
+                  )}
+                  {opp.prize && (
+                    <span>Prize: <span className="text-text-secondary">{opp.prize}</span></span>
+                  )}
+                  {opp.amount && (
+                    <span>Amount: <span className="text-text-secondary">{opp.amount}</span></span>
+                  )}
+                  {opp.location && (
+                    <span>Location: <span className="text-text-secondary">{opp.location}</span></span>
+                  )}
+                </div>
+                {opp.applyLink && (
+                  
+                    href={opp.applyLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
+                    <Button size="sm" variant="primary">Apply Now</Button>
+                  </a>
+                )}
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.div>
   )
 }

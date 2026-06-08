@@ -1,3 +1,4 @@
+import { createOpportunity, deleteOpportunity, getOpportunities, updateOpportunity } from '../features/opportunities/opportunityAPI'
 import React, { useEffect, useState } from 'react'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -731,6 +732,149 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      <OpportunitiesAdmin />
     </div>
+  )
+}
+
+function OpportunitiesAdmin() {
+  const [opportunities, setOpportunities] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({
+    type: 'incubator', title: '', description: '', organization: '',
+    applyLink: '', deadline: '', prize: '', amount: '', location: ''
+  })
+
+  const load = async () => {
+    try {
+      const data = await getOpportunities('all')
+      setOpportunities(data?.opportunities || [])
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  const resetForm = () => {
+    setForm({ type: 'incubator', title: '', description: '', organization: '', applyLink: '', deadline: '', prize: '', amount: '', location: '' })
+    setEditingId(null)
+    setShowForm(false)
+  }
+
+  const handleSubmit = async () => {
+    if (!form.title) return
+    setLoading(true)
+    try {
+      if (editingId) {
+        await updateOpportunity(editingId, form)
+      } else {
+        await createOpportunity(form)
+      }
+      await load()
+      resetForm()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEdit = (opp) => {
+    setForm({
+      type: opp.type, title: opp.title, description: opp.description || '',
+      organization: opp.organization || '', applyLink: opp.applyLink || '',
+      deadline: opp.deadline ? opp.deadline.slice(0, 10) : '',
+      prize: opp.prize || '', amount: opp.amount || '', location: opp.location || ''
+    })
+    setEditingId(opp._id)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this opportunity?')) return
+    await deleteOpportunity(id)
+    await load()
+  }
+
+  return (
+    <Card className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-text-primary">Opportunities</h2>
+        <Button variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(true) }}>Add New</Button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-xl border border-border bg-bg-secondary p-4 space-y-3">
+          <h3 className="font-semibold text-text-primary">{editingId ? 'Edit' : 'Add'} Opportunity</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-text-muted">Type</label>
+              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary">
+                <option value="incubator">Incubator</option>
+                <option value="grant">Grant</option>
+                <option value="hackathon">Hackathon</option>
+                <option value="achievement">Achievement</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-text-muted">Title *</label>
+              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary" placeholder="Title" />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted">Organization</label>
+              <input value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary" placeholder="Organization name" />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted">Apply Link</label>
+              <input value={form.applyLink} onChange={(e) => setForm({ ...form, applyLink: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary" placeholder="https://" />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted">Deadline</label>
+              <input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary" />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted">Prize / Amount</label>
+              <input value={form.prize || form.amount} onChange={(e) => setForm({ ...form, prize: e.target.value, amount: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary" placeholder="e.g. ₹1,00,000" />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted">Location</label>
+              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary" placeholder="City or Online" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs text-text-muted">Description</label>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary resize-none" placeholder="Short description" />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="secondary" size="sm" onClick={resetForm}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={handleSubmit} disabled={loading}>
+              {loading ? 'Saving...' : editingId ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {opportunities.length === 0 ? (
+        <p className="text-sm text-text-muted">No opportunities yet. Add your first one.</p>
+      ) : (
+        <div className="space-y-2">
+          {opportunities.map((opp) => (
+            <div key={opp._id} className="flex items-start justify-between gap-3 rounded-xl border border-border bg-bg-secondary p-3">
+              <div className="min-w-0">
+                <p className="font-medium text-text-primary truncate">{opp.title}</p>
+                <p className="text-xs text-text-muted">{opp.type} {opp.organization ? `· ${opp.organization}` : ''}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(opp)}>Edit</Button>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(opp._id)}>Delete</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   )
 }
