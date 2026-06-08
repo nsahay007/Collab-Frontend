@@ -207,6 +207,7 @@ export default function VentureDiscovery() {
               </p>
             </Card>
           </motion.div>
+        )}
       </motion.div>
 
       <AnimatePresence>
