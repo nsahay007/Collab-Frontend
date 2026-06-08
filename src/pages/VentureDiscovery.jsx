@@ -244,11 +244,11 @@ function DiscoverCard({ project, viewerId, onOpen }) {
           <Card className="h-full transition-shadow hover:shadow-glow-blue" hover={false}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-text-primary truncate">
+                <h2 className="text-lg font-semibold text-text-primary truncate break-words">
                   {project.title || 'Untitled venture'}
                 </h2>
                 {project.shortPitch && (
-                  <p className="mt-1 text-sm text-text-secondary line-clamp-2">
+                  <p className="mt-1 text-sm text-text-secondary line-clamp-2 break-words overflow-hidden">
                     {project.shortPitch}
                   </p>
                 )}
