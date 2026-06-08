@@ -1044,3 +1044,9 @@ body,
     transform: none;
   }
 }
+* {
+  box-sizing: border-box;
+}
+img, video, table {
+  max-width: 100%;
+}

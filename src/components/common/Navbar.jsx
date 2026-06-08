@@ -309,7 +309,7 @@ export default function Navbar() {
 
       {/* Mobile profile menu (when opened from drawer) */}
       {user && showMobileProfile && (
-        <div className="lg:hidden fixed inset-0 z-[55] flex items-end justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileProfile(false)}>
+        <div className="fixed inset-0 z-[55] flex items-end justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileProfile(false)}>
           <div className="w-full max-w-sm rounded-2xl border border-border bg-bg-elevated p-4 shadow-elevated" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <span className="nav-avatar">{avatarInitial}</span>
