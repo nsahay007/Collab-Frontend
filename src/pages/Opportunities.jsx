@@ -123,7 +123,7 @@ export default function Opportunities() {
                   )}
                 </div>
                 {opp.applyLink && (
-                  
+                  <a
                     href={opp.applyLink}
                     target="_blank"
                     rel="noopener noreferrer"
