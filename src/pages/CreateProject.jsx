@@ -81,6 +81,15 @@ export default function CreateProject() {
     try {
       const response = await lookupUserById(userId)
       const found = response?.user
+      if (!found) {
+        setForm((prev) => ({
+          ...prev,
+          teamMembers: prev.teamMembers.map((member, memberIndex) => (
+            memberIndex === index ? { ...member, resolved: null, error: 'User ID not found. Please check and try again.' } : member
+          ))
+        }))
+        return
+      }
       setForm((prev) => ({
         ...prev,
         teamMembers: prev.teamMembers.map((member, memberIndex) => (
@@ -93,7 +102,7 @@ export default function CreateProject() {
       setForm((prev) => ({
         ...prev,
         teamMembers: prev.teamMembers.map((member, memberIndex) => (
-          memberIndex === index ? { ...member, resolved: null, error: 'User ID not found' } : member
+          memberIndex === index ? { ...member, resolved: null, error: 'User ID not found. Please check and try again.' } : member
         ))
       }))
     }
@@ -149,6 +158,12 @@ export default function CreateProject() {
       if (!form.startupName.trim() || !form.problemStatement.trim() || !form.targetUsers.trim() || !form.category || !form.whyMatters.trim()) {
         return 'Add the startup name, problem, users, category, and why this matters.'
       }
+    }
+    if (step === 1) {
+      const hasInvalidMember = form.teamMembers.some(
+        (member) => member.userId.trim() && member.error
+      )
+      if (hasInvalidMember) return 'One or more User IDs are invalid. Please fix them before continuing.'
     }
     if (step === 2) {
       if (!form.startupGoals.trim()) return 'Please add your startup goals'
