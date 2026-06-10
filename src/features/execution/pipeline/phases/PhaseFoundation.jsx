@@ -94,6 +94,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
         <TextInput
           id="pf-name"
           large
+          maxLength={60}
           value={form.startupName}
           onChange={(v) => setForm((p) => ({ ...p, startupName: v }))}
           placeholder="e.g. CampusCart"
@@ -109,6 +110,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
       >
         <TextInput
           id="pf-pitch"
+          maxLength={180}
           value={form.elevatorPitch}
           onChange={(v) => setForm((p) => ({ ...p, elevatorPitch: v }))}
           placeholder="One sentence only"
@@ -124,6 +126,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
       >
         <TextInput
           id="pf-tagline"
+          maxLength={80}
           value={form.tagline}
           onChange={(v) => setForm((p) => ({ ...p, tagline: v }))}
           placeholder="3-8 words"
@@ -142,6 +145,7 @@ export default function PhaseFoundation({ phase, project, onSaved, showToast }) 
             <input
               key={i}
               type="text"
+              maxLength={20}
               value={form.descriptorWords[i]}
               onChange={(e) => setWord(i, e.target.value)}
               placeholder={'Word ' + (i + 1)}

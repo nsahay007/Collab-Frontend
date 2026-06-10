@@ -53,6 +53,7 @@ export default function PhasePurpose({ phase, project, onSaved, showToast }) {
       >
         <TextArea
           id="pp-inspiration"
+          maxLength={600}
           rows={4}
           value={form.inspiration}
           onChange={(v) => setForm((p) => ({ ...p, inspiration: v }))}
@@ -75,6 +76,7 @@ export default function PhasePurpose({ phase, project, onSaved, showToast }) {
           id="pp-problem"
           large
           rows={6}
+          maxLength={800}
           value={form.problem}
           onChange={(v) => setForm((p) => ({ ...p, problem: v }))}
           placeholder="Describe the core problem in depth…"
@@ -89,6 +91,7 @@ export default function PhasePurpose({ phase, project, onSaved, showToast }) {
       >
         <TextArea
           id="pp-audience"
+          maxLength={300}
           rows={4}
           value={form.audience}
           onChange={(v) => setForm((p) => ({ ...p, audience: v }))}
@@ -104,6 +107,7 @@ export default function PhasePurpose({ phase, project, onSaved, showToast }) {
       >
         <TextArea
           id="pp-impact"
+          maxLength={600}
           rows={4}
           value={form.impact}
           onChange={(v) => setForm((p) => ({ ...p, impact: v }))}

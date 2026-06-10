@@ -23,7 +23,7 @@ const STEPS = [
 
 const emptyMember = () => ({ userId: '', name: '', role: '', resolved: null, error: '' })
 const emptyMilestone = () => ({ title: '', description: '' })
-const LONG_TEXT_LIMIT = 3000
+const LONG_TEXT_LIMIT = 600
 
 const splitLines = (value) => String(value || '')
   .split('\n')
@@ -389,10 +389,10 @@ function ConceptStep({ form, updateField }) {
         <Textarea value={form.problemStatement} onChange={(value) => updateField('problemStatement', value)} placeholder="What exact problem is your team solving?" />
       </Field>
       <Field label="Target users *">
-        <Textarea value={form.targetUsers} onChange={(value) => updateField('targetUsers', value)} placeholder="Who has this problem? Be specific." />
+        <Textarea value={form.targetUsers} maxLength={300} onChange={(value) => updateField('targetUsers', value)} placeholder="Who has this problem? Be specific." />
       </Field>
       <Field label="Why this matters *">
-        <Textarea value={form.whyMatters} onChange={(value) => updateField('whyMatters', value)} placeholder="Why should this startup exist, especially for users in India?" />
+        <Textarea value={form.whyMatters} maxLength={600} onChange={(value) => updateField('whyMatters', value)} placeholder="Why should this startup exist, especially for users in India?" />
       </Field>
     </div>
   )
@@ -553,7 +553,7 @@ function Textarea({ value, onChange, placeholder, maxLength = LONG_TEXT_LIMIT })
         className="w-full resize-none rounded-xl border border-border bg-bg-card px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
       />
       <span className={`mt-1 block text-right text-xs ${nearLimit ? 'text-warning' : 'text-text-muted'}`}>
-        {count}/{maxLength} characters
+        {maxLength - count} characters remaining
       </span>
     </>
   )
