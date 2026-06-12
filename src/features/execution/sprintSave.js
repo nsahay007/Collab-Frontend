@@ -30,6 +30,12 @@ export async function saveFoundationPhase(projectId, data) {
     shortPitch: data.elevatorPitch,
     tags: words,
     category: data.category,
+    pipeline: {
+      foundation: {
+        tagline: data.tagline,
+        descriptorWords: words,
+      }
+    }
   })
   saveSprintMeta(projectId, {
     tagline: data.tagline,
@@ -50,6 +56,12 @@ export async function savePurposePhase(projectId, data) {
   await updateProjectDetails(projectId, {
     description,
     executionPlan: data.impact ? `Vision & impact:\n${data.impact}` : undefined,
+    pipeline: {
+      purpose: {
+        founderInspiration: data.inspiration,
+        impactStatement: data.impact,
+      }
+    }
   })
   await updateValidationWorkspace(projectId, {
     problemStatement: data.problem,
@@ -67,6 +79,13 @@ export async function saveReadinessPhase(projectId, data) {
   await updateProjectRequirements(projectId, {
     rolesNeeded: roles,
     skillsRequired: data.skills || [],
+  })
+  await updateProjectDetails(projectId, {
+    pipeline: {
+      readiness: {
+        notes: data.collaboratorNotes || '',
+      }
+    }
   })
   saveSprintMeta(projectId, {
     sprintStage: data.stage,
@@ -119,6 +138,16 @@ export async function saveIncubationPhase(projectId, data) {
     pitchDeckLink: data.pitchDeckLink,
     demoVideoLink: data.demoVideoLink,
     overviewNotes: data.overviewNotes,
+  })
+  await updateProjectDetails(projectId, {
+    pipeline: {
+      incubation: {
+        executiveSummary: data.overviewNotes || '',
+        pitchDeckLinks: data.pitchDeckLink ? [data.pitchDeckLink] : [],
+        demoVideoLinks: data.demoVideoLink ? [data.demoVideoLink] : [],
+        startupOverview: data.overviewNotes || '',
+      }
+    }
   })
   await applyContinuationAction(projectId, {
     action: 'prepare_incubation',

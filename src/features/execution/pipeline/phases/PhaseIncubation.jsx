@@ -35,10 +35,11 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
 
   useEffect(() => {
     const meta = loadSprintMeta(projectId)
+    const incubation = project.pipeline?.incubation || {}
     setForm({
-      pitchDeckLink: meta.pitchDeckLink || '',
-      demoVideoLink: meta.demoVideoLink || project.validation?.demoLink || '',
-      overviewNotes: meta.overviewNotes || '',
+      pitchDeckLink: incubation.pitchDeckLinks?.[0] || meta.pitchDeckLink || '',
+      demoVideoLink: incubation.demoVideoLinks?.[0] || meta.demoVideoLink || project.validation?.demoLink || '',
+      overviewNotes: incubation.startupOverview || incubation.executiveSummary || meta.overviewNotes || '',
     })
   }, [project, projectId])
 

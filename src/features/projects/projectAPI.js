@@ -76,7 +76,8 @@ export const updateProjectDetails = async (projectId, payload = {}) => {
     shortPitch: payload.shortPitch !== undefined ? sanitizeText(payload.shortPitch || '') : undefined,
     description: payload.description !== undefined ? sanitizeOptionalText(payload.description || '') : undefined,
     tags: payload.tags !== undefined ? sanitizeList(payload.tags) : undefined,
-    executionPlan: payload.executionPlan !== undefined ? sanitizeText(payload.executionPlan || '') : undefined
+    executionPlan: payload.executionPlan !== undefined ? sanitizeText(payload.executionPlan || '') : undefined,
+    pipeline: payload.pipeline
   })
   return response.data
 }

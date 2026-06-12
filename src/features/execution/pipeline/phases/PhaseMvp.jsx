@@ -23,12 +23,13 @@ export default function PhaseMvp({
 }) {
   const projectId = project._id || project.id
   const meta = loadSprintMeta(projectId)
+  const mvpPipeline = project.pipeline?.mvp || {}
   const [saving, setSaving] = useState(false)
-  const [roadmap, setRoadmap] = useState(project.executionPlan || meta.roadmap || '')
+  const [roadmap, setRoadmap] = useState(project.executionPlan || mvpPipeline.roadmap || meta.roadmap || '')
   const [mvpLinks, setMvpLinks] = useState({
-    figma: meta.mvpFigma || '',
-    github: meta.mvpGithub || '',
-    demo: project.validation?.demoLink || meta.mvpDemo || '',
+    figma: mvpPipeline.figmaLinks?.[0] || meta.mvpFigma || '',
+    github: mvpPipeline.githubLinks?.[0] || meta.mvpGithub || '',
+    demo: project.validation?.demoLink || mvpPipeline.demoLinks?.[0] || meta.mvpDemo || '',
   })
   const [newMilestone, setNewMilestone] = useState({ title: '', description: '' })
   const [creating, setCreating] = useState(false)
@@ -43,7 +44,17 @@ export default function PhaseMvp({
   const handleSaveRoadmap = async () => {
     setSaving(true)
     try {
-      await updateProjectDetails(projectId, { executionPlan: roadmap })
+      await updateProjectDetails(projectId, {
+        executionPlan: roadmap,
+        pipeline: {
+          mvp: {
+            roadmap,
+            figmaLinks: mvpLinks.figma ? [mvpLinks.figma] : [],
+            githubLinks: mvpLinks.github ? [mvpLinks.github] : [],
+            demoLinks: mvpLinks.demo ? [mvpLinks.demo] : [],
+          }
+        }
+      })
       saveSprintMeta(projectId, { roadmap, ...mvpLinks })
       showToast?.('Execution plan saved', 'success')
       onSaved?.()
@@ -171,9 +182,24 @@ export default function PhaseMvp({
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => {
+              onClick={async () => {
                 saveSprintMeta(projectId, { ...mvpLinks, mvpFigma: mvpLinks.figma, mvpGithub: mvpLinks.github, mvpDemo: mvpLinks.demo })
-                showToast?.('MVP links saved locally', 'success')
+                try {
+                  await updateProjectDetails(projectId, {
+                    pipeline: {
+                      mvp: {
+                        roadmap,
+                        figmaLinks: mvpLinks.figma ? [mvpLinks.figma] : [],
+                        githubLinks: mvpLinks.github ? [mvpLinks.github] : [],
+                        demoLinks: mvpLinks.demo ? [mvpLinks.demo] : [],
+                      }
+                    }
+                  })
+                  showToast?.('MVP links saved', 'success')
+                  onSaved?.()
+                } catch {
+                  showToast?.('Could not save MVP links', 'error')
+                }
               }}
             >
               Save MVP links
