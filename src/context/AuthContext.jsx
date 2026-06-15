@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let isMounted = true
+    localStorage.removeItem('user')
     const bootstrap = async () => {
       try {
         const response = await axios.get('/users/me')

@@ -147,7 +147,6 @@ export default function Profile() {
         setSkillsInput((data.skills || []).join(', '))
         setTwoFactorEnabled(Boolean(data.twoFactorEnabled))
         setTwoFactorPending(Boolean(data.twoFactorPending))
-        localStorage.setItem('user', JSON.stringify(data))
       } catch (err) {
         console.error('Failed to load execution profile', err)
         navigate('/login')
@@ -260,7 +259,6 @@ export default function Profile() {
       const updated = { ...user, ...payload, skills: parsedSkills }
       setUser(updated)
       setFormData((prev) => ({ ...prev, skills: parsedSkills }))
-      localStorage.setItem('user', JSON.stringify(updated))
       setEditMode(false)
       setSaveStatus({ type: 'success', message: 'Execution Profile updated successfully.' })
     } catch (err) {

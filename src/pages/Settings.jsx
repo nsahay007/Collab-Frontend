@@ -46,8 +46,6 @@ export default function Settings() {
         skills: form.skills.split(',').map((item) => item.trim()).filter(Boolean)
       }
       await updateProfile(payload)
-      const cached = JSON.parse(localStorage.getItem('user') || '{}')
-      localStorage.setItem('user', JSON.stringify({ ...cached, ...payload }))
       setStatus('Settings saved.')
     } catch (error) {
       setStatus(error?.response?.data?.message || 'Could not save settings.')
