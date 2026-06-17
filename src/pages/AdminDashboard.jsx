@@ -822,9 +822,9 @@ function OpportunitiesAdmin() {
               <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="mt-1 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-sm text-text-primary">
                 <option value="incubator">Incubator</option>
                 <option value="grant">Grant</option>
-                <option value="hackathon">Hackathon</option>
                 <option value="achievement">Achievement</option>
               </select>
+              <p className="mt-1 text-xs text-text-muted">Hackathons are managed only from Hackathon Management.</p>
             </div>
             <div>
               <label className="text-xs text-text-muted">Title *</label>
