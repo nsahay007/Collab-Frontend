@@ -22,6 +22,8 @@ import FinalStartupPackage from './pages/FinalStartupPackage'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminProjects from './pages/AdminProjects'
+import AdminHackathons from './pages/AdminHackathons'
 import VerifyEmail from './pages/VerifyEmail'
 import VerifyCertificate from './pages/VerifyCertificate'
 import ForgotPassword from './pages/ForgotPassword'
@@ -90,6 +92,8 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
+      <Route path="/admin/projects" element={<ProtectedRoute><Layout><AdminProjects /></Layout></ProtectedRoute>} />
+      <Route path="/admin/hackathons" element={<ProtectedRoute><Layout><AdminHackathons /></Layout></ProtectedRoute>} />
       <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
       <Route path="/verify/:certificateId" element={<Layout><VerifyCertificate /></Layout>} />
       <Route path="/forgot" element={<PublicRoute><Layout><ForgotPassword /></Layout></PublicRoute>} />

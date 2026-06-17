@@ -5,7 +5,7 @@
 This policy outlines how Collab handles disputes related to ownership, contributions, or conduct.
 
 ## 1. Reporting a Dispute
-Email **helpdesk@collab.qzz.io** with:
+Email **helpdesk@joincollab.org** with:
 - venture name
 - involved parties
 - description of the dispute

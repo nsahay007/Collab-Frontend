@@ -30,7 +30,7 @@ You agree not to:
 Violations may result in suspension or termination.
 
 ## 6. Intellectual Property Infringement
-If you believe your IP has been infringed, contact us at **helpdesk@collab.qzz.io**. We will investigate and take appropriate action, including content removal or account suspension.
+If you believe your IP has been infringed, contact us at **helpdesk@joincollab.org**. We will investigate and take appropriate action, including content removal or account suspension.
 
 ## 7. Termination
 We may suspend or terminate accounts that violate these Terms, or if required by law.
@@ -45,4 +45,4 @@ To the maximum extent permitted by law, Collab is not liable for indirect, incid
 We may update these Terms. Continued use after changes means you accept the revised Terms.
 
 ## 11. Contact
-For questions, contact **helpdesk@collab.qzz.io**.
+For questions, contact **helpdesk@joincollab.org**.

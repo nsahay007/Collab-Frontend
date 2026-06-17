@@ -35,10 +35,10 @@ We retain data as long as needed to provide services or as required by law. You 
 We use access controls, encryption in transit (HTTPS), and role-based permissions to protect data.
 
 ## 7. Your Rights
-You may request access, correction, or deletion of your data by emailing **helpdesk@collab.qzz.io**.
+You may request access, correction, or deletion of your data by emailing **helpdesk@joincollab.org**.
 
 ## 8. Changes
 We may update this policy. Continued use means acceptance of changes.
 
 ## 9. Contact
-For privacy questions: **helpdesk@collab.qzz.io**.
+For privacy questions: **helpdesk@joincollab.org**.

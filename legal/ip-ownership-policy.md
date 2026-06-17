@@ -22,4 +22,4 @@ Collab has a zero-tolerance policy for plagiarism, misrepresentation, or venture
 Venture timelines and activity logs are recorded to provide proof of contribution if disputes arise.
 
 ## 6. Reporting Infringement
-If you believe your IP has been infringed, email **helpdesk@collab.qzz.io**. We will investigate and take appropriate action.
+If you believe your IP has been infringed, email **helpdesk@joincollab.org**. We will investigate and take appropriate action.

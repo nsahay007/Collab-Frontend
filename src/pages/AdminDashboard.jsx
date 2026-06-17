@@ -1,5 +1,6 @@
 import { createOpportunity, deleteOpportunity, getOpportunities, updateOpportunity } from '../features/opportunities/opportunityAPI'
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
@@ -383,6 +384,12 @@ export default function AdminDashboard() {
       <div>
         <h1 className="text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h1>
         <p className="text-text-secondary">Manage users, monitor activity, and oversee system operations</p>
+        <Link to="/admin/projects" className="inline-flex mt-4">
+          <Button variant="secondary" size="sm">Open Project Management</Button>
+        </Link>
+        <Link to="/admin/hackathons" className="inline-flex mt-4 ml-3">
+          <Button variant="secondary" size="sm">Open Hackathon Management</Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
