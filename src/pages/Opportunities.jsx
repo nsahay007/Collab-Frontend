@@ -3,7 +3,8 @@ import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
-import { getOpportunities } from '../features/opportunities/opportunityAPI'
+import { getOpportunities, registerHackathonProject } from '../features/opportunities/opportunityAPI'
+import { getUserProjects } from '../features/user/userAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
 
 const TYPE_LABELS = {
@@ -30,6 +31,9 @@ const TABS = [
 
 export default function Opportunities() {
   const [opportunities, setOpportunities] = useState([])
+  const [projects, setProjects] = useState([])
+  const [selectedProjects, setSelectedProjects] = useState({})
+  const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
 
@@ -47,6 +51,22 @@ export default function Opportunities() {
     }
     load()
   }, [activeTab])
+
+  useEffect(() => {
+    getUserProjects('all').then((data) => setProjects(data?.projects || [])).catch(() => setProjects([]))
+  }, [])
+
+  const registerProject = async (opp) => {
+    const projectId = selectedProjects[opp.sourceId]
+    if (!projectId) return setStatus('Select a project first.')
+    try {
+      setStatus('Registering project...')
+      await registerHackathonProject(opp.sourceId, projectId)
+      setStatus('Project registered for hackathon.')
+    } catch (error) {
+      setStatus(error?.response?.data?.message || 'Registration failed.')
+    }
+  }
 
   return (
     <motion.div className="max-w-5xl mx-auto space-y-6" variants={staggerContainer} initial="hidden" animate="show">
@@ -79,6 +99,7 @@ export default function Opportunities() {
           <p className="text-text-muted text-sm">Loading opportunities...</p>
         </motion.div>
       )}
+      {status && <p className="text-sm text-text-secondary">{status}</p>}
 
       {!loading && opportunities.length === 0 && (
         <motion.div variants={staggerItem}>
@@ -131,6 +152,19 @@ export default function Opportunities() {
                   >
                     <Button size="sm" variant="primary">Apply Now</Button>
                   </a>
+                )}
+                {opp.sourceType === 'hackathon' && (
+                  <div className="space-y-2">
+                    <select
+                      className="w-full rounded-xl border border-border-default bg-bg-secondary p-3 text-sm"
+                      value={selectedProjects[opp.sourceId] || ''}
+                      onChange={(event) => setSelectedProjects({ ...selectedProjects, [opp.sourceId]: event.target.value })}
+                    >
+                      <option value="">Select your project</option>
+                      {projects.map((project) => <option key={project._id} value={project._id}>{project.title}</option>)}
+                    </select>
+                    <Button size="sm" variant="primary" onClick={() => registerProject(opp)}>Register Existing Project</Button>
+                  </div>
                 )}
               </Card>
             </motion.div>
