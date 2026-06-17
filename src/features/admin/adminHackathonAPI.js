@@ -5,6 +5,8 @@ export const createAdminHackathon = async (payload) => (await axios.post('/admin
 export const getAdminHackathon = async (id) => (await axios.get(`/admin/hackathons/${id}`)).data
 export const updateAdminHackathon = async (id, payload) => (await axios.patch(`/admin/hackathons/${id}`, payload)).data
 export const getAdminHackathonRegistrations = async (id) => (await axios.get(`/admin/hackathons/${id}/registrations`)).data
+export const createAdminHackathonRegistration = async (id, projectId) => (await axios.post(`/admin/hackathons/${id}/registrations`, { projectId })).data
+export const getAdminHackathonProjectOptions = async () => (await axios.get('/admin/project-records')).data
 export const updateAdminHackathonRegistrationStatus = async (id, registrationId, registrationStatus) => (await axios.patch(`/admin/hackathons/${id}/registrations/${registrationId}/status`, { registrationStatus })).data
 export const getAdminHackathonLeaderboard = async (id) => (await axios.get(`/admin/hackathons/${id}/leaderboard`)).data
 export const getAdminHackathonReport = async (id) => (await axios.get(`/admin/hackathons/${id}/report`)).data

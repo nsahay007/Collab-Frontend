@@ -6,6 +6,7 @@ import Input from '../components/common/Input'
 import useAuth from '../hooks/useAuth'
 import {
   createAdminHackathon,
+  createAdminHackathonRegistration,
   approveAdminHackathon,
   archiveAdminHackathon,
   createAdminHackathonAnnouncement,
@@ -20,6 +21,7 @@ import {
   getAdminHackathonPdfUrl,
   getAdminHackathonLeaderboard,
   getAdminHackathonRegistrations,
+  getAdminHackathonProjectOptions,
   getAdminHackathonReport,
   getAdminHackathons,
   getAdminHackathonStages,
@@ -49,6 +51,9 @@ export default function AdminHackathons() {
   const [selectedId, setSelectedId] = useState('')
   const [details, setDetails] = useState(null)
   const [registrations, setRegistrations] = useState([])
+  const [projectOptions, setProjectOptions] = useState([])
+  const [registrationProjectId, setRegistrationProjectId] = useState('')
+  const [projectQuery, setProjectQuery] = useState('')
   const [stages, setStages] = useState([])
   const [criteriaByStage, setCriteriaByStage] = useState({})
   const [leaderboard, setLeaderboard] = useState([])
@@ -68,6 +73,11 @@ export default function AdminHackathons() {
   const loadList = async () => {
     const data = await runAdminRequest('Loading hackathons', getAdminHackathons, { setStatus, setLoading: setLoadingAction })
     setHackathons(data.hackathons || [])
+  }
+
+  const loadProjectOptions = async () => {
+    const data = await getAdminHackathonProjectOptions()
+    setProjectOptions(data.projects || [])
   }
 
   const openHackathon = async (id) => {
@@ -113,7 +123,10 @@ export default function AdminHackathons() {
     }
   }
 
-  useEffect(() => { loadList().catch(() => setStatus('Failed to load hackathons')) }, [])
+  useEffect(() => {
+    loadList().catch(() => setStatus('Failed to load hackathons'))
+    loadProjectOptions().catch(() => setStatus('Failed to load projects'))
+  }, [])
 
   const filtered = useMemo(() => {
     const text = query.toLowerCase().trim()
@@ -163,6 +176,7 @@ export default function AdminHackathons() {
   }, [judgeStageId, judgeRegistrationId, report])
 
   const selectedCriteria = criteriaByStage[judgeStageId] || []
+  const filteredProjectOptions = projectOptions.filter((project) => [project.title, project.category, project.owner?.name, project.owner?.email].filter(Boolean).join(' ').toLowerCase().includes(projectQuery.toLowerCase())).slice(0, 50)
   const scoreTotal = selectedCriteria.reduce((sum, c) => sum + (Number(scores[c._id]) || 0), 0)
   const maxTotal = selectedCriteria.reduce((sum, c) => sum + (Number(c.maximumMarks) || 0), 0)
 
@@ -202,7 +216,7 @@ export default function AdminHackathons() {
           </Card>
 
           {details && <>
-            <Card hover={false}><h2 className="text-xl font-bold mb-3">Registrations</h2>{registrations.map((r) => <div key={r._id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm border-b border-border-default"><span>{r.project?.title || 'Project'} · {r.project?.category || 'No category'} · Owner: {r.project?.owner?.name || 'Unknown'} · Team: {(r.project?.teamMembers || r.registeredUsers || []).map((u) => u.name).join(', ') || 'No users listed'} · {r.registrationStatus}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => alert(JSON.stringify(r.project, null, 2))}>Project</Button><Button size="xs" disabled={loadingAction} onClick={() => run('Approving registration', () => updateAdminHackathonRegistrationStatus(selectedId, r._id, 'approved'))}>Approve</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => run('Rejecting registration', () => updateAdminHackathonRegistrationStatus(selectedId, r._id, 'rejected'))}>Reject</Button></div></div>)}{!registrations.length && <p className="text-sm text-text-muted">No registrations found.</p>}</Card>
+            <Card hover={false}><h2 className="text-xl font-bold mb-3">Registrations</h2><div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 mb-4"><Input value={projectQuery} onChange={(e) => setProjectQuery(e.target.value)} placeholder="Search projects..." /><select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={registrationProjectId} onChange={(e) => setRegistrationProjectId(e.target.value)}><option value="">Select project</option>{filteredProjectOptions.map((project) => <option key={project._id} value={project._id}>{project.title} · {project.owner?.name || project.owner?.email || 'No owner'}</option>)}</select><Button disabled={!registrationProjectId || loadingAction} onClick={() => run('Adding registration', async () => { await createAdminHackathonRegistration(selectedId, registrationProjectId); setRegistrationProjectId('') })}>Add Project</Button></div>{registrations.map((r) => <div key={r._id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm border-b border-border-default"><span>{r.project?.title || 'Project'} · {r.project?.category || 'No category'} · Owner: {r.project?.owner?.name || 'Unknown'} · Team: {(r.project?.teamMembers || r.registeredUsers || []).map((u) => u.name).join(', ') || 'No users listed'} · {r.registrationStatus}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => alert(JSON.stringify(r.project, null, 2))}>Project</Button><Button size="xs" disabled={loadingAction} onClick={() => run('Approving registration', () => updateAdminHackathonRegistrationStatus(selectedId, r._id, 'approved'))}>Approve</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => run('Rejecting registration', () => updateAdminHackathonRegistrationStatus(selectedId, r._id, 'rejected'))}>Reject</Button></div></div>)}{!registrations.length && <p className="text-sm text-text-muted">No registrations found.</p>}</Card>
 
             <Card hover={false}><div className="flex justify-between mb-3"><h2 className="text-xl font-bold">Stages</h2><Button size="sm" disabled={loadingAction} onClick={() => promptStage()}>Create Stage</Button></div>{stages.map((s) => <div key={s._id} className="flex justify-between gap-2 py-2 border-b border-border-default text-sm"><span>{s.order}. {s.stageName} · {s.maximumMarks} marks · {s.status}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => promptStage(s)}>Edit</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => run('Archiving stage', () => updateAdminHackathonStage(selectedId, s._id, { status: 'archived' }))}>Delete</Button></div></div>)}{!stages.length && <p className="text-sm text-text-muted">No stages found.</p>}</Card>
 
