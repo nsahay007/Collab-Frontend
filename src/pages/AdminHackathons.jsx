@@ -30,7 +30,7 @@ import {
 } from '../features/admin/adminHackathonAPI'
 import { runAdminRequest } from '../features/admin/adminRequest'
 
-const emptyForm = { title: '', description: '', organizer: '', startDate: '', endDate: '', status: 'draft', visibility: 'private' }
+const emptyForm = { title: '', description: '', organizer: '', startDate: '', endDate: '', status: 'published', visibility: 'public' }
 const compactDate = (value) => value?.slice?.(0, 10) || ''
 const cleanHackathonPayload = (form) => ({
   ...form,
@@ -177,8 +177,12 @@ export default function AdminHackathons() {
               <Input value={form.organizer} onChange={(e) => setForm({ ...form, organizer: e.target.value })} placeholder="Organizer" />
               <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
               <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
-              <Input value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} placeholder="Status" />
-              <Input value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value })} placeholder="Visibility" />
+              <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                {['draft', 'published', 'active', 'completed', 'archived'].map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
+              <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value })}>
+                {['private', 'college', 'public'].map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
             </div>
             <textarea className="mt-3 w-full min-h-[90px] rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" />
             <Button className="mt-3" disabled={loadingAction} onClick={save}>{selectedId ? 'Save Hackathon' : 'Create Hackathon'}</Button>
