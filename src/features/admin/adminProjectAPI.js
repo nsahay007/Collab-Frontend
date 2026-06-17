@@ -1,5 +1,10 @@
 import axios from '../../services/axiosInstance'
 
+export const getAdminUsers = async () => {
+  const response = await axios.get('/users/all')
+  return response.data
+}
+
 export const getAdminProjectRecords = async () => {
   const response = await axios.get('/admin/project-records')
   return response.data

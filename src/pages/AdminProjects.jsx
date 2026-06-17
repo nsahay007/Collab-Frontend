@@ -9,6 +9,7 @@ import {
   archiveAdminProjectRecord,
   getAdminProjectRecord,
   getAdminProjectRecords,
+  getAdminUsers,
   permanentlyRemoveAdminProjectRecord,
   removeAdminProjectFile,
   removeAdminProjectMember,
@@ -19,8 +20,27 @@ import {
   updateAdminProjectOwner,
   updateAdminProjectRecord
 } from '../features/admin/adminProjectAPI'
+import { runAdminRequest } from '../features/admin/adminRequest'
 
 const editable = ['title', 'description', 'category', 'lifecycleStage', 'readinessScore', 'visibility']
+const categoryOptions = ['Tech & Product', 'Business & Startup', 'Design & Creative', 'Marketing & Content', 'Services & Operations']
+const lifecycleOptions = [
+  ['idea', 'idea'],
+  ['validation', 'validation'],
+  ['mvp', 'mvp'],
+  ['incubation', 'incubation_ready'],
+  ['launch', 'incubation_ready'],
+  ['growth', 'incubation_ready'],
+  ['archived', 'archived']
+]
+const visibilityOptions = [
+  ['private', 'private'],
+  ['team', 'college'],
+  ['public', 'global']
+]
+const toUiLifecycle = (value) => value === 'incubation_ready' ? 'incubation' : value || 'idea'
+const toUiVisibility = (value) => value === 'college' ? 'team' : value === 'global' ? 'public' : value || 'private'
+const findUser = (users, id) => users.find((item) => String(item._id || item.id) === String(id))
 
 export default function AdminProjects() {
   const { user } = useAuth()
@@ -28,28 +48,43 @@ export default function AdminProjects() {
   const [selectedId, setSelectedId] = useState('')
   const [details, setDetails] = useState(null)
   const [form, setForm] = useState({})
-  const [memberId, setMemberId] = useState('')
-  const [ownerId, setOwnerId] = useState('')
+  const [users, setUsers] = useState([])
+  const [userQuery, setUserQuery] = useState('')
+  const [memberUserId, setMemberUserId] = useState('')
+  const [ownerUserId, setOwnerUserId] = useState('')
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('')
+  const [loadingAction, setLoadingAction] = useState(false)
 
   const loadProjects = async () => {
     const data = await getAdminProjectRecords()
     setProjects(data.projects || [])
   }
 
+  const loadUsers = async () => {
+    const data = await getAdminUsers()
+    setUsers(data.users || [])
+  }
+
   const openProject = async (id) => {
-    setSelectedId(id)
-    setStatus('Loading project...')
-    const data = await getAdminProjectRecord(id)
-    setDetails(data)
-    const project = data.project || {}
-    setForm(editable.reduce((acc, key) => ({ ...acc, [key]: project[key] ?? '' }), {}))
-    setStatus('')
+    try {
+      setSelectedId(id)
+      const data = await runAdminRequest('Loading project', () => getAdminProjectRecord(id), { setStatus, setLoading: setLoadingAction })
+      setDetails(data)
+      const project = data.project || {}
+      setForm({
+        ...editable.reduce((acc, key) => ({ ...acc, [key]: project[key] ?? '' }), {}),
+        lifecycleStage: toUiLifecycle(project.lifecycleStage),
+        visibility: toUiVisibility(project.visibility)
+      })
+    } catch {
+      // status already contains backend error
+    }
   }
 
   useEffect(() => {
     loadProjects().catch(() => setStatus('Failed to load projects'))
+    loadUsers().catch(() => setStatus('Failed to load users'))
   }, [])
 
   const filtered = useMemo(() => {
@@ -65,32 +100,56 @@ export default function AdminProjects() {
   }, [projects, query])
 
   const saveProject = async () => {
-    setStatus('Saving...')
-    const payload = { ...form, readinessScore: Number(form.readinessScore) || 0 }
-    const data = await updateAdminProjectRecord(selectedId, payload)
-    setDetails((prev) => ({ ...prev, project: data.project }))
-    await loadProjects()
-    setStatus('Project updated')
+    const lifecycleValue = lifecycleOptions.find(([label]) => label === form.lifecycleStage)?.[1] || form.lifecycleStage
+    const visibilityValue = visibilityOptions.find(([label]) => label === form.visibility)?.[1] || form.visibility
+    const payload = {
+      ...form,
+      lifecycleStage: lifecycleValue,
+      visibility: visibilityValue,
+      readinessScore: Math.max(0, Math.min(100, Number(form.readinessScore) || 0))
+    }
+    try {
+      await runAdminRequest('Saving project', () => updateAdminProjectRecord(selectedId, payload), { setStatus, setLoading: setLoadingAction, payload })
+      await openProject(selectedId)
+      await loadProjects()
+      setStatus('Project updated')
+    } catch {
+      // status already contains backend error
+    }
   }
 
   const refreshProject = () => selectedId ? openProject(selectedId) : Promise.resolve()
   const runAction = async (label, action) => {
-    setStatus(`${label}...`)
-    await action()
-    await refreshProject()
-    await loadProjects()
-    setStatus(`${label} complete`)
+    try {
+      await runAdminRequest(label, action, { setStatus, setLoading: setLoadingAction })
+      await refreshProject()
+      await loadProjects()
+    } catch {
+      // status already contains backend error
+    }
   }
 
-  const addMember = () => memberId && runAction('Adding member', async () => {
-    await addAdminProjectMember(selectedId, memberId)
-    setMemberId('')
+  const addMember = () => memberUserId && runAction('Adding member', async () => {
+    await addAdminProjectMember(selectedId, memberUserId)
+    setMemberUserId('')
   })
 
-  const changeOwner = () => ownerId && runAction('Changing owner', async () => {
-    await updateAdminProjectOwner(selectedId, ownerId)
-    setOwnerId('')
+  const changeOwner = () => ownerUserId && runAction('Changing owner', async () => {
+    await updateAdminProjectOwner(selectedId, ownerUserId)
+    setOwnerUserId('')
   })
+
+  const permanentlyRemoveProject = async () => {
+    if (window.prompt('Type DELETE to permanently remove') !== 'DELETE') return
+    try {
+      await runAdminRequest('Removing project', () => permanentlyRemoveAdminProjectRecord(selectedId), { setStatus, setLoading: setLoadingAction })
+      setSelectedId('')
+      setDetails(null)
+      await loadProjects()
+    } catch {
+      // status already contains backend error
+    }
+  }
 
   const editMilestone = (milestone) => {
     const title = window.prompt('Milestone title', milestone.title || '')
@@ -108,12 +167,26 @@ export default function AdminProjects() {
     runAction('Updating blocker', () => updateAdminProjectBlocker(selectedId, milestone._id, blocker.blockerId, { description, status: statusValue }))
   }
 
+  const deleteBlocker = (milestone, blocker) => {
+    runAction('Deleting blocker', () => updateAdminProjectBlocker(selectedId, milestone._id, blocker.blockerId, {
+      description: blocker.description || 'Removed by admin',
+      status: 'resolved'
+    }))
+  }
+
   if (user?.role !== 'admin') {
     return <Card><h1 className="text-xl font-bold">Admin access required</h1></Card>
   }
 
   const project = details?.project
   const milestones = details?.milestones || []
+  const filteredUsers = users.filter((item) => {
+    const text = userQuery.trim().toLowerCase()
+    if (!text) return true
+    return [item.name, item.email, item._id].filter(Boolean).join(' ').toLowerCase().includes(text)
+  }).slice(0, 20)
+  const selectedMember = findUser(users, memberUserId)
+  const selectedOwner = findUser(users, ownerUserId)
 
   return (
     <div className="space-y-6">
@@ -150,10 +223,17 @@ export default function AdminProjects() {
                 <h2 className="text-xl font-bold mb-4">Overview</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Input value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title" />
-                  <Input value={form.category || ''} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Category" />
-                  <Input value={form.lifecycleStage || ''} onChange={(e) => setForm({ ...form, lifecycleStage: e.target.value })} placeholder="Lifecycle stage" />
-                  <Input value={form.visibility || ''} onChange={(e) => setForm({ ...form, visibility: e.target.value })} placeholder="Visibility" />
-                  <Input type="number" value={form.readinessScore || 0} onChange={(e) => setForm({ ...form, readinessScore: e.target.value })} placeholder="Readiness score" />
+                  <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.category || ''} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                    <option value="">Select category</option>
+                    {categoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                  <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.lifecycleStage || 'idea'} onChange={(e) => setForm({ ...form, lifecycleStage: e.target.value })}>
+                    {lifecycleOptions.map(([label]) => <option key={label} value={label}>{label}</option>)}
+                  </select>
+                  <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.visibility || 'private'} onChange={(e) => setForm({ ...form, visibility: e.target.value })}>
+                    {visibilityOptions.map(([label]) => <option key={label} value={label}>{label}</option>)}
+                  </select>
+                  <Input type="number" min="0" max="100" value={form.readinessScore || 0} onChange={(e) => setForm({ ...form, readinessScore: e.target.value })} placeholder="Readiness score" />
                 </div>
                 <textarea className="mt-3 w-full min-h-[100px] rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </Card>
@@ -171,10 +251,19 @@ export default function AdminProjects() {
                   {!(project.teamMembers || []).length && <p className="text-sm text-text-muted">No members.</p>}
                 </div>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input value={memberId} onChange={(e) => setMemberId(e.target.value)} placeholder="User ID to add" />
-                  <Button variant="secondary" onClick={addMember}>Add Member</Button>
-                  <Input value={ownerId} onChange={(e) => setOwnerId(e.target.value)} placeholder="User ID for new owner" />
-                  <Button variant="secondary" onClick={changeOwner}>Change Owner</Button>
+                  <Input value={userQuery} onChange={(e) => setUserQuery(e.target.value)} placeholder="Search users by name/email/full ID" />
+                  <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={memberUserId} onChange={(e) => setMemberUserId(e.target.value)}>
+                    <option value="">Select member to add</option>
+                    {filteredUsers.map((item) => <option key={item._id} value={item._id}>{item.name} · {item.email}</option>)}
+                  </select>
+                  <Button variant="secondary" disabled={!memberUserId || loadingAction} onClick={addMember}>Add {selectedMember?.name || 'Member'}</Button>
+                  <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={ownerUserId} onChange={(e) => setOwnerUserId(e.target.value)}>
+                    <option value="">Select new owner</option>
+                    {filteredUsers.map((item) => <option key={item._id} value={item._id}>{item.name} · {item.email}</option>)}
+                  </select>
+                  <div className="md:col-span-2">
+                    <Button variant="secondary" disabled={!ownerUserId || loadingAction} onClick={changeOwner}>Change Owner{selectedOwner ? ` to ${selectedOwner.name}` : ''}</Button>
+                  </div>
                 </div>
               </Card>
 
@@ -183,7 +272,7 @@ export default function AdminProjects() {
                 {milestones.map((m) => (
                   <div key={m._id} className="border-b border-border-default py-3 text-sm space-y-2">
                     <div className="flex items-center justify-between gap-3">
-                      <span>{m.title} · {m.status}</span>
+                      <span>{m.title} · {m.status} · {m.priority || 'medium'} · {m.dueDate ? new Date(m.dueDate).toLocaleDateString() : 'No due date'}</span>
                       <div className="flex gap-2">
                         <Button size="xs" variant="secondary" onClick={() => editMilestone(m)}>Edit</Button>
                         <Button size="xs" variant="danger" onClick={() => window.confirm('Remove milestone?') && runAction('Removing milestone', () => removeAdminProjectMilestone(selectedId, m._id))}>Remove</Button>
@@ -192,12 +281,16 @@ export default function AdminProjects() {
                     {(m.blockerDetails || []).map((b) => (
                       <div key={b.blockerId} className="flex items-center justify-between gap-3 text-xs text-text-secondary">
                         <span>Blocker: {b.description} · {b.status}</span>
-                        <Button size="xs" variant="ghost" onClick={() => editBlocker(m, b)}>Update blocker</Button>
+                        <div className="flex gap-2">
+                          <Button size="xs" variant="ghost" onClick={() => editBlocker(m, b)}>Edit blocker</Button>
+                          <Button size="xs" variant="danger" onClick={() => window.confirm('Delete blocker?') && deleteBlocker(m, b)}>Delete blocker</Button>
+                        </div>
                       </div>
                     ))}
+                    {!(m.blockerDetails || []).length && <p className="text-xs text-text-muted">No blockers.</p>}
                   </div>
                 ))}
-                {!milestones.length && <p className="text-sm text-text-muted">No milestones.</p>}
+                {!milestones.length && <p className="text-sm text-text-muted">No milestones found.</p>}
               </Card>
 
               <Card hover={false}>
@@ -217,10 +310,10 @@ export default function AdminProjects() {
                   <p className="text-sm text-text-secondary">Save fields, archive/restore, or permanently remove with confirmation.</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Button onClick={saveProject}>Save Changes</Button>
-                  <Button variant="secondary" onClick={() => runAction('Archiving project', () => archiveAdminProjectRecord(selectedId))}>Archive</Button>
-                  <Button variant="secondary" onClick={() => runAction('Restoring project', () => restoreAdminProjectRecord(selectedId, 'idea'))}>Restore</Button>
-                  <Button variant="danger" onClick={() => window.prompt('Type DELETE to permanently remove') === 'DELETE' && runAction('Removing project', () => permanentlyRemoveAdminProjectRecord(selectedId))}>Permanent Remove</Button>
+                  <Button disabled={loadingAction} onClick={saveProject}>Save Changes</Button>
+                  <Button disabled={loadingAction} variant="secondary" onClick={() => runAction('Archiving project', () => archiveAdminProjectRecord(selectedId))}>Archive</Button>
+                  <Button disabled={loadingAction} variant="secondary" onClick={() => runAction('Restoring project', () => restoreAdminProjectRecord(selectedId, 'idea'))}>Restore</Button>
+                  <Button disabled={loadingAction} variant="danger" onClick={permanentlyRemoveProject}>Permanent Remove</Button>
                 </div>
               </Card>
             </>
