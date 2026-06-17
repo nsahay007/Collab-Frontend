@@ -6,6 +6,8 @@ import Input from '../components/common/Input'
 import useAuth from '../hooks/useAuth'
 import {
   createAdminHackathon,
+  approveAdminHackathon,
+  archiveAdminHackathon,
   createAdminHackathonAnnouncement,
   createAdminHackathonStage,
   createAdminJudgeReview,
@@ -14,6 +16,8 @@ import {
   getAdminHackathon,
   getAdminHackathonAnnouncements,
   getAdminHackathonExportData,
+  getAdminHackathonCsvUrl,
+  getAdminHackathonPdfUrl,
   getAdminHackathonLeaderboard,
   getAdminHackathonRegistrations,
   getAdminHackathonReport,
@@ -57,6 +61,7 @@ export default function AdminHackathons() {
   const [judgeStageId, setJudgeStageId] = useState('')
   const [judgeRegistrationId, setJudgeRegistrationId] = useState('')
   const [scores, setScores] = useState({})
+  const [existingReviewId, setExistingReviewId] = useState('')
   const [status, setStatus] = useState('')
   const [loadingAction, setLoadingAction] = useState(false)
 
@@ -149,6 +154,14 @@ export default function AdminHackathons() {
     run(criteria._id ? 'Updating criteria' : 'Creating criteria', () => criteria._id ? updateAdminStageCriteria(selectedId, stageId, criteria._id, payload) : createAdminStageCriteria(selectedId, stageId, payload))
   }
 
+  useEffect(() => {
+    const team = report?.teams?.find((item) => item.registrationId === judgeRegistrationId)
+    const stage = team?.stageWiseMarks?.find((item) => item.stageId === judgeStageId)
+    const review = stage?.reviews?.[0]
+    setExistingReviewId(review?._id || '')
+    if (review?.criteriaScores?.length) setScores(Object.fromEntries(review.criteriaScores.map((score) => [score.criteria?._id || score.criteria, score.obtainedMarks])))
+  }, [judgeStageId, judgeRegistrationId, report])
+
   const selectedCriteria = criteriaByStage[judgeStageId] || []
   const scoreTotal = selectedCriteria.reduce((sum, c) => sum + (Number(scores[c._id]) || 0), 0)
   const maxTotal = selectedCriteria.reduce((sum, c) => sum + (Number(c.maximumMarks) || 0), 0)
@@ -185,7 +198,7 @@ export default function AdminHackathons() {
               </select>
             </div>
             <textarea className="mt-3 w-full min-h-[90px] rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" />
-            <Button className="mt-3" disabled={loadingAction} onClick={save}>{selectedId ? 'Save Hackathon' : 'Create Hackathon'}</Button>
+            <div className="mt-3 flex flex-wrap gap-2"><Button disabled={loadingAction} onClick={save}>{selectedId ? 'Save Hackathon' : 'Create Hackathon'}</Button>{selectedId && <Button variant="secondary" disabled={loadingAction} onClick={() => run('Approving hackathon', () => approveAdminHackathon(selectedId))}>Approve</Button>}{selectedId && <Button variant="danger" disabled={loadingAction} onClick={() => window.prompt('Type DELETE_HACKATHON to archive') === 'DELETE_HACKATHON' && run('Archiving hackathon', () => archiveAdminHackathon(selectedId))}>Delete</Button>}</div>
           </Card>
 
           {details && <>
@@ -197,11 +210,11 @@ export default function AdminHackathons() {
 
             <Card hover={false}><h2 className="text-xl font-bold mb-3">Submissions</h2>{submissions.map((s) => <div key={s._id} className="flex justify-between gap-2 py-2 text-sm border-b border-border-default"><span>{s.project?.title || 'Project'} · {s.submissionStatus} · {s.demoLink || s.githubLink || 'No link'}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => alert(JSON.stringify(s, null, 2))}>Details</Button><Button size="xs" disabled={loadingAction} onClick={() => run('Updating submission', () => updateAdminHackathonSubmissionStatus(selectedId, s._id, window.prompt('Status', s.submissionStatus) || s.submissionStatus))}>Status</Button></div></div>)}{!submissions.length && <p className="text-sm text-text-muted">No submissions found.</p>}</Card>
 
-            <Card hover={false}><h2 className="text-xl font-bold mb-3">Judging</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={judgeStageId} onChange={(e) => { setJudgeStageId(e.target.value); setScores({}) }}><option value="">Select stage</option>{stages.map((s) => <option key={s._id} value={s._id}>{s.stageName}</option>)}</select><select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={judgeRegistrationId} onChange={(e) => setJudgeRegistrationId(e.target.value)}><option value="">Select team</option>{registrations.map((r) => <option key={r._id} value={r._id}>{r.project?.title || 'Project'}</option>)}</select></div>{selectedCriteria.map((c) => <div key={c._id} className="grid grid-cols-[1fr_120px] gap-3 mt-3 items-center text-sm"><span>{c.criteriaName} / {c.maximumMarks}</span><Input type="number" value={scores[c._id] || ''} onChange={(e) => setScores({ ...scores, [c._id]: e.target.value })} /></div>)}{!selectedCriteria.length && <p className="text-sm text-text-muted mt-3">No criteria available for scoring.</p>}<p className="text-sm text-text-secondary mt-3">Total: {scoreTotal}/{maxTotal}</p><Button className="mt-2" disabled={!judgeStageId || !judgeRegistrationId || !selectedCriteria.length || loadingAction} onClick={() => run('Saving evaluation', () => createAdminJudgeReview(selectedId, judgeStageId, judgeRegistrationId, { criteriaScores: selectedCriteria.map((c) => ({ criteria: c._id, obtainedMarks: Number(scores[c._id]) || 0 })), feedback: window.prompt('Feedback', '') || '' }))}>Save Score</Button></Card>
+            <Card hover={false}><h2 className="text-xl font-bold mb-3">Judging</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={judgeStageId} onChange={(e) => { setJudgeStageId(e.target.value); setScores({}) }}><option value="">Select stage</option>{stages.map((s) => <option key={s._id} value={s._id}>{s.stageName}</option>)}</select><select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={judgeRegistrationId} onChange={(e) => setJudgeRegistrationId(e.target.value)}><option value="">Select team</option>{registrations.map((r) => <option key={r._id} value={r._id}>{r.project?.title || 'Project'}</option>)}</select></div>{selectedCriteria.map((c) => <div key={c._id} className="grid grid-cols-[1fr_120px] gap-3 mt-3 items-center text-sm"><span>{c.criteriaName} / {c.maximumMarks}</span><Input type="number" value={scores[c._id] || ''} onChange={(e) => setScores({ ...scores, [c._id]: e.target.value })} /></div>)}{!selectedCriteria.length && <p className="text-sm text-text-muted mt-3">No criteria available for scoring.</p>}<p className="text-sm text-text-secondary mt-3">Total: {scoreTotal}/{maxTotal}</p><Button className="mt-2" disabled={!judgeStageId || !judgeRegistrationId || !selectedCriteria.length || loadingAction} onClick={() => run(existingReviewId ? 'Updating evaluation' : 'Saving evaluation', () => createAdminJudgeReview(selectedId, judgeStageId, judgeRegistrationId, { criteriaScores: selectedCriteria.map((c) => ({ criteria: c._id, obtainedMarks: Number(scores[c._id]) || 0 })), feedback: window.prompt('Feedback', '') || '' }))}>{existingReviewId ? 'Update Score' : 'Save Score'}</Button></Card>
 
             <Card hover={false}><h2 className="text-xl font-bold mb-3">Leaderboard</h2>{leaderboard.length ? <div className="overflow-x-auto"><table className="min-w-full text-sm"><tbody>{leaderboard.map((r) => <tr key={r.registrationId} className="border-b border-border-default"><td className="py-2">#{r.rank}</td><td>{r.project?.title || 'Project'}</td><td>{r.totalObtainedMarks}/{r.totalMaximumMarks}</td><td>{r.percentage}%</td></tr>)}</tbody></table></div> : <p className="text-sm text-text-muted">No leaderboard scores yet.</p>}</Card>
 
-            <Card hover={false}><div className="flex justify-between gap-3"><div><h2 className="text-xl font-bold">Reports</h2><p className="text-sm text-text-secondary">Teams: {report?.teams?.length || 0} · Export rows: {exportRows.length}</p></div><div className="flex gap-2"><Button size="sm" variant="secondary" disabled>Export CSV</Button><Button size="sm" variant="secondary" disabled>Export PDF</Button></div></div></Card>
+            <Card hover={false}><div className="flex justify-between gap-3"><div><h2 className="text-xl font-bold">Reports</h2><p className="text-sm text-text-secondary">Teams: {report?.teams?.length || 0} · Export rows: {exportRows.length}</p></div><div className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => window.open(getAdminHackathonCsvUrl(selectedId), '_blank')}>Export CSV</Button><Button size="sm" variant="secondary" onClick={() => window.open(getAdminHackathonPdfUrl(selectedId), '_blank')}>Export PDF</Button></div></div></Card>
 
             <Card hover={false}><div className="flex justify-between mb-3"><h2 className="text-xl font-bold">Announcements</h2><Button size="sm" disabled={loadingAction} onClick={() => run('Creating announcement', () => createAdminHackathonAnnouncement(selectedId, { title: window.prompt('Title', '') || 'Announcement', message: window.prompt('Message', '') || '', priority: 'normal' }))}>Create</Button></div>{announcements.map((a) => <div key={a._id} className="flex justify-between gap-2 py-2 border-b border-border-default text-sm"><span>{a.title} · {a.priority}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => run('Updating announcement', () => updateAdminHackathonAnnouncement(selectedId, a._id, { title: window.prompt('Title', a.title) || a.title, message: window.prompt('Message', a.message) || a.message, priority: a.priority }))}>Edit</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => window.confirm('Delete announcement?') && run('Deleting announcement', () => deleteAdminHackathonAnnouncement(selectedId, a._id))}>Delete</Button></div></div>)}{!announcements.length && <p className="text-sm text-text-muted">No announcements found.</p>}</Card>
           </>}

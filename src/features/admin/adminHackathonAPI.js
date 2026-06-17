@@ -22,3 +22,8 @@ export const getAdminStageCriteria = async (id, stageId) => (await axios.get(`/a
 export const createAdminStageCriteria = async (id, stageId, payload) => (await axios.post(`/admin/hackathons/${id}/stages/${stageId}/criteria`, payload)).data
 export const updateAdminStageCriteria = async (id, stageId, criteriaId, payload) => (await axios.patch(`/admin/hackathons/${id}/stages/${stageId}/criteria/${criteriaId}`, payload)).data
 export const createAdminJudgeReview = async (id, stageId, registrationId, payload) => (await axios.post(`/admin/hackathons/${id}/stages/${stageId}/registrations/${registrationId}/evaluations`, payload)).data
+
+export const approveAdminHackathon = async (id) => (await axios.patch(`/admin/hackathons/${id}/approve`)).data
+export const archiveAdminHackathon = async (id) => (await axios.delete(`/admin/hackathons/${id}`, { data: { confirm: 'DELETE_HACKATHON' } })).data
+export const getAdminHackathonCsvUrl = (id) => `${axios.defaults.baseURL || ''}/admin/hackathons/${id}/export.csv`
+export const getAdminHackathonPdfUrl = (id) => `${axios.defaults.baseURL || ''}/admin/hackathons/${id}/export.pdf`
