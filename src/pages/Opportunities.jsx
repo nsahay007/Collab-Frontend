@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
-import { getOpportunities, registerHackathonProject } from '../features/opportunities/opportunityAPI'
+import { getOpportunities, getHackathonDetails, registerHackathonProject } from '../features/opportunities/opportunityAPI'
 import { getUserProjects } from '../features/user/userAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
 
@@ -34,6 +34,7 @@ export default function Opportunities() {
   const [projects, setProjects] = useState([])
   const [selectedProjects, setSelectedProjects] = useState({})
   const [status, setStatus] = useState('')
+  const [activeHackathon, setActiveHackathon] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
 
@@ -65,6 +66,17 @@ export default function Opportunities() {
       setStatus('Project registered for hackathon.')
     } catch (error) {
       setStatus(error?.response?.data?.message || 'Registration failed.')
+    }
+  }
+
+  const openHackathon = async (opp) => {
+    try {
+      setStatus('Opening hackathon...')
+      const data = await getHackathonDetails(opp.sourceId)
+      setActiveHackathon(data)
+      setStatus('')
+    } catch (error) {
+      setStatus(error?.response?.data?.message || 'Hackathon is not open yet.')
     }
   }
 
@@ -100,6 +112,19 @@ export default function Opportunities() {
         </motion.div>
       )}
       {status && <p className="text-sm text-text-secondary">{status}</p>}
+      {activeHackathon && (
+        <Card hover={false} className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-text-primary">{activeHackathon.hackathon?.title}</h2>
+              <p className="text-sm text-text-secondary">Team workspace for {activeHackathon.registration?.project?.title || 'registered project'}.</p>
+            </div>
+            <Button size="sm" variant="secondary" onClick={() => setActiveHackathon(null)}>Close</Button>
+          </div>
+          {(activeHackathon.announcements || []).map((item) => <div key={item._id} className="rounded-xl border border-border-default bg-bg-secondary p-3"><p className="font-medium text-text-primary">{item.title}</p><p className="text-sm text-text-secondary">{item.message}</p></div>)}
+          {!(activeHackathon.announcements || []).length && <p className="text-sm text-text-muted">No messages yet.</p>}
+        </Card>
+      )}
 
       {!loading && opportunities.length === 0 && (
         <motion.div variants={staggerItem}>
@@ -155,6 +180,7 @@ export default function Opportunities() {
                 )}
                 {opp.sourceType === 'hackathon' && (
                   <div className="space-y-2">
+                    <Badge variant={opp.status === 'active' ? 'success' : 'warning'}>{opp.status === 'active' ? 'Hackathon Day' : 'Registrations Open'}</Badge>
                     <select
                       className="w-full rounded-xl border border-border-default bg-bg-secondary p-3 text-sm"
                       value={selectedProjects[opp.sourceId] || ''}
@@ -163,7 +189,7 @@ export default function Opportunities() {
                       <option value="">Select your project</option>
                       {projects.map((project) => <option key={project._id} value={project._id}>{project.title}</option>)}
                     </select>
-                    <Button size="sm" variant="primary" onClick={() => registerProject(opp)}>Register Existing Project</Button>
+                    <div className="flex flex-wrap gap-2"><Button size="sm" variant="primary" onClick={() => registerProject(opp)}>Register Existing Project</Button>{opp.status === 'active' && <Button size="sm" variant="secondary" onClick={() => openHackathon(opp)}>Open Hackathon</Button>}</div>
                   </div>
                 )}
               </Card>

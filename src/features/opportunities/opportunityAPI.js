@@ -11,6 +11,11 @@ export const registerHackathonProject = async (hackathonId, projectId) => {
   return response.data
 }
 
+export const getHackathonDetails = async (hackathonId) => {
+  const response = await axiosInstance.get(`/opportunities/hackathons/${hackathonId}`)
+  return response.data
+}
+
 export const createOpportunity = async (data) => {
   const response = await axiosInstance.post('/opportunities', data)
   return response.data
