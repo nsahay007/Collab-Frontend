@@ -7,6 +7,7 @@ import useAuth from '../hooks/useAuth'
 import {
   addAdminProjectMember,
   archiveAdminProjectRecord,
+  getAdminProjectFileDownloadUrl,
   getAdminProjectRecord,
   getAdminProjectRecords,
   getAdminUsers,
@@ -187,6 +188,7 @@ export default function AdminProjects() {
   }).slice(0, 20)
   const selectedMember = findUser(users, memberUserId)
   const selectedOwner = findUser(users, ownerUserId)
+  const projectFiles = [...(project?.files || []), ...(project?.validation?.sharedFiles || [])]
 
   return (
     <div className="space-y-6">
@@ -295,13 +297,17 @@ export default function AdminProjects() {
 
               <Card hover={false}>
                 <h2 className="text-xl font-bold mb-3">Files</h2>
-                {(project.files || []).map((file) => (
+                {projectFiles.map((file) => (
                   <div key={file._id || file.filename} className="flex items-center justify-between gap-3 text-sm py-2">
-                    <span>{file.originalName} · {Math.round((file.size || 0) / 1024)} KB</span>
-                    <Button size="xs" variant="danger" onClick={() => window.confirm('Remove file reference?') && runAction('Removing file', () => removeAdminProjectFile(selectedId, file._id || file.filename))}>Remove</Button>
+                    <span className="min-w-0 truncate">{file.originalName || file.filename} · {Math.round((file.size || 0) / 1024)} KB</span>
+                    <div className="flex shrink-0 gap-2">
+                      <Button size="xs" variant="secondary" onClick={() => window.open(getAdminProjectFileDownloadUrl(selectedId, file._id || file.filename), '_blank', 'noopener,noreferrer')}>View</Button>
+                      <Button size="xs" variant="secondary" onClick={() => window.open(getAdminProjectFileDownloadUrl(selectedId, file._id || file.filename), '_blank', 'noopener,noreferrer')}>Download</Button>
+                      <Button size="xs" variant="danger" onClick={() => window.confirm('Remove file reference?') && runAction('Removing file', () => removeAdminProjectFile(selectedId, file._id || file.filename))}>Remove</Button>
+                    </div>
                   </div>
                 ))}
-                {!(project.files || []).length && <p className="text-sm text-text-muted">No files.</p>}
+                {!projectFiles.length && <p className="text-sm text-text-muted">No files.</p>}
               </Card>
 
               <Card hover={false} className="space-y-4">

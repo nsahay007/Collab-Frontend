@@ -1,4 +1,5 @@
 import axios from '../../services/axiosInstance'
+import { apiBaseUrl } from '../../config/api'
 
 export const getAdminUsers = async () => {
   const response = await axios.get('/users/all')
@@ -53,6 +54,11 @@ export const updateAdminProjectBlocker = async (projectId, milestoneId, blockerI
 export const removeAdminProjectFile = async (projectId, fileId) => {
   const response = await axios.delete(`/admin/project-records/${projectId}/files/${fileId}`)
   return response.data
+}
+
+export const getAdminProjectFileDownloadUrl = (projectId, fileId) => {
+  const base = apiBaseUrl || ''
+  return `${base}/admin/project-records/${projectId}/files/${encodeURIComponent(fileId)}/download`
 }
 
 export const archiveAdminProjectRecord = async (projectId) => {

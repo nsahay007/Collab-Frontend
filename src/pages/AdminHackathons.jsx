@@ -32,6 +32,12 @@ import { runAdminRequest } from '../features/admin/adminRequest'
 
 const emptyForm = { title: '', description: '', organizer: '', startDate: '', endDate: '', status: 'draft', visibility: 'private' }
 const compactDate = (value) => value?.slice?.(0, 10) || ''
+const cleanHackathonPayload = (form) => ({
+  ...form,
+  title: form.title.trim(),
+  startDate: form.startDate || undefined,
+  endDate: form.endDate || undefined
+})
 
 export default function AdminHackathons() {
   const { user } = useAuth()
@@ -111,7 +117,12 @@ export default function AdminHackathons() {
 
   const save = async () => {
     try {
-      const data = await runAdminRequest(selectedId ? 'Saving hackathon' : 'Creating hackathon', () => selectedId ? updateAdminHackathon(selectedId, form) : createAdminHackathon(form), { setStatus, setLoading: setLoadingAction, payload: form })
+      const payload = cleanHackathonPayload(form)
+      if (!payload.title) {
+        setStatus('Hackathon title is required')
+        return
+      }
+      const data = await runAdminRequest(selectedId ? 'Saving hackathon' : 'Creating hackathon', () => selectedId ? updateAdminHackathon(selectedId, payload) : createAdminHackathon(payload), { setStatus, setLoading: setLoadingAction, payload })
       await loadList()
       await openHackathon(data.hackathon._id)
       setStatus(selectedId ? 'Hackathon updated' : 'Hackathon created')
