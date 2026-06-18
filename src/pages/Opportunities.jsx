@@ -57,6 +57,11 @@ export default function Opportunities() {
     getUserProjects('all').then((data) => setProjects(data?.projects || [])).catch(() => setProjects([]))
   }, [])
 
+  useEffect(() => {
+    const hackathonId = new URLSearchParams(window.location.search).get('hackathon')
+    if (hackathonId) getHackathonDetails(hackathonId).then(setActiveHackathon).catch(() => {})
+  }, [])
+
   const registerProject = async (opp) => {
     const projectId = selectedProjects[opp.sourceId]
     if (!projectId) return setStatus('Select a project first.')
@@ -180,7 +185,7 @@ export default function Opportunities() {
                 )}
                 {opp.sourceType === 'hackathon' && (
                   <div className="space-y-2">
-                    <Badge variant={opp.status === 'active' ? 'success' : 'warning'}>{opp.status === 'active' ? 'Hackathon Day' : 'Registrations Open'}</Badge>
+                    <Badge variant={opp.status === 'active' ? 'success' : 'warning'}>{opp.phase === 'HACKATHON_OPEN' ? 'Hackathon Day' : opp.phase === 'REGISTRATIONS_CLOSED' ? 'Registrations Closed' : 'Registrations Open'}</Badge>
                     <select
                       className="w-full rounded-xl border border-border-default bg-bg-secondary p-3 text-sm"
                       value={selectedProjects[opp.sourceId] || ''}
@@ -189,7 +194,7 @@ export default function Opportunities() {
                       <option value="">Select your project</option>
                       {projects.map((project) => <option key={project._id} value={project._id}>{project.title}</option>)}
                     </select>
-                    <div className="flex flex-wrap gap-2"><Button size="sm" variant="primary" onClick={() => registerProject(opp)}>Register Existing Project</Button>{opp.status === 'active' && <Button size="sm" variant="secondary" onClick={() => openHackathon(opp)}>Open Hackathon</Button>}</div>
+                    <div className="flex flex-wrap gap-2">{opp.phase === 'REGISTRATIONS_OPEN' && <Button size="sm" variant="primary" onClick={() => registerProject(opp)}>Register Existing Project</Button>}{opp.phase === 'HACKATHON_OPEN' && <Button size="sm" variant="secondary" onClick={() => openHackathon(opp)}>Open Hackathon</Button>}</div>
                   </div>
                 )}
               </Card>

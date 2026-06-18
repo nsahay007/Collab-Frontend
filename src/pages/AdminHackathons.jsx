@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
@@ -14,6 +14,8 @@ import {
   createAdminJudgeReview,
   createAdminStageCriteria,
   deleteAdminHackathonAnnouncement,
+  deleteAdminHackathonStage,
+  deleteAdminStageCriteria,
   getAdminHackathon,
   getAdminHackathonAnnouncements,
   getAdminHackathonExportData,
@@ -36,13 +38,12 @@ import {
 } from '../features/admin/adminHackathonAPI'
 import { runAdminRequest } from '../features/admin/adminRequest'
 
-const emptyForm = { title: '', description: '', organizer: '', startDate: '', endDate: '', status: 'published', visibility: 'public' }
+const emptyForm = { title: '', description: '', organizer: '', startDate: '', endDate: '', rules: '', status: 'published', visibility: 'public', phase: 'REGISTRATIONS_OPEN' }
 const workflowLabels = {
-  draft: 'Draft',
-  published: 'Registration Open',
-  active: 'Hackathon Running',
-  completed: 'Completed',
-  archived: 'Archived'
+  REGISTRATIONS_OPEN: 'Registrations Open',
+  REGISTRATIONS_CLOSED: 'Registrations Closed',
+  HACKATHON_OPEN: 'Hackathon Open',
+  HACKATHON_CLOSED: 'Hackathon Closed'
 }
 const compactDate = (value) => value?.slice?.(0, 10) || ''
 const cleanHackathonPayload = (form) => ({
@@ -75,6 +76,8 @@ export default function AdminHackathons() {
   const [scores, setScores] = useState({})
   const [existingReviewId, setExistingReviewId] = useState('')
   const [status, setStatus] = useState('')
+  const [saveState, setSaveState] = useState('')
+  const lastSavedRef = useRef('')
   const [loadingAction, setLoadingAction] = useState(false)
 
   const loadList = async () => {
@@ -104,7 +107,9 @@ export default function AdminHackathons() {
       const criteriaPairs = await Promise.all(loadedStages.map(async (stage) => [stage._id, (await getAdminStageCriteria(id, stage._id)).criteria || []]))
       const h = detail.hackathon || {}
       setDetails(h)
-      setForm({ ...emptyForm, ...h, startDate: compactDate(h.startDate), endDate: compactDate(h.endDate) })
+      const loadedForm = { ...emptyForm, ...h, startDate: compactDate(h.startDate), endDate: compactDate(h.endDate) }
+      setForm(loadedForm)
+      lastSavedRef.current = JSON.stringify(cleanHackathonPayload(loadedForm))
       setRegistrations(regs.registrations || [])
       setLeaderboard(board.leaderboard || [])
       setReport(rep)
@@ -134,6 +139,25 @@ export default function AdminHackathons() {
     loadList().catch(() => setStatus('Failed to load hackathons'))
     loadProjectOptions().catch(() => setStatus('Failed to load projects'))
   }, [])
+
+  useEffect(() => {
+    if (!selectedId || !details) return undefined
+    const payload = cleanHackathonPayload(form)
+    const key = JSON.stringify(payload)
+    if (key === lastSavedRef.current) return undefined
+    setSaveState('Saving...')
+    const timer = setTimeout(async () => {
+      try {
+        await updateAdminHackathon(selectedId, payload)
+        lastSavedRef.current = key
+        setSaveState('Saved')
+        await loadList()
+      } catch (error) {
+        setSaveState(error?.response?.data?.message || 'Save failed')
+      }
+    }, 700)
+    return () => clearTimeout(timer)
+  }, [form, selectedId, details])
 
   const filtered = useMemo(() => {
     const text = query.toLowerCase().trim()
@@ -205,9 +229,8 @@ export default function AdminHackathons() {
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
         <Card hover={false}>
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search hackathons..." />
-          <Button className="w-full mt-3" variant="secondary" onClick={() => { setSelectedId(''); setDetails(null); setForm(emptyForm) }}>New Hackathon</Button>
           <div className="mt-4 space-y-3 max-h-[70vh] overflow-auto">
-            {filtered.map((h) => <button key={h._id} type="button" onClick={() => openHackathon(h._id)} className={`w-full text-left p-4 rounded-xl border ${selectedId === h._id ? 'border-primary bg-primary/5' : 'border-border-default bg-bg-secondary'}`}><div className="font-semibold truncate">{h.title}</div><div className="text-xs text-text-muted truncate">{h.organizer || 'No organizer'}</div><div className="mt-2 flex gap-2"><Badge>{h.status}</Badge><Badge variant="secondary">{h.visibility}</Badge></div></button>)}
+            {filtered.map((h) => <button key={h._id} type="button" onClick={() => openHackathon(h._id)} className={`w-full text-left p-4 rounded-xl border ${selectedId === h._id ? 'border-primary bg-primary/5' : 'border-border-default bg-bg-secondary'}`}><div className="font-semibold truncate">{h.title}</div><div className="text-xs text-text-muted truncate">{h.organizer || 'No organizer'}</div><div className="mt-2 flex gap-2"><Badge>{workflowLabels[h.phase] || h.phase || h.status}</Badge></div></button>)}
             {!filtered.length && <p className="text-sm text-text-muted">No hackathons created yet.</p>}
           </div>
         </Card>
@@ -220,25 +243,24 @@ export default function AdminHackathons() {
               <Input value={form.organizer} onChange={(e) => setForm({ ...form, organizer: e.target.value })} placeholder="Organizer" />
               <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
               <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
-              <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                {['draft', 'published', 'active', 'completed', 'archived'].map((item) => <option key={item} value={item}>{item}</option>)}
+              <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })}>
+                {Object.entries(workflowLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
-              <select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value })}>
-                {['private', 'college', 'public'].map((item) => <option key={item} value={item}>{item}</option>)}
-              </select>
+              <p className="text-sm text-text-secondary self-center">{saveState || 'Autosave ready'}</p>
             </div>
             <textarea className="mt-3 w-full min-h-[90px] rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" />
-            <div className="mt-3 flex flex-wrap gap-2"><Button disabled={loadingAction} onClick={save}>{selectedId ? 'Save Hackathon' : 'Create Hackathon'}</Button>{selectedId && <Button variant="secondary" disabled={loadingAction} onClick={() => run('Opening registrations', () => approveAdminHackathon(selectedId))}>Open Registrations</Button>}{selectedId && <Button variant="secondary" disabled={loadingAction} onClick={() => run('Starting hackathon', () => updateAdminHackathon(selectedId, { status: 'active', visibility: 'public' }))}>Start Hackathon</Button>}{selectedId && <Button variant="secondary" disabled={loadingAction} onClick={() => run('Ending hackathon', () => updateAdminHackathon(selectedId, { status: 'completed', visibility: 'public' }))}>End Hackathon</Button>}{selectedId && <Button variant="danger" disabled={loadingAction} onClick={() => window.prompt('Type DELETE_HACKATHON to archive') === 'DELETE_HACKATHON' && run('Archiving hackathon', () => archiveAdminHackathon(selectedId))}>Archive</Button>}</div>
+            <textarea className="mt-3 w-full min-h-[70px] rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={form.rules || ''} onChange={(e) => setForm({ ...form, rules: e.target.value })} placeholder="Rules / registration link" />
+            <div className="mt-3 flex flex-wrap gap-2"><Button variant="secondary" disabled={loadingAction || !selectedId} onClick={() => run('Opening registrations', () => approveAdminHackathon(selectedId))}>Open Registrations</Button><Button variant="secondary" disabled={loadingAction || !selectedId} onClick={() => run('Closing registrations', () => updateAdminHackathon(selectedId, { phase: 'REGISTRATIONS_CLOSED', status: 'published', visibility: 'public' }))}>Close Registrations</Button><Button variant="secondary" disabled={loadingAction || !selectedId} onClick={() => run('Starting hackathon', () => updateAdminHackathon(selectedId, { phase: 'HACKATHON_OPEN', status: 'active', visibility: 'public' }))}>Start Hackathon</Button><Button variant="secondary" disabled={loadingAction || !selectedId} onClick={() => run('Ending hackathon', () => updateAdminHackathon(selectedId, { phase: 'HACKATHON_CLOSED', status: 'completed', visibility: 'public' }))}>End Hackathon</Button></div>
           </Card>
 
           {details && <>
-            <Card hover={false}><h2 className="text-xl font-bold mb-3">Workflow</h2><div className="flex flex-wrap gap-2">{['draft', 'published', 'active', 'completed'].map((step) => <Badge key={step} variant={details.status === step ? 'primary' : 'secondary'}>{workflowLabels[step]}</Badge>)}</div><p className="mt-3 text-sm text-text-secondary">Current: {workflowLabels[details.status] || details.status}. Registration deadline: {form.endDate || 'not set'}.</p></Card>
+            <Card hover={false}><h2 className="text-xl font-bold mb-3">Workflow</h2><div className="flex flex-wrap gap-2">{Object.entries(workflowLabels).map(([step, label]) => <Badge key={step} variant={form.phase === step ? 'primary' : 'secondary'}>{label}</Badge>)}</div><p className="mt-3 text-sm text-text-secondary">Current: {workflowLabels[form.phase] || form.phase}. End date: {form.endDate || 'not set'}.</p></Card>
 
             <Card hover={false}><h2 className="text-xl font-bold mb-3">Registrations</h2><div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 mb-4"><Input value={projectQuery} onChange={(e) => setProjectQuery(e.target.value)} placeholder="Search projects..." /><select className="rounded-xl border border-border-default bg-bg-secondary p-3 text-sm" value={registrationProjectId} onChange={(e) => setRegistrationProjectId(e.target.value)}><option value="">Select project</option>{filteredProjectOptions.map((project) => <option key={project._id} value={project._id}>{project.title} · {project.owner?.name || project.owner?.email || 'No owner'}</option>)}</select><Button disabled={!registrationProjectId || loadingAction} onClick={() => run('Adding registration', async () => { await createAdminHackathonRegistration(selectedId, registrationProjectId); setRegistrationProjectId('') })}>Add Project</Button></div>{registrations.map((r) => <div key={r._id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm border-b border-border-default"><span>{r.project?.title || 'Project'} · {r.project?.category || 'No category'} · Owner: {r.project?.owner?.name || 'Unknown'} · Team: {(r.project?.teamMembers || r.registeredUsers || []).map((u) => u.name).join(', ') || 'No users listed'} · {r.registrationStatus}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => alert(JSON.stringify(r.project, null, 2))}>Project</Button><Button size="xs" disabled={loadingAction} onClick={() => run('Approving registration', () => updateAdminHackathonRegistrationStatus(selectedId, r._id, 'approved'))}>Approve</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => run('Rejecting registration', () => updateAdminHackathonRegistrationStatus(selectedId, r._id, 'rejected'))}>Reject</Button></div></div>)}{!registrations.length && <p className="text-sm text-text-muted">No registrations found.</p>}</Card>
 
             <Card hover={false}><div className="flex justify-between mb-3"><h2 className="text-xl font-bold">Stages</h2><Button size="sm" disabled={loadingAction} onClick={() => promptStage()}>Create Stage</Button></div>{stages.map((s) => <div key={s._id} className="flex justify-between gap-2 py-2 border-b border-border-default text-sm"><span>{s.order}. {s.stageName} · {s.maximumMarks} marks · {s.status}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => promptStage(s)}>Edit</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => run('Archiving stage', () => updateAdminHackathonStage(selectedId, s._id, { status: 'archived' }))}>Delete</Button></div></div>)}{!stages.length && <p className="text-sm text-text-muted">No stages found.</p>}</Card>
 
-            <Card hover={false}><h2 className="text-xl font-bold mb-3">Criteria</h2>{stages.map((s) => <div key={s._id} className="mb-4"><div className="flex justify-between"><h3 className="font-semibold">{s.stageName}</h3><Button size="xs" disabled={loadingAction} onClick={() => promptCriteria(s._id)}>Add Criteria</Button></div>{(criteriaByStage[s._id] || []).map((c) => <div key={c._id} className="flex justify-between gap-2 py-1 text-sm"><span>{c.criteriaName} · {c.maximumMarks} marks · {c.weightage}%</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => promptCriteria(s._id, c)}>Edit</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => run('Disabling criteria', () => updateAdminStageCriteria(selectedId, s._id, c._id, { ...c, maximumMarks: 0, weightage: 0 }))}>Delete</Button></div></div>)}{!(criteriaByStage[s._id] || []).length && <p className="text-xs text-text-muted mt-2">No criteria found.</p>}</div>)}{!stages.length && <p className="text-sm text-text-muted">Create a stage before adding criteria.</p>}</Card>
+            <Card hover={false}><h2 className="text-xl font-bold mb-3">Criteria</h2>{stages.map((s) => <div key={s._id} className="mb-4"><div className="flex justify-between"><h3 className="font-semibold">{s.stageName}</h3><Button size="xs" disabled={loadingAction} onClick={() => promptCriteria(s._id)}>Add Criteria</Button></div>{(criteriaByStage[s._id] || []).map((c) => <div key={c._id} className="flex justify-between gap-2 py-1 text-sm"><span>{c.criteriaName} · {c.maximumMarks} marks · {c.weightage}%</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => promptCriteria(s._id, c)}>Edit</Button><Button size="xs" disabled={loadingAction} variant="danger" onClick={() => window.confirm('Delete criteria?') && run('Deleting criteria', () => deleteAdminStageCriteria(selectedId, s._id, c._id))}>Delete</Button></div></div>)}{!(criteriaByStage[s._id] || []).length && <p className="text-xs text-text-muted mt-2">No criteria found.</p>}</div>)}{!stages.length && <p className="text-sm text-text-muted">Create a stage before adding criteria.</p>}</Card>
 
             <Card hover={false}><h2 className="text-xl font-bold mb-3">Submissions</h2>{submissions.map((s) => <div key={s._id} className="flex justify-between gap-2 py-2 text-sm border-b border-border-default"><span>{s.project?.title || 'Project'} · {s.submissionStatus} · {s.demoLink || s.githubLink || 'No link'}</span><div className="flex gap-2"><Button size="xs" variant="secondary" onClick={() => alert(JSON.stringify(s, null, 2))}>Details</Button><Button size="xs" disabled={loadingAction} onClick={() => run('Updating submission', () => updateAdminHackathonSubmissionStatus(selectedId, s._id, window.prompt('Status', s.submissionStatus) || s.submissionStatus))}>Status</Button></div></div>)}{!submissions.length && <p className="text-sm text-text-muted">No submissions found.</p>}</Card>
 

@@ -20,9 +20,11 @@ export const deleteAdminHackathonAnnouncement = async (id, announcementId) => (a
 export const getAdminHackathonStages = async (id) => (await axios.get(`/admin/hackathons/${id}/stages`)).data
 export const createAdminHackathonStage = async (id, payload) => (await axios.post(`/admin/hackathons/${id}/stages`, payload)).data
 export const updateAdminHackathonStage = async (id, stageId, payload) => (await axios.patch(`/admin/hackathons/${id}/stages/${stageId}`, payload)).data
+export const deleteAdminHackathonStage = async (id, stageId) => (await axios.delete(`/admin/hackathons/${id}/stages/${stageId}`)).data
 export const getAdminStageCriteria = async (id, stageId) => (await axios.get(`/admin/hackathons/${id}/stages/${stageId}/criteria`)).data
 export const createAdminStageCriteria = async (id, stageId, payload) => (await axios.post(`/admin/hackathons/${id}/stages/${stageId}/criteria`, payload)).data
 export const updateAdminStageCriteria = async (id, stageId, criteriaId, payload) => (await axios.patch(`/admin/hackathons/${id}/stages/${stageId}/criteria/${criteriaId}`, payload)).data
+export const deleteAdminStageCriteria = async (id, stageId, criteriaId) => (await axios.delete(`/admin/hackathons/${id}/stages/${stageId}/criteria/${criteriaId}`)).data
 export const createAdminJudgeReview = async (id, stageId, registrationId, payload) => (await axios.post(`/admin/hackathons/${id}/stages/${stageId}/registrations/${registrationId}/evaluations`, payload)).data
 
 export const approveAdminHackathon = async (id) => (await axios.patch(`/admin/hackathons/${id}/approve`)).data
