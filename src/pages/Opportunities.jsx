@@ -3,8 +3,7 @@ import { motion } from 'framer-motion'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
-import { getOpportunities, getHackathonDetails, registerHackathonProject } from '../features/opportunities/opportunityAPI'
-import { getUserProjects } from '../features/user/userAPI'
+import { getOpportunities, getHackathonDetails } from '../features/opportunities/opportunityAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
 
 const TYPE_LABELS = {
@@ -31,8 +30,6 @@ const TABS = [
 
 export default function Opportunities() {
   const [opportunities, setOpportunities] = useState([])
-  const [projects, setProjects] = useState([])
-  const [selectedProjects, setSelectedProjects] = useState({})
   const [status, setStatus] = useState('')
   const [activeHackathon, setActiveHackathon] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -54,25 +51,9 @@ export default function Opportunities() {
   }, [activeTab])
 
   useEffect(() => {
-    getUserProjects('all').then((data) => setProjects(data?.projects || [])).catch(() => setProjects([]))
-  }, [])
-
-  useEffect(() => {
     const hackathonId = new URLSearchParams(window.location.search).get('hackathon')
     if (hackathonId) getHackathonDetails(hackathonId).then(setActiveHackathon).catch(() => {})
   }, [])
-
-  const registerProject = async (opp) => {
-    const projectId = selectedProjects[opp.sourceId]
-    if (!projectId) return setStatus('Select a project first.')
-    try {
-      setStatus('Registering project...')
-      await registerHackathonProject(opp.sourceId, projectId)
-      setStatus('Project registered for hackathon.')
-    } catch (error) {
-      setStatus(error?.response?.data?.message || 'Registration failed.')
-    }
-  }
 
   const openHackathon = async (opp) => {
     try {
@@ -126,6 +107,7 @@ export default function Opportunities() {
             </div>
             <Button size="sm" variant="secondary" onClick={() => setActiveHackathon(null)}>Close</Button>
           </div>
+          {activeHackathon.hackathon?.rules && <div className="rounded-xl border border-border-default bg-bg-secondary p-3"><p className="font-medium text-text-primary">Brochure / Rules</p><p className="whitespace-pre-wrap text-sm text-text-secondary">{activeHackathon.hackathon.rules}</p></div>}
           {(activeHackathon.announcements || []).map((item) => <div key={item._id} className="rounded-xl border border-border-default bg-bg-secondary p-3"><p className="font-medium text-text-primary">{item.title}</p><p className="text-sm text-text-secondary">{item.message}</p></div>)}
           {!(activeHackathon.announcements || []).length && <p className="text-sm text-text-muted">No messages yet.</p>}
         </Card>
@@ -173,28 +155,15 @@ export default function Opportunities() {
                     <span>Location: <span className="text-text-secondary">{opp.location}</span></span>
                   )}
                 </div>
-                {opp.applyLink && (
-                  <a
-                    href={opp.applyLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block"
-                  >
-                    <Button size="sm" variant="primary">Apply Now</Button>
-                  </a>
+                {opp.sourceType !== 'hackathon' && opp.applyLink && (
+                  <a href={opp.applyLink} target="_blank" rel="noopener noreferrer" className="inline-block"><Button size="sm" variant="primary">Apply Now</Button></a>
                 )}
                 {opp.sourceType === 'hackathon' && (
                   <div className="space-y-2">
-                    <Badge variant={opp.status === 'active' ? 'success' : 'warning'}>{opp.phase === 'HACKATHON_OPEN' ? 'Hackathon Day' : opp.phase === 'REGISTRATIONS_CLOSED' ? 'Registrations Closed' : 'Registrations Open'}</Badge>
-                    <select
-                      className="w-full rounded-xl border border-border-default bg-bg-secondary p-3 text-sm"
-                      value={selectedProjects[opp.sourceId] || ''}
-                      onChange={(event) => setSelectedProjects({ ...selectedProjects, [opp.sourceId]: event.target.value })}
-                    >
-                      <option value="">Select your project</option>
-                      {projects.map((project) => <option key={project._id} value={project._id}>{project.title}</option>)}
-                    </select>
-                    <div className="flex flex-wrap gap-2">{opp.phase === 'REGISTRATIONS_OPEN' && <Button size="sm" variant="primary" onClick={() => registerProject(opp)}>Register Existing Project</Button>}{opp.phase === 'HACKATHON_OPEN' && <Button size="sm" variant="secondary" onClick={() => openHackathon(opp)}>Open Hackathon</Button>}</div>
+                    <Badge variant={opp.phase === 'HACKATHON_OPEN' ? 'success' : opp.phase === 'REGISTRATIONS_CLOSED' ? 'warning' : 'secondary'}>{opp.phase === 'HACKATHON_OPEN' ? 'Hackathon Open' : opp.phase === 'REGISTRATIONS_CLOSED' ? 'Registrations Closed' : 'Registrations Open'}</Badge>
+                    {opp.phase === 'REGISTRATIONS_OPEN' && opp.applyLink && <a href={opp.applyLink} target="_blank" rel="noopener noreferrer" className="inline-block"><Button size="sm" variant="primary">Apply Now</Button></a>}
+                    {opp.phase === 'REGISTRATIONS_CLOSED' && <p className="text-sm text-text-muted">Registrations Closed</p>}
+                    {opp.phase === 'HACKATHON_OPEN' && <Button size="sm" variant="secondary" onClick={() => openHackathon(opp)}>Open Hackathon</Button>}
                   </div>
                 )}
               </Card>
