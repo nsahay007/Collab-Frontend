@@ -135,6 +135,13 @@ export default function AdminHackathons() {
     }
   }
 
+  const deleteHackathon = async (id) => {
+    if (window.prompt('Type DELETE_HACKATHON to delete') !== 'DELETE_HACKATHON') return
+    await runAdminRequest('Deleting hackathon', () => archiveAdminHackathon(id), { setStatus, setLoading: setLoadingAction })
+    if (selectedId === id) { setSelectedId(''); setDetails(null) }
+    await loadList()
+  }
+
   useEffect(() => {
     loadList().catch(() => setStatus('Failed to load hackathons'))
     loadProjectOptions().catch(() => setStatus('Failed to load projects'))
@@ -230,7 +237,7 @@ export default function AdminHackathons() {
         <Card hover={false}>
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search hackathons..." />
           <div className="mt-4 space-y-3 max-h-[70vh] overflow-auto">
-            {filtered.map((h) => <button key={h._id} type="button" onClick={() => openHackathon(h._id)} className={`w-full text-left p-4 rounded-xl border ${selectedId === h._id ? 'border-primary bg-primary/5' : 'border-border-default bg-bg-secondary'}`}><div className="font-semibold truncate">{h.title}</div><div className="text-xs text-text-muted truncate">{h.organizer || 'No organizer'}</div><div className="mt-2 flex gap-2"><Badge>{workflowLabels[h.phase] || h.phase || h.status}</Badge></div></button>)}
+            {filtered.map((h) => <div key={h._id} className={`w-full p-4 rounded-xl border ${selectedId === h._id ? 'border-primary bg-primary/5' : 'border-border-default bg-bg-secondary'}`}><button type="button" onClick={() => openHackathon(h._id)} className="w-full text-left"><div className="font-semibold truncate">{h.title}</div><div className="text-xs text-text-muted truncate">{h.organizer || 'No organizer'}</div><div className="mt-2 flex gap-2"><Badge>{workflowLabels[h.phase] || h.phase || h.status}</Badge></div></button><Button className="mt-3" size="xs" variant="danger" disabled={loadingAction} onClick={() => deleteHackathon(h._id)}>Delete</Button></div>)}
             {!filtered.length && <p className="text-sm text-text-muted">No hackathons created yet.</p>}
           </div>
         </Card>

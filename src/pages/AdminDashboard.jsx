@@ -800,8 +800,9 @@ function OpportunitiesAdmin() {
     setShowForm(true)
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this opportunity?')) return
+  const handleDelete = async (id, type) => {
+    const message = type === 'hackathon' ? 'Delete this hackathon and all registrations/scores?' : 'Delete this opportunity?'
+    if (!window.confirm(message)) return
     await deleteOpportunity(id)
     await load()
   }
@@ -877,7 +878,7 @@ function OpportunitiesAdmin() {
               </div>
               <div className="flex gap-2 shrink-0">
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(opp)}>Edit</Button>
-                <Button variant="danger" size="sm" onClick={() => handleDelete(opp._id)}>Delete</Button>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(opp._id, opp.type)}>Delete</Button>
               </div>
             </div>
           ))}
