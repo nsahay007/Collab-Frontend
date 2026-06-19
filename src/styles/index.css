@@ -1072,6 +1072,7 @@ img, video, table {
 .landing-constellation {
   position: relative;
   min-height: 36rem;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate3d(var(--mx, 0), var(--my, 0), 0);
   border: 1px solid var(--border);
   border-radius: 3rem;
   overflow: hidden;
@@ -1081,6 +1082,7 @@ img, video, table {
     radial-gradient(circle at center, color-mix(in srgb, var(--bg-card) 80%, transparent), transparent 72%);
   background-size: 42px 42px, 42px 42px, auto;
   box-shadow: var(--shadow-elevated);
+  transition: transform 180ms ease;
 }
 
 .landing-constellation::before,
@@ -1243,9 +1245,11 @@ img, video, table {
   position: relative;
   width: min(32rem, 88vw);
   aspect-ratio: 1;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translate3d(var(--mx, 0), var(--my, 0), 0);
   border-radius: 9999px;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
   background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent), transparent 58%);
+  transition: transform 180ms ease;
 }
 
 .landing-role-orbit > span {
