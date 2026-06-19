@@ -74,9 +74,6 @@ export default function Opportunities() {
         <NarrativeSection eyebrow="Opportunity Signals" title="Discover the next signal for your venture.">
           Incubators, grants, events, and achievements surfaced as startup opportunities, not a static notice board.
         </NarrativeSection>
-        <div className="grid gap-3 md:grid-cols-3">
-          {['Signals: curated stream', 'Radar: match what matters', 'Exploration: scan the ecosystem'].map((mode) => <div key={mode} className="momentum-step"><strong>{mode}</strong></div>)}
-        </div>
       </motion.div>
 
       <motion.div variants={staggerItem} className="flex flex-wrap gap-2">

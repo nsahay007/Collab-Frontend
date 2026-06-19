@@ -17,7 +17,7 @@ import ExecutionPostPanel from '../feed/components/ExecutionPostPanel'
 import { useFeedPosts } from '../feed/useFeedPosts'
 import { useMotionToast } from '../../components/common/MotionToast'
 import { fetchProject } from '../projects/projectAPI'
-import { ActivityPulse, ContextCluster, InsightPanel, MomentumStrip, NarrativeSection, SignalFeed, VentureNode } from '../../components/ecosystem/EcosystemPrimitives'
+import { ActivityPulse, ContextCluster, InsightPanel, NarrativeSection, VentureNode } from '../../components/ecosystem/EcosystemPrimitives'
 
 function ErrorState({ message, onRetry }) {
   return (
@@ -47,17 +47,6 @@ function EmptyVentureState() {
 function BuildHubView({ profile, projects = [] }) {
   const active = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready')
   const completed = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === 'incubation_ready')
-  const stages = ['idea', 'planning', 'building', 'mvp', 'validation', 'incubation_ready']
-  const stageItems = stages.map((stage) => ({
-    label: getLifecycleLabel(stage),
-    detail: `${projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === stage).length} venture${projects.length === 1 ? '' : 's'}`
-  }))
-  const signals = [
-    { title: 'Opportunity signals', meta: 'Live ecosystem', detail: 'Discover programs, collaborations, and events from the Opportunities orbit.' },
-    { title: 'Team constellations', meta: `${active.length} active`, detail: 'Continue where your builders last created momentum.' },
-    { title: 'Incubation readiness', meta: `${completed.length} complete`, detail: 'Completed ventures stay accessible as final startup packages.' }
-  ]
-
   if (!projects.length) {
     return <EmptyVentureState />
   }
@@ -79,11 +68,7 @@ function BuildHubView({ profile, projects = [] }) {
           <InsightPanel label="Incubation ready" value={completed.length} detail="Final packages prepared" tone="gold" />
         </div>
 
-        <ContextCluster title="Momentum path" subtitle="Where your ventures currently sit in the builder journey.">
-          <MomentumStrip items={stageItems} />
-        </ContextCluster>
-
-        <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-5">
           <ContextCluster title="Venture galaxy" subtitle="Open a venture to continue execution.">
             <div className="grid gap-3 md:grid-cols-2">
               {active.map((project) => {
@@ -96,10 +81,6 @@ function BuildHubView({ profile, projects = [] }) {
               })}
               {!active.length && <ActivityPulse title="No active ventures" meta="Create one">Start a new venture galaxy from your next idea.</ActivityPulse>}
             </div>
-          </ContextCluster>
-
-          <ContextCluster title="Ecosystem activity" subtitle="Signals that keep the founder universe alive.">
-            <SignalFeed signals={signals} />
           </ContextCluster>
         </div>
 

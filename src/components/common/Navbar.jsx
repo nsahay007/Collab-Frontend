@@ -12,7 +12,7 @@ import { getNotifications, markNotificationRead } from '../../features/notificat
 const AUTH_NAV = [
   { to: '/build', label: 'Universe', match: ['/build', '/create', '/project'], emphasis: true },
   { to: '/discover', label: 'Discover', match: ['/discover'] },
-  { to: '/feed', label: 'Activity', match: ['/feed', '/dashboard'] },
+  { to: '/feed', label: 'Activities', match: ['/feed', '/dashboard'] },
   { to: '/opportunities', label: 'Opportunities', match: ['/opportunities'] },
 ]
 
