@@ -210,7 +210,12 @@ export default function Register() {
         navigate('/build')
         return
       }
-      navigate('/login')
+      navigate('/verify-email', {
+        state: {
+          email: response?.data?.email || payload.email,
+          message: response?.data?.message || 'Please check your email for the verification OTP.'
+        }
+      })
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.')
     } finally {

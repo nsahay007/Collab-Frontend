@@ -17,4 +17,4 @@ Only claim work you contributed to. All contributions should be recorded accurat
 Do not share sensitive personal details publicly. Use built‑in collaboration tools.
 
 ## 5. Reporting
-Report violations to **helpdesk@joincollab.org**.
+Report violations to **support@joincollab.org**.

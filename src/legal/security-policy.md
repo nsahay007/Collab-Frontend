@@ -19,7 +19,7 @@ Collab takes security seriously and applies safeguards to protect your data.
 - Admin access is limited and logged
 
 ## 4. Reporting Security Issues
-If you discover a vulnerability, report it to **helpdesk@joincollab.org**. We will respond promptly.
+If you discover a vulnerability, report it to **support@joincollab.org**. We will respond promptly.
 
 ## 5. Availability
 We monitor uptime and maintain backups. Free-tier hosting may cause cold starts, but core data is preserved.
