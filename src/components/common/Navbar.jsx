@@ -287,7 +287,7 @@ export default function Navbar() {
                     isNavActive(link)
                       ? link.emphasis
                         ? 'nav-pill-build text-primary'
-                        : 'nav-pill-active text-text-primary'
+                        : 'nav-pill-active text-primary'
                       : 'text-text-muted hover:text-text-secondary hover:bg-primary/6'
                   }`}
                 >

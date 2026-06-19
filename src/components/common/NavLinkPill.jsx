@@ -10,9 +10,7 @@ export default function NavLinkPill({ to, label, isActive, onClick, emphasis = f
       onClick={onClick}
       className={`relative text-[13px] font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${
         isActive
-          ? emphasis
-            ? 'text-primary'
-            : 'text-text-primary'
+          ? 'text-primary'
           : 'text-text-muted hover:text-text-secondary hover:bg-primary/6'
       }`}
     >
