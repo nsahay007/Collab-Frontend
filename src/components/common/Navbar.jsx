@@ -10,9 +10,9 @@ import BrandLogo from './BrandLogo'
 import { getNotifications, markNotificationRead } from '../../features/notifications/notificationAPI'
 
 const AUTH_NAV = [
-  { to: '/build', label: 'Build', match: ['/build', '/create', '/project'], emphasis: true },
+  { to: '/build', label: 'Universe', match: ['/build', '/create', '/project'], emphasis: true },
   { to: '/discover', label: 'Discover', match: ['/discover'] },
-  { to: '/feed', label: 'Feed', match: ['/feed', '/dashboard'] },
+  { to: '/feed', label: 'Activity', match: ['/feed', '/dashboard'] },
   { to: '/opportunities', label: 'Opportunities', match: ['/opportunities'] },
 ]
 

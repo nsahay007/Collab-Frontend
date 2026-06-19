@@ -5,6 +5,7 @@ import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import { getOpportunities, getHackathonDetails } from '../features/opportunities/opportunityAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
+import { ContextCluster, NarrativeSection } from '../components/ecosystem/EcosystemPrimitives'
 
 const TYPE_LABELS = {
   incubator: 'Incubator',
@@ -67,13 +68,15 @@ export default function Opportunities() {
   }
 
   return (
-    <motion.div className="max-w-5xl mx-auto space-y-6" variants={staggerContainer} initial="hidden" animate="show">
+    <motion.div className="ecosystem-shell -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:-my-8 sm:px-6 sm:py-8" variants={staggerContainer} initial="hidden" animate="show">
+      <div className="mx-auto max-w-6xl space-y-6">
       <motion.div variants={staggerItem}>
-        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Growth Layer</p>
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight">Opportunities</h1>
-        <p className="text-text-secondary mt-2 max-w-2xl">
-          Incubators, grants, hackathons, and achievements — curated for teams ready to scale.
-        </p>
+        <NarrativeSection eyebrow="Opportunity Signals" title="Discover the next signal for your venture.">
+          Incubators, grants, events, and achievements surfaced as startup opportunities, not a static notice board.
+        </NarrativeSection>
+        <div className="grid gap-3 md:grid-cols-3">
+          {['Signals: curated stream', 'Radar: match what matters', 'Exploration: scan the ecosystem'].map((mode) => <div key={mode} className="momentum-step"><strong>{mode}</strong></div>)}
+        </div>
       </motion.div>
 
       <motion.div variants={staggerItem} className="flex flex-wrap gap-2">
@@ -125,6 +128,7 @@ export default function Opportunities() {
       )}
 
       {!loading && opportunities.length > 0 && (
+        <ContextCluster title="Discovery stream" subtitle="Choose a signal when your team is ready to move.">
         <div className="grid gap-4 sm:grid-cols-2">
           {opportunities.map((opp) => (
             <motion.div key={opp._id} variants={staggerItem}>
@@ -170,7 +174,9 @@ export default function Opportunities() {
             </motion.div>
           ))}
         </div>
+        </ContextCluster>
       )}
+      </div>
     </motion.div>
   )
 }

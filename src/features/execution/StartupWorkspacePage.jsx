@@ -17,6 +17,7 @@ import ExecutionPostPanel from '../feed/components/ExecutionPostPanel'
 import { useFeedPosts } from '../feed/useFeedPosts'
 import { useMotionToast } from '../../components/common/MotionToast'
 import { fetchProject } from '../projects/projectAPI'
+import { ActivityPulse, ContextCluster, InsightPanel, MomentumStrip, NarrativeSection, SignalFeed, VentureNode } from '../../components/ecosystem/EcosystemPrimitives'
 
 function ErrorState({ message, onRetry }) {
   return (
@@ -46,38 +47,75 @@ function EmptyVentureState() {
 function BuildHubView({ profile, projects = [] }) {
   const active = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready')
   const completed = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === 'incubation_ready')
+  const stages = ['idea', 'planning', 'building', 'mvp', 'validation', 'incubation_ready']
+  const stageItems = stages.map((stage) => ({
+    label: getLifecycleLabel(stage),
+    detail: `${projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === stage).length} venture${projects.length === 1 ? '' : 's'}`
+  }))
+  const signals = [
+    { title: 'Opportunity signals', meta: 'Live ecosystem', detail: 'Discover programs, collaborations, and events from the Opportunities orbit.' },
+    { title: 'Team constellations', meta: `${active.length} active`, detail: 'Continue where your builders last created momentum.' },
+    { title: 'Incubation readiness', meta: `${completed.length} complete`, detail: 'Completed ventures stay accessible as final startup packages.' }
+  ]
 
   if (!projects.length) {
     return <EmptyVentureState />
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <Card hover={false} className="innovation-surface">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Build</p>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight truncate">
-              {profile?.name ? `${profile.name}'s startup workspaces` : 'Your startup workspaces'}
-            </h1>
-            <p className="text-text-secondary mt-2 max-w-2xl">
-              Choose a startup to continue building. The workspace opens only after you select a project.
-            </p>
-          </div>
-          <Link to="/create" className="shrink-0">
-            <Button size="sm" className="w-full sm:w-auto">New workspace</Button>
-          </Link>
-        </div>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Badge variant="primary">{active.length} active</Badge>
-          <Badge variant="success">{completed.length} completed</Badge>
-          <Badge variant="default">{projects.length} total</Badge>
-        </div>
-      </Card>
+    <div className="ecosystem-shell -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:-my-8 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <NarrativeSection
+          eyebrow="Universe"
+          title={profile?.name ? `${profile.name}'s startup universe` : 'Your startup universe'}
+          action={<Link to="/create"><Button>New venture</Button></Link>}
+        >
+          A living overview of your ventures, signals, teams, and startup momentum. Select a venture only when you are ready to enter its command center.
+        </NarrativeSection>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <ProjectList title="Active projects" projects={active} packageView={false} />
-        <ProjectList title="Completed projects" projects={completed} packageView />
+        <div className="grid gap-4 md:grid-cols-3">
+          <InsightPanel label="Venture galaxies" value={projects.length} detail="Total startup workspaces" />
+          <InsightPanel label="Momentum active" value={active.length} detail="Ventures still building" tone="green" />
+          <InsightPanel label="Incubation ready" value={completed.length} detail="Final packages prepared" tone="gold" />
+        </div>
+
+        <ContextCluster title="Momentum path" subtitle="Where your ventures currently sit in the builder journey.">
+          <MomentumStrip items={stageItems} />
+        </ContextCluster>
+
+        <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <ContextCluster title="Venture galaxy" subtitle="Open a venture to continue execution.">
+            <div className="grid gap-3 md:grid-cols-2">
+              {active.map((project) => {
+                const id = project._id || project.id
+                return (
+                  <Link key={id} to={`/project/${id}`}>
+                    <VentureNode title={project.title} stage={getLifecycleLabel(project.lifecycleStage)} detail={project.shortPitch || project.description || 'Open venture command center'} />
+                  </Link>
+                )
+              })}
+              {!active.length && <ActivityPulse title="No active ventures" meta="Create one">Start a new venture galaxy from your next idea.</ActivityPulse>}
+            </div>
+          </ContextCluster>
+
+          <ContextCluster title="Ecosystem activity" subtitle="Signals that keep the founder universe alive.">
+            <SignalFeed signals={signals} />
+          </ContextCluster>
+        </div>
+
+        <ContextCluster title="Completed ventures" subtitle="Read-only access to final startup packages.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {completed.map((project) => {
+              const id = project._id || project.id
+              return (
+                <Link key={id} to={`/project/${id}/package`}>
+                  <VentureNode title={project.title} stage="Incubation Ready" detail="Open final startup package" />
+                </Link>
+              )
+            })}
+            {!completed.length && <ActivityPulse title="No final packages yet" meta="Keep building">Your completed ventures will appear here.</ActivityPulse>}
+          </div>
+        </ContextCluster>
       </div>
     </div>
   )

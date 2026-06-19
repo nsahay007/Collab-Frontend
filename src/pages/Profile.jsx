@@ -20,6 +20,7 @@ import {
   getLifecycleVariant,
   normalizeLifecycleStage
 } from '../utils/ventureLifecycle'
+import { InsightPanel, NarrativeSection } from '../components/ecosystem/EcosystemPrimitives'
 
 function ProjectCard({
   id,
@@ -389,8 +390,22 @@ export default function Profile() {
   }
 
   return (
-    <div className="space-y-8">
-      <Card hover={false} className="bg-gradient-to-r from-primary to-secondary text-white shadow-glow-blue border-primary/20">
+    <div className="ecosystem-shell -mx-4 -my-6 px-4 py-6 sm:-mx-6 sm:-my-8 sm:px-6 sm:py-8">
+    <div className="mx-auto max-w-7xl space-y-8">
+      <NarrativeSection
+        eyebrow="Founder Identity"
+        title={user.name || 'Your builder story'}
+        action={!editMode && <Link to="/settings"><Button variant="secondary">Account Settings</Button></Link>}
+      >
+        Your ventures, collaborations, reputation, and impact collected into one founder signal.
+      </NarrativeSection>
+      <div className="grid gap-4 md:grid-cols-3">
+        <InsightPanel label="Ventures" value={projects.length} detail="Startup workspaces connected to you" />
+        <InsightPanel label="Execution credibility" value={`${reputation.executionCredibility ?? 0}%`} detail="Built from meaningful contribution" />
+        <InsightPanel label="Identity" value={user.role || 'Builder'} detail={user.email || 'No email provided'} />
+      </div>
+
+      <Card hover={false} className="border-primary/20 bg-bg-card/70">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center text-4xl font-bold">
@@ -933,6 +948,7 @@ export default function Profile() {
           </Link>
         </div>
       </div>
+    </div>
     </div>
   )
 }
