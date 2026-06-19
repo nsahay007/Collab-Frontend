@@ -1050,3 +1050,326 @@ body,
 img, video, table {
   max-width: 100%;
 }
+
+.landing-ecosystem {
+  position: relative;
+  background:
+    radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 28rem),
+    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--success) 14%, transparent), transparent 26rem),
+    linear-gradient(180deg, var(--bg-main), color-mix(in srgb, var(--bg-main) 82%, var(--bg-secondary)));
+}
+
+.landing-aurora {
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 34rem;
+  background: conic-gradient(from 140deg, transparent, color-mix(in srgb, var(--primary) 24%, transparent), color-mix(in srgb, var(--success) 18%, transparent), transparent);
+  filter: blur(70px);
+  opacity: 0.7;
+  animation: landing-drift 16s ease-in-out infinite alternate;
+}
+
+.landing-constellation {
+  position: relative;
+  min-height: 36rem;
+  border: 1px solid var(--border);
+  border-radius: 3rem;
+  overflow: hidden;
+  background:
+    linear-gradient(color-mix(in srgb, var(--primary) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 8%, transparent) 1px, transparent 1px),
+    radial-gradient(circle at center, color-mix(in srgb, var(--bg-card) 80%, transparent), transparent 72%);
+  background-size: 42px 42px, 42px 42px, auto;
+  box-shadow: var(--shadow-elevated);
+}
+
+.landing-constellation::before,
+.landing-constellation::after {
+  content: '';
+  position: absolute;
+  inset: 18%;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 9999px;
+  animation: landing-spin 28s linear infinite;
+}
+
+.landing-constellation::after {
+  inset: 30%;
+  border-color: color-mix(in srgb, var(--success) 22%, transparent);
+  animation-duration: 20s;
+  animation-direction: reverse;
+}
+
+.landing-orbit {
+  position: absolute;
+  inset: 12%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, transparent 58%, color-mix(in srgb, var(--primary) 18%, transparent) 59%, transparent 61%);
+}
+
+.landing-orbit-b {
+  inset: 25%;
+  transform: rotate(24deg);
+}
+
+.landing-node {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  animation: landing-pulse 4s ease-in-out infinite;
+}
+
+.landing-node span {
+  display: inline-flex;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+  background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+  padding: 0.7rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  box-shadow: 0 0 40px color-mix(in srgb, var(--primary) 18%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.landing-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: min(15rem, 54vw);
+  transform: translate(-50%, -50%);
+  border-radius: 2rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+  padding: 1.4rem;
+  text-align: center;
+  box-shadow: 0 0 80px color-mix(in srgb, var(--primary) 24%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.landing-core p {
+  margin-top: 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.42em;
+  color: var(--text-secondary);
+}
+
+.landing-fragment {
+  min-height: 8rem;
+  border: 1px solid var(--border);
+  border-radius: 1.6rem;
+  background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+  padding: 1.25rem;
+  color: var(--text-primary);
+  font-weight: 900;
+  box-shadow: var(--shadow);
+}
+
+.landing-journey {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.landing-journey-step {
+  position: relative;
+  min-height: 10rem;
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 10%, var(--bg-card)), var(--bg-card));
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.landing-journey-step::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+}
+
+.landing-journey-step span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.landing-journey-step strong {
+  display: block;
+  margin-top: 3rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.landing-signal-wrap {
+  display: grid;
+  gap: 0.85rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+  padding: 1rem;
+}
+
+.landing-signal-row {
+  display: flex;
+  width: max-content;
+  gap: 0.75rem;
+  animation: landing-marquee 24s linear infinite;
+}
+
+.landing-signal-row:nth-child(even) {
+  animation-direction: reverse;
+}
+
+.landing-signal-row span {
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.landing-role-orbit {
+  position: relative;
+  width: min(32rem, 88vw);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent), transparent 58%);
+}
+
+.landing-role-orbit > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: rotate(calc(var(--i) * 51.4deg)) translate(14rem) rotate(calc(var(--i) * -51.4deg));
+  border-radius: 9999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 0.7rem 0.9rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 800;
+  box-shadow: var(--shadow);
+}
+
+.landing-role-orbit > div {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  font-weight: 1000;
+  letter-spacing: 0.3em;
+}
+
+.landing-vision {
+  border-radius: 3rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 18%, var(--bg-card)), color-mix(in srgb, var(--success) 12%, var(--bg-card)));
+  padding: clamp(2rem, 6vw, 5rem);
+  box-shadow: var(--shadow-elevated);
+}
+
+.landing-vision p {
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.landing-vision h2 {
+  margin-top: 1.25rem;
+  max-width: 58rem;
+  font-size: clamp(2.3rem, 6vw, 5.8rem);
+  font-weight: 1000;
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+}
+
+.landing-final {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3rem;
+  padding: clamp(2.2rem, 7vw, 5rem);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.2), transparent 18rem),
+    linear-gradient(135deg, #0f172a, #1d4ed8 48%, #059669);
+  box-shadow: var(--shadow-elevated);
+}
+
+@keyframes landing-drift {
+  from { transform: translate3d(-2%, -2%, 0) rotate(0deg); }
+  to { transform: translate3d(3%, 4%, 0) rotate(12deg); }
+}
+
+@keyframes landing-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes landing-pulse {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
+
+@keyframes landing-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 900px) {
+  .landing-journey {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-journey-step {
+    min-height: 6rem;
+  }
+
+  .landing-journey-step strong {
+    margin-top: 1.2rem;
+  }
+
+  .landing-role-orbit {
+    display: grid;
+    width: auto;
+    aspect-ratio: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    border-radius: 2rem;
+    padding: 1rem;
+  }
+
+  .landing-role-orbit > span,
+  .landing-role-orbit > div {
+    position: static;
+    transform: none;
+    text-align: center;
+  }
+
+  .landing-role-orbit > div {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-aurora,
+  .landing-constellation::before,
+  .landing-constellation::after,
+  .landing-node,
+  .landing-signal-row {
+    animation: none;
+  }
+}
