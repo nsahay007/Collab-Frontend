@@ -18,7 +18,9 @@ export default function PhaseMvp({
   milestones,
   onSaved,
   onMilestonesRefresh,
+  onMilestoneLocalUpdate,
   onPost,
+  onRemoveMilestonePost,
   showToast,
 }) {
   const projectId = project._id || project.id
@@ -64,25 +66,33 @@ export default function PhaseMvp({
   const handleToggleMilestone = async (milestone) => {
     const milestoneId = milestone._id || milestone.id
     if (!milestoneId || updatingId) return
+    const wasCompleted = milestone.status === 'completed'
+    const nextStatus = wasCompleted ? 'in_progress' : 'completed'
     setUpdatingId(milestoneId)
+    onMilestoneLocalUpdate?.(milestoneId, { status: nextStatus })
     try {
-      await updateMilestone(projectId, milestoneId, {
-        status: milestone.status === 'completed' ? 'in_progress' : 'completed'
-      })
-      if (milestone.status !== 'completed') {
+      await updateMilestone(projectId, milestoneId, { status: nextStatus })
+      if (!wasCompleted) {
         try {
           await onPost?.({
             type: 'milestone',
             content: `Achieved milestone: ${milestone.title}`,
             media: null,
+            source: { type: 'milestone', projectId, milestoneId },
           })
         } catch {
           showToast?.('Milestone completed, but could not publish to Activities', 'error')
         }
+      } else {
+        try {
+          await onRemoveMilestonePost?.({ projectId, milestoneId })
+        } catch {
+          showToast?.('Milestone unchecked, but activity removal failed', 'error')
+        }
       }
       showToast?.('Checklist updated', 'success')
-      onMilestonesRefresh?.()
     } catch (err) {
+      onMilestoneLocalUpdate?.(milestoneId, { status: milestone.status })
       showToast?.(err?.response?.data?.message || 'Could not update checklist', 'error')
     } finally {
       setUpdatingId('')

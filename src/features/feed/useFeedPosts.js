@@ -47,7 +47,7 @@ export function useFeedPosts() {
   }, [])
 
   const createPost = useCallback(
-    async ({ type, content, venture, media, user, projectTitle }) => {
+    async ({ type, content, venture, media, user, projectTitle, source }) => {
       const author = buildAuthorSnapshot(user, venture || projectTitle)
       const response = await axios.post('/feed/posts', {
         type,
@@ -55,6 +55,7 @@ export function useFeedPosts() {
         venture: venture || projectTitle || author.venture,
         projectTitle,
         media: media || null,
+        source,
       })
       const newPost = normalizePost(response?.data?.post || {
         id: createPostId(),
@@ -64,6 +65,7 @@ export function useFeedPosts() {
         venture: venture || projectTitle || author.venture,
         content,
         media: media || null,
+        source,
         createdAt: new Date().toISOString(),
       })
       const next = [newPost, ...loadFeedPosts().filter((post) => post.id !== newPost.id)]
@@ -159,5 +161,18 @@ export function useFeedPosts() {
     [persist]
   )
 
-  return { posts, refresh, createPost, vote, addComment, deletePost }
+  const deleteMilestonePost = useCallback(
+    async ({ projectId, milestoneId }) => {
+      await axios.delete('/feed/posts/milestone-activity', { data: { projectId, milestoneId } })
+      const next = loadFeedPosts().filter((post) => (
+        !(post.type === 'milestone'
+          && post.source?.projectId === projectId
+          && post.source?.milestoneId === milestoneId)
+      ))
+      persist(next)
+    },
+    [persist]
+  )
+
+  return { posts, refresh, createPost, vote, addComment, deletePost, deleteMilestonePost }
 }

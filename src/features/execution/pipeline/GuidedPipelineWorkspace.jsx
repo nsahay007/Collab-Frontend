@@ -14,7 +14,9 @@ export default function GuidedPipelineWorkspace({
   logs,
   onSaved,
   onMilestonesRefresh,
+  onMilestoneLocalUpdate,
   onPost,
+  onRemoveMilestonePost,
   showToast,
 }) {
   if (!phase || !project) return null
@@ -37,7 +39,9 @@ export default function GuidedPipelineWorkspace({
           milestones={milestones}
           logs={logs}
           onMilestonesRefresh={onMilestonesRefresh}
+          onMilestoneLocalUpdate={onMilestoneLocalUpdate}
           onPost={onPost}
+          onRemoveMilestonePost={onRemoveMilestonePost}
         />
       )
     case 'incubation':

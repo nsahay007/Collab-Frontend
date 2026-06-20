@@ -86,8 +86,8 @@ export default function FeedPostCard({
               aria-pressed={userVote === 'like'}
               aria-label="Helpful"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a1 1 0 01.789 1.592l-3.805 5.092a1 1 0 01-.789.408H10v6a1 1 0 01-1-1v-4.764a1 1 0 00-.211-.632l-3.805-5.092A1 1 0 016.236 10H10V4a1 1 0 011-1h2a1 1 0 011 1v6z" />
+              <svg className="feed-thumb-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M2.75 10.25h3.5v10h-3.5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Zm5.5 9.83V10.1l4.22-7.03c.33-.55.94-.88 1.58-.84l.48.03c1.2.08 2.02 1.25 1.68 2.4l-1.1 3.59h4.15a3 3 0 0 1 2.9 3.76l-1.36 5.2a4 4 0 0 1-3.87 2.99h-6.26c-.84 0-1.67-.04-2.42-.12Z" />
               </svg>
               <span>{post.likes || 0}</span>
             </button>
@@ -98,8 +98,8 @@ export default function FeedPostCard({
               aria-pressed={userVote === 'dislike'}
               aria-label="Not helpful"
             >
-              <svg className="h-4 w-4 scale-y-[-1]" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a1 1 0 01.789 1.592l-3.805 5.092a1 1 0 01-.789.408H10v6a1 1 0 01-1-1v-4.764a1 1 0 00-.211-.632l-3.805-5.092A1 1 0 016.236 10H10V4a1 1 0 011-1h2a1 1 0 011 1v6z" />
+              <svg className="feed-thumb-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M21.25 13.75h-3.5v-10h3.5a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1Zm-5.5-9.83v9.98l-4.22 7.03c-.33.55-.94.88-1.58.84l-.48-.03c-1.2-.08-2.02-1.25-1.68-2.4l1.1-3.59H4.74a3 3 0 0 1-2.9-3.76l1.36-5.2A4 4 0 0 1 7.07 3.8h6.26c.84 0 1.67.04 2.42.12Z" />
               </svg>
               <span>{post.dislikes || 0}</span>
             </button>

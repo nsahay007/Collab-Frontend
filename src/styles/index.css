@@ -628,6 +628,12 @@ body,
   background: color-mix(in srgb, var(--primary) 8%, transparent);
 }
 
+.feed-thumb-icon {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
 .feed-action--active-like {
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 12%, transparent);

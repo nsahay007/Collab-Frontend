@@ -154,7 +154,7 @@ function fallbackSprintState() {
  */
 export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMode = 'build' }) {
   const { user } = useAuth()
-  const { createPost } = useFeedPosts()
+  const { createPost, deleteMilestonePost } = useFeedPosts()
   const { showToast } = useMotionToast()
 
   const [profile, setProfile] = useState(null)
@@ -240,6 +240,14 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     }
   }, [fixedProjectId, user])
 
+  const refreshWorkspaceSilently = useCallback(() => loadWorkspace({ silent: true }), [loadWorkspace])
+
+  const updateMilestoneLocally = useCallback((milestoneId, patch) => {
+    setMilestones((items) => items.map((item) => (
+      String(item._id || item.id) === String(milestoneId) ? { ...item, ...patch } : item
+    )))
+  }, [])
+
   useEffect(() => {
     loadWorkspace()
   }, [loadWorkspace])
@@ -259,11 +267,12 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     }
   }, [sprint?.activePhaseId])
 
-  const handlePublishToFeed = async ({ type, content, media }) => {
+  const handlePublishToFeed = async ({ type, content, media, source }) => {
     await createPost({
       type,
       content,
       media,
+      source,
       user,
       projectTitle: project?.title,
     })
@@ -384,9 +393,11 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             project={project}
             milestones={milestones}
             logs={logs}
-            onSaved={loadWorkspace}
-            onMilestonesRefresh={loadWorkspace}
+            onSaved={refreshWorkspaceSilently}
+            onMilestonesRefresh={refreshWorkspaceSilently}
+            onMilestoneLocalUpdate={updateMilestoneLocally}
             onPost={handlePublishToFeed}
+            onRemoveMilestonePost={deleteMilestonePost}
             showToast={showToast}
           />
         </main>
