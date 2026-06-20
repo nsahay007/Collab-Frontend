@@ -17,7 +17,7 @@ export default function Modal({ children, open, onClose, size = 'md' }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 flex items-start justify-center z-50 overflow-y-auto p-4 sm:p-6 backdrop-blur-sm"
           style={{ backgroundColor: 'var(--overlay)' }}
           onClick={onClose}
         >
@@ -27,7 +27,7 @@ export default function Modal({ children, open, onClose, size = 'md' }) {
             exit={{ scale: 0.96, opacity: 0, y: 8 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className={`bg-bg-elevated rounded-2xl shadow-elevated border border-border p-6 w-full ${sizes[size]}`}
+            className={`my-auto max-h-[calc(100vh-2rem)] overflow-y-auto bg-bg-elevated rounded-2xl shadow-elevated border border-border p-6 w-full ${sizes[size]}`}
           >
             {children}
           </motion.div>
