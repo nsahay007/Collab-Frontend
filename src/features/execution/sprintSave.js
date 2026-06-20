@@ -82,6 +82,9 @@ export async function saveReadinessPhase(projectId, data) {
     pipeline: {
       readiness: {
         notes: data.collaboratorNotes || '',
+        fundingAvailable: data.fundingAvailable || '',
+        technicalResources: data.technicalResources || '',
+        existingAssets: data.existingAssets || '',
       }
     }
   })

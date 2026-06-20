@@ -93,10 +93,12 @@ export function getPhaseProgress(phaseId, project, context = {}) {
     },
     readiness: () => {
       let n = 0
+      const readiness = pipeline.readiness || {}
       if (normalizeLifecycleStage(project.lifecycleStage)) n++
       if ((project.rolesNeeded || []).length > 0) n++
-      if (hasText(pipeline.readiness?.notes || meta.collaboratorNotes, 10) || hasText(project.executionPlan, 30)) n++
-      return Math.round((n / 3) * 100)
+      if (hasText(readiness.notes || meta.collaboratorNotes, 10) || hasText(project.executionPlan, 30)) n++
+      if (hasText(readiness.fundingAvailable, 2) || hasText(readiness.technicalResources, 8) || hasText(readiness.existingAssets, 8)) n++
+      return Math.round((n / 4) * 100)
     },
     validation: () => {
       let n = 0

@@ -25,6 +25,9 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
     roles: [],
     roleInput: '',
     collaboratorNotes: '',
+    fundingAvailable: '',
+    technicalResources: '',
+    existingAssets: '',
   })
 
   useEffect(() => {
@@ -36,6 +39,9 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
       roles: project.rolesNeeded || [],
       roleInput: '',
       collaboratorNotes: readiness.notes || meta.collaboratorNotes || '',
+      fundingAvailable: readiness.fundingAvailable || '',
+      technicalResources: readiness.technicalResources || '',
+      existingAssets: readiness.existingAssets || '',
     })
   }, [project, projectId])
 
@@ -56,6 +62,9 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
         stage: form.stage,
         roles: form.roles,
         collaboratorNotes: form.collaboratorNotes,
+        fundingAvailable: form.fundingAvailable,
+        technicalResources: form.technicalResources,
+        existingAssets: form.existingAssets,
       })
       showToast?.('Execution readiness saved', 'success')
       onSaved?.()
@@ -126,6 +135,35 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
           value={form.collaboratorNotes}
           onChange={(v) => setForm((p) => ({ ...p, collaboratorNotes: v }))}
           placeholder="Optional: what might future collaborators help with?"
+        />
+      </QuestionCard>
+
+      <QuestionCard
+        number={3}
+        title="Current resources"
+        why="Capture what your team already has before building further."
+        complete={Boolean(form.fundingAvailable || form.technicalResources || form.existingAssets)}
+      >
+        <TextArea
+          id="pr-funding"
+          rows={2}
+          value={form.fundingAvailable}
+          onChange={(v) => setForm((p) => ({ ...p, fundingAvailable: v }))}
+          placeholder="Funding available (optional): grants, savings, sponsorships…"
+        />
+        <TextArea
+          id="pr-technical-resources"
+          rows={3}
+          value={form.technicalResources}
+          onChange={(v) => setForm((p) => ({ ...p, technicalResources: v }))}
+          placeholder="Technical resources: devices, tools, APIs, cloud credits, lab access…"
+        />
+        <TextArea
+          id="pr-existing-assets"
+          rows={3}
+          value={form.existingAssets}
+          onChange={(v) => setForm((p) => ({ ...p, existingAssets: v }))}
+          placeholder="Existing assets: sketches, docs, research, prototype files, datasets…"
         />
       </QuestionCard>
 
