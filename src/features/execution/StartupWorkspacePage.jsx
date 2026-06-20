@@ -44,6 +44,13 @@ function EmptyVentureState() {
   )
 }
 
+function isEditingField() {
+  const el = typeof document !== 'undefined' ? document.activeElement : null
+  if (!el) return false
+  const tag = el.tagName?.toLowerCase()
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
+}
+
 function BuildHubView({ profile, projects = [] }) {
   const active = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) !== 'incubation_ready')
   const completed = projects.filter((item) => normalizeLifecycleStage(item.lifecycleStage || item.status || item.phase) === 'incubation_ready')
@@ -187,8 +194,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     }
 
     try {
-      const profileResponse = await api.get('/users/me')
-      setProfile(profileResponse?.data || null)
+      setProfile(user || null)
 
       let targetId = fixedProjectId
 
@@ -209,26 +215,20 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
         return
       }
 
-      const [detail, milestonesResponse, logsResponse] = await Promise.allSettled([
-        fetchProject(targetId),
-        api.get(`/projects/${targetId}/milestones`),
-        api.get(`/projects/${targetId}/contribution-logs`),
-      ])
-
-      const loaded = detail.status === 'fulfilled' ? detail.value : null
+      const loaded = await fetchProject(targetId)
       const resolved = loaded && (loaded._id || loaded.id) ? loaded : null
 
       if (!resolved?._id && !resolved?.id) {
-        const fetchMessage =
-          detail.status === 'rejected'
-            ? detail.reason?.response?.data?.message
-            : null
-        setError(fetchMessage || 'Startup workspace not found')
+        if (!silent) setError('Startup workspace not found')
         setProject(null)
         return
       }
 
       setProject(resolved)
+      const [milestonesResponse, logsResponse] = await Promise.allSettled([
+        api.get(`/projects/${targetId}/milestones`),
+        api.get(`/projects/${targetId}/contribution-logs`),
+      ])
       setMilestones(
         milestonesResponse.status === 'fulfilled' ? milestonesResponse.value?.data?.milestones || [] : []
       )
@@ -238,7 +238,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [fixedProjectId])
+  }, [fixedProjectId, user])
 
   useEffect(() => {
     loadWorkspace()
@@ -247,8 +247,9 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   useEffect(() => {
     if (!fixedProjectId) return undefined
     const interval = setInterval(() => {
+      if (isEditingField()) return
       loadWorkspace({ silent: true })
-    }, 8000)
+    }, 30000)
     return () => clearInterval(interval)
   }, [fixedProjectId, loadWorkspace])
 
