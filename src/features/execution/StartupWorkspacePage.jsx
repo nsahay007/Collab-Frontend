@@ -375,6 +375,7 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
             logs={logs}
             onSaved={loadWorkspace}
             onMilestonesRefresh={loadWorkspace}
+            onPost={handlePublishToFeed}
             showToast={showToast}
           />
         </main>

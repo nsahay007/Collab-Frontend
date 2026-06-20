@@ -9,7 +9,7 @@ import {
 } from '../PipelinePrimitives'
 import Button from '../../../../components/common/Button'
 import Badge from '../../../../components/common/Badge'
-import { createMilestone, updateMilestone, uploadProjectFile } from '../../../projects/projectAPI'
+import { updateMilestone, uploadProjectFile } from '../../../projects/projectAPI'
 import { updateProjectDetails } from '../../../projects/projectAPI'
 import { loadSprintMeta, saveSprintMeta } from '../../sprintMeta'
 
@@ -19,6 +19,7 @@ export default function PhaseMvp({
   milestones,
   onSaved,
   onMilestonesRefresh,
+  onPost,
   showToast,
 }) {
   const projectId = project._id || project.id
@@ -31,8 +32,6 @@ export default function PhaseMvp({
     github: mvpPipeline.githubLinks?.[0] || meta.mvpGithub || '',
     demo: project.validation?.demoLink || mvpPipeline.demoLinks?.[0] || meta.mvpDemo || '',
   })
-  const [newMilestone, setNewMilestone] = useState({ title: '', description: '' })
-  const [creating, setCreating] = useState(false)
   const [updatingId, setUpdatingId] = useState('')
 
   const completedCount = useMemo(
@@ -65,25 +64,6 @@ export default function PhaseMvp({
     }
   }
 
-  const handleCreateMilestone = async () => {
-    if (!newMilestone.title.trim()) return
-    setCreating(true)
-    try {
-      await createMilestone(projectId, {
-        title: newMilestone.title.trim(),
-        description: newMilestone.description,
-        status: 'pending',
-      })
-      setNewMilestone({ title: '', description: '' })
-      showToast?.('Milestone created', 'success')
-      onMilestonesRefresh?.()
-    } catch (err) {
-      showToast?.(err?.response?.data?.message || 'Could not create milestone', 'error')
-    } finally {
-      setCreating(false)
-    }
-  }
-
   const handleToggleMilestone = async (milestone) => {
     const milestoneId = milestone._id || milestone.id
     if (!milestoneId || updatingId) return
@@ -92,6 +72,17 @@ export default function PhaseMvp({
       await updateMilestone(projectId, milestoneId, {
         status: milestone.status === 'completed' ? 'in_progress' : 'completed'
       })
+      if (milestone.status !== 'completed') {
+        try {
+          await onPost?.({
+            type: 'milestone',
+            content: `Achieved milestone: ${milestone.title}`,
+            media: null,
+          })
+        } catch {
+          showToast?.('Milestone completed, but could not publish to Activities', 'error')
+        }
+      }
       showToast?.('Checklist updated', 'success')
       onMilestonesRefresh?.()
     } catch (err) {
@@ -140,21 +131,9 @@ export default function PhaseMvp({
         <QuestionCard
           number="§"
           title="Execution checklist"
-          why="This checklist comes from the milestones created during setup. Complete it as your MVP becomes real."
+          why="This checklist comes only from the milestones created during venture setup. Mark what your team has achieved."
           complete={milestones.length > 0}
         >
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] mb-4">
-            <input
-              type="text"
-              value={newMilestone.title}
-              onChange={(e) => setNewMilestone((p) => ({ ...p, title: e.target.value }))}
-              placeholder="New milestone title"
-              className="pipeline-input"
-            />
-            <Button size="sm" onClick={handleCreateMilestone} disabled={creating}>
-              Add milestone
-            </Button>
-          </div>
           <ExecutionChecklist
             milestones={milestones}
             completedCount={completedCount}
@@ -262,7 +241,7 @@ function ExecutionChecklist({ milestones, completedCount, progress, updatingId, 
           )
         }) : (
           <p className="rounded-xl border border-dashed border-border bg-bg-card px-4 py-5 text-center text-sm text-text-secondary">
-            No setup milestones yet. Add your first MVP milestone above.
+            No setup milestones yet. Add milestones from the venture creation flow.
           </p>
         )}
       </div>

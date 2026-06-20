@@ -7,7 +7,7 @@ export default function ExecutionPostPanel({ ventureName, onPost }) {
   const { user } = useAuth()
   const fileRef = useRef(null)
   const [content, setContent] = useState('')
-  const [type, setType] = useState('milestone')
+  const [type] = useState('blocker')
   const [media, setMedia] = useState(null)
   const [posting, setPosting] = useState(false)
 
@@ -42,32 +42,19 @@ export default function ExecutionPostPanel({ ventureName, onPost }) {
 
   return (
     <Card hover={false} className="build-post-panel border-primary/15">
-      <p className="text-xs uppercase tracking-wide text-text-muted mb-1">Share to Feed</p>
-      <h2 className="text-base font-semibold text-text-primary">Post execution update</h2>
+      <p className="text-xs uppercase tracking-wide text-text-muted mb-1">Share to Activities</p>
+      <h2 className="text-base font-semibold text-text-primary">Report a blocker</h2>
       <p className="text-xs text-text-muted mt-1 mb-4">
-        Milestones and blockers publish to the public ecosystem timeline.
+        Achieved milestones publish from the MVP checklist. Use this only for blockers.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="flex gap-2">
-          {['milestone', 'blocker'].map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setType(t)}
-              className={`feed-type-chip text-xs ${type === t ? `feed-type-chip--${t} feed-type-chip--active` : ''}`}
-            >
-              {t === 'milestone' ? 'Milestone' : 'Blocker'}
-            </button>
-          ))}
-        </div>
-
         <div className="flex gap-2">
           <div className="feed-avatar feed-avatar-sm shrink-0 mt-0.5">{initial}</div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder={type === 'blocker' ? 'Describe the blocker…' : 'What did your team ship?'}
+            placeholder="Describe the blocker…"
             rows={3}
             className="flex-1 resize-none rounded-xl border border-border bg-bg-secondary/40 px-3 py-2.5 text-sm text-text-primary placeholder-text-muted outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
           />
@@ -105,7 +92,7 @@ export default function ExecutionPostPanel({ ventureName, onPost }) {
             </svg>
           </button>
           <Button type="submit" size="sm" disabled={!content.trim() || posting} className="flex-1 sm:flex-none">
-            {posting ? 'Publishing…' : 'Publish to Feed'}
+            {posting ? 'Publishing…' : 'Publish blocker'}
           </Button>
         </div>
       </form>

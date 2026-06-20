@@ -92,8 +92,8 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
 
       <QuestionCard
         number={2}
-        title="What collaborators / team members are needed?"
-        why="Define roles so the right builders can join your execution."
+        title="What collaborators / team members might be needed in the future?"
+        why="Capture future role gaps without turning this into a hiring flow."
         complete={form.roles.length > 0}
       >
         <div className="flex gap-2 mb-3">
@@ -124,7 +124,7 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
           rows={3}
           value={form.collaboratorNotes}
           onChange={(v) => setForm((p) => ({ ...p, collaboratorNotes: v }))}
-          placeholder="Optional: what should collaborators help with?"
+          placeholder="Optional: what might future collaborators help with?"
         />
       </QuestionCard>
 

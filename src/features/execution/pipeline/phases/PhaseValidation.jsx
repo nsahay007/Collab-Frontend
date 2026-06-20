@@ -27,7 +27,7 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
     const blocks = meta.validationBlocks || {}
     const v = project.validation?.workspace || {}
     setForm({
-      surveys: blocks.surveys || { link: '', notes: v.surprisingInsights || '' },
+      surveys: blocks.surveys || emptyBlock(),
       interviews: blocks.interviews || { link: '', notes: v.whoSpokenTo || '' },
       feedback: blocks.feedback || { link: '', notes: v.repeatedProblems || '' },
     })

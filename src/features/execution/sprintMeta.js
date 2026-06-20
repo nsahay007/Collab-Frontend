@@ -37,8 +37,12 @@ export function getAudienceFromProject(project) {
 }
 
 export function getDescriptorWords(project, meta) {
+  const pipelineWords = project?.pipeline?.foundation?.descriptorWords
+  if (Array.isArray(pipelineWords) && pipelineWords.length) {
+    return pipelineWords.slice(0, 3)
+  }
   if (Array.isArray(meta?.descriptorWords) && meta.descriptorWords.length) {
     return meta.descriptorWords.slice(0, 3)
   }
-  return (project?.tags || []).slice(0, 3)
+  return ['', '', '']
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -9,27 +9,27 @@ import { AuthSkeleton } from './components/common/Skeleton'
 import useAuth from './hooks/useAuth'
 import Navbar from './components/common/Navbar'
 import Button from './components/common/Button'
-import Landing from './pages/Landing'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Feed from './pages/Feed'
-import Build from './pages/Build'
-import Discover from './pages/Discover'
-import Opportunities from './pages/Opportunities'
-import CreateProject from './pages/CreateProject'
-import ProjectDetail from './pages/ProjectDetail'
-import FinalStartupPackage from './pages/FinalStartupPackage'
-import Profile from './pages/Profile'
-import Settings from './pages/Settings'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminProjects from './pages/AdminProjects'
-import AdminHackathons from './pages/AdminHackathons'
-import VerifyEmail from './pages/VerifyEmail'
-import VerifyCertificate from './pages/VerifyCertificate'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import Legal from './pages/Legal'
-import LegalDoc from './pages/LegalDoc'
+const Landing = lazy(() => import('./pages/Landing'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Feed = lazy(() => import('./pages/Feed'))
+const Build = lazy(() => import('./pages/Build'))
+const Discover = lazy(() => import('./pages/Discover'))
+const Opportunities = lazy(() => import('./pages/Opportunities'))
+const CreateProject = lazy(() => import('./pages/CreateProject'))
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
+const FinalStartupPackage = lazy(() => import('./pages/FinalStartupPackage'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Settings = lazy(() => import('./pages/Settings'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminProjects = lazy(() => import('./pages/AdminProjects'))
+const AdminHackathons = lazy(() => import('./pages/AdminHackathons'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
+const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const Legal = lazy(() => import('./pages/Legal'))
+const LegalDoc = lazy(() => import('./pages/LegalDoc'))
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -77,46 +77,48 @@ function Layout({ children }) {
 
 function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<Layout><Landing /></Layout>} />
-      <Route path="/login" element={<PublicRoute><Layout><Login /></Layout></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><Layout><Register /></Layout></PublicRoute>} />
-      <Route path="/feed" element={<ProtectedRoute><Layout><Feed /></Layout></ProtectedRoute>} />
-      <Route path="/dashboard" element={<Navigate to="/build" replace />} />
-      <Route path="/build" element={<ProtectedRoute><Layout><Build /></Layout></ProtectedRoute>} />
-      <Route path="/discover" element={<ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>} />
-      <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
-      <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
-      <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
-      <Route path="/project/:id/package" element={<ProtectedRoute><Layout><FinalStartupPackage /></Layout></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-      <Route path="/admin/projects" element={<ProtectedRoute><Layout><AdminProjects /></Layout></ProtectedRoute>} />
-      <Route path="/admin/hackathons" element={<ProtectedRoute><Layout><AdminHackathons /></Layout></ProtectedRoute>} />
-      <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
-      <Route path="/verify/:certificateId" element={<Layout><VerifyCertificate /></Layout>} />
-      <Route path="/forgot" element={<PublicRoute><Layout><ForgotPassword /></Layout></PublicRoute>} />
-      <Route path="/reset" element={<PublicRoute><Layout><ResetPassword /></Layout></PublicRoute>} />
-      <Route path="/legal" element={<Layout><Legal /></Layout>} />
-      <Route path="/legal/:slug" element={<Layout><LegalDoc /></Layout>} />
-      <Route
-        path="*"
-        element={(
-          <Layout>
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-3">
-              <h1 className="text-2xl font-bold text-text-primary">Page not found</h1>
-              <p className="text-text-secondary max-w-md">
-                The page you are looking for doesn&apos;t exist or has moved.
-              </p>
-              <Link to="/build">
-                <Button variant="primary" size="sm">Go to Build</Button>
-              </Link>
-            </div>
-          </Layout>
-        )}
-      />
-    </Routes>
+    <Suspense fallback={<AuthSkeleton />}>
+      <Routes>
+        <Route path="/" element={<Layout><Landing /></Layout>} />
+        <Route path="/login" element={<PublicRoute><Layout><Login /></Layout></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><Layout><Register /></Layout></PublicRoute>} />
+        <Route path="/feed" element={<ProtectedRoute><Layout><Feed /></Layout></ProtectedRoute>} />
+        <Route path="/dashboard" element={<Navigate to="/build" replace />} />
+        <Route path="/build" element={<ProtectedRoute><Layout><Build /></Layout></ProtectedRoute>} />
+        <Route path="/discover" element={<ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>} />
+        <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
+        <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
+        <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
+        <Route path="/project/:id/package" element={<ProtectedRoute><Layout><FinalStartupPackage /></Layout></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/admin/projects" element={<ProtectedRoute><Layout><AdminProjects /></Layout></ProtectedRoute>} />
+        <Route path="/admin/hackathons" element={<ProtectedRoute><Layout><AdminHackathons /></Layout></ProtectedRoute>} />
+        <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
+        <Route path="/verify/:certificateId" element={<Layout><VerifyCertificate /></Layout>} />
+        <Route path="/forgot" element={<PublicRoute><Layout><ForgotPassword /></Layout></PublicRoute>} />
+        <Route path="/reset" element={<PublicRoute><Layout><ResetPassword /></Layout></PublicRoute>} />
+        <Route path="/legal" element={<Layout><Legal /></Layout>} />
+        <Route path="/legal/:slug" element={<Layout><LegalDoc /></Layout>} />
+        <Route
+          path="*"
+          element={(
+            <Layout>
+              <div className="min-h-[60vh] flex flex-col items-center justify-center text-center space-y-3">
+                <h1 className="text-2xl font-bold text-text-primary">Page not found</h1>
+                <p className="text-text-secondary max-w-md">
+                  The page you are looking for doesn&apos;t exist or has moved.
+                </p>
+                <Link to="/build">
+                  <Button variant="primary" size="sm">Go to Build</Button>
+                </Link>
+              </div>
+            </Layout>
+          )}
+        />
+      </Routes>
+    </Suspense>
   )
 }
 

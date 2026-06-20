@@ -4,6 +4,7 @@ import Badge from '../../../components/common/Badge'
 import ReadinessRing from '../../../components/common/ReadinessRing'
 import ExecutionPostPanel from '../../feed/components/ExecutionPostPanel'
 import StartupSprintPipeline from './StartupSprintPipeline'
+import { getBlockers } from '../executionUtils'
 import {
   getLifecycleLabel,
   getLifecycleProgress,
@@ -49,6 +50,28 @@ function IncubationReadinessPanel({ project, milestones = [] }) {
   )
 }
 
+function BlockerPanel({ project, milestones = [] }) {
+  const blockers = getBlockers(project, milestones)
+
+  return (
+    <Card hover={false} className="innovation-surface">
+      <h2 className="text-lg font-semibold text-text-primary mb-3">Blockers</h2>
+      {blockers.length ? (
+        <div className="space-y-3">
+          {blockers.map((blocker, index) => (
+            <div key={`${blocker.source}-${blocker.title}-${index}`} className="rounded-xl border border-warning/25 bg-warning/10 p-3">
+              <p className="text-sm font-semibold text-text-primary">{blocker.title}</p>
+              <p className="mt-1 text-xs text-text-secondary">{blocker.source || blocker.type || 'Workspace blocker'}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-text-secondary">No active blockers right now.</p>
+      )}
+    </Card>
+  )
+}
+
 export default function BuildRightSidebar({
   project,
   phases,
@@ -61,6 +84,7 @@ export default function BuildRightSidebar({
     <aside className="build-right-rail" aria-label="Execution status">
       <div className="build-right-rail-inner space-y-4">
         <IncubationReadinessPanel project={project} milestones={milestones} />
+        <BlockerPanel project={project} milestones={milestones} />
         <StartupSprintPipeline phases={phases} activePhaseId={activePhaseId} />
         <ExecutionPostPanel ventureName={ventureName} onPost={onPost} />
       </div>
