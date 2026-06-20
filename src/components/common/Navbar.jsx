@@ -212,7 +212,7 @@ export default function Navbar() {
                             ))}
                           </div>
                         )}
-                        <Link to="/profile" onClick={() => setShowNotifications(false)} className="block text-center text-xs text-primary mt-3 hover:text-primary-hover">
+                        <Link to="/settings#notifications" onClick={() => setShowNotifications(false)} className="block text-center text-xs text-primary mt-3 hover:text-primary-hover">
                           View all
                         </Link>
                       </div>

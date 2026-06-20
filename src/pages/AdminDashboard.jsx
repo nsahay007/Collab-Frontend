@@ -440,8 +440,8 @@ export default function AdminDashboard() {
         <Link to="/admin/hackathons" className="inline-flex mt-4 ml-3">
           <Button variant="secondary" size="sm">Open Hackathon Management</Button>
         </Link>
-        <Link to="/admin/user-lookup" className="inline-flex mt-4 ml-3">
-          <Button variant="secondary" size="sm">Open User Lookup</Button>
+        <Link to="/admin/logs" className="inline-flex mt-4 ml-3">
+          <Button variant="secondary" size="sm">Open Security & Audit Logs</Button>
         </Link>
       </div>
 

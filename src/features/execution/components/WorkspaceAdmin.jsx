@@ -8,7 +8,9 @@ import {
   updateProjectRequirements,
   removeTeamMember,
   deleteProject,
+  respondToTeamApplication,
 } from '../../projects/projectAPI'
+import { VentureJourneyTimeline, WorkspaceTrustCard } from '../../../components/trust/WorkspaceTrustPanel'
 
 function normalizeList(value) {
   if (!value) return []
@@ -18,7 +20,7 @@ function normalizeList(value) {
     .filter(Boolean)
 }
 
-export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
+export default function WorkspaceAdmin({ project, projectId, onRefresh, milestones = [], logs = [] }) {
   const navigate = useNavigate()
   const { user } = useAuth()
   const userId = user?._id || user?.id
@@ -46,6 +48,7 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
     skillsRequired: '',
     numberOfTeammates: 1,
     visibility: 'private',
+    lookingForTeammates: false,
   })
 
   const openDetails = () => {
@@ -67,6 +70,7 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
       skillsRequired: (project?.skillsRequired || []).join(', '),
       numberOfTeammates: project?.numberOfTeammates || 1,
       visibility: project?.visibility || 'private',
+      lookingForTeammates: Boolean(project?.lookingForTeammates),
     })
     setRequirementsOpen(true)
   }
@@ -100,11 +104,25 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
         skillsRequired: normalizeList(requirementsForm.skillsRequired),
         numberOfTeammates: parseInt(requirementsForm.numberOfTeammates, 10) || 1,
         visibility: requirementsForm.visibility,
+        lookingForTeammates: requirementsForm.lookingForTeammates,
       })
       setRequirementsOpen(false)
       onRefresh?.()
     } catch (err) {
       setError(err?.response?.data?.message || 'Could not save team settings.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleApplication = async (applicationId, action) => {
+    setSaving(true)
+    setError('')
+    try {
+      await respondToTeamApplication(projectId, applicationId, action)
+      onRefresh?.()
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Could not update application.')
     } finally {
       setSaving(false)
     }
@@ -184,6 +202,10 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
           <Button variant="secondary" size="sm" onClick={openRequirements}>
             Edit team & visibility
           </Button>
+          <div className="space-y-4 border-t border-border pt-4">
+            <WorkspaceTrustCard project={project} />
+            <VentureJourneyTimeline project={project} milestones={milestones} logs={logs} />
+          </div>
         </div>
         {error && <p className="text-xs text-error mt-3">{error}</p>}
         <div className="flex gap-2 mt-5 justify-end">
@@ -227,6 +249,21 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
               <option value="global">Public</option>
             </select>
           </label>
+          <label className="flex items-start gap-3 rounded-lg border border-border px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              checked={requirementsForm.lookingForTeammates}
+              onChange={(e) => setRequirementsForm((p) => ({ ...p, lookingForTeammates: e.target.checked }))}
+              className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
+            />
+            <span>
+              <span className="block font-medium text-text-primary">Find your teammate</span>
+              <span className="block text-xs text-text-secondary">Let interested builders apply for a role in this venture.</span>
+            </span>
+          </label>
+          <p className="rounded-lg border border-border bg-bg-secondary/50 px-3 py-2 text-xs text-text-secondary">
+            This project is currently <strong className="text-text-primary">{project?.visibility || 'private'}</strong>. To change it, use Edit Team & Visibility here.
+          </p>
           <div>
             <p className="text-sm font-medium text-text-primary mb-2">Team members</p>
             <ul className="space-y-2">
@@ -250,6 +287,24 @@ export default function WorkspaceAdmin({ project, projectId, onRefresh }) {
               ))}
             </ul>
           </div>
+          {(project.teamApplications || []).some((item) => item.status === 'pending') && (
+            <div>
+              <p className="text-sm font-medium text-text-primary mb-2">Teammate applications</p>
+              <ul className="space-y-2">
+                {(project.teamApplications || []).filter((item) => item.status === 'pending').map((item) => (
+                  <li key={item._id} className="rounded-lg border border-border px-3 py-2 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span>{item.user?.name || 'Applicant'} · {item.role || 'Role not specified'}</span>
+                      <span className="flex gap-2">
+                        <Button size="xs" onClick={() => handleApplication(item._id, 'accept')} disabled={saving}>Add</Button>
+                        <Button size="xs" variant="danger" onClick={() => handleApplication(item._id, 'reject')} disabled={saving}>Reject</Button>
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         {error && <p className="text-xs text-error mt-3">{error}</p>}
         <div className="flex gap-2 mt-5 justify-end">

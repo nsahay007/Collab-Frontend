@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import ThemeSwitch from '../components/common/ThemeSwitch'
 import { getProfile, updateProfile } from '../features/user/userAPI'
-import { getNotifications, markAllNotificationsRead } from '../features/notifications/notificationAPI'
+import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../features/notifications/notificationAPI'
 
 export default function Settings() {
+  const navigate = useNavigate()
   const [form, setForm] = useState({
     name: '',
     course: '',
@@ -59,6 +61,14 @@ export default function Settings() {
     setNotifications((items) => items.map((item) => ({ ...item, isRead: true })))
   }
 
+  const openNotification = async (item) => {
+    if (!item.isRead) {
+      await markNotificationRead(item._id)
+      setNotifications((items) => items.map((n) => (n._id === item._id ? { ...n, isRead: true } : n)))
+    }
+    if (item.actionUrl) navigate(item.actionUrl)
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
@@ -67,7 +77,7 @@ export default function Settings() {
         <p className="mt-2 text-text-secondary">Manage account details, preferences, notifications, and privacy.</p>
       </div>
 
-      <Card hover={false} className="space-y-4">
+      <Card id="notifications" hover={false} className="space-y-4">
         <h2 className="text-xl font-semibold text-text-primary">Account</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Input value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Name" />
@@ -94,6 +104,20 @@ export default function Settings() {
           </Button>
         </div>
         <p className="text-sm text-text-secondary">{notifications.length} recent notifications.</p>
+        <div className="space-y-2">
+          {notifications.length ? notifications.map((item) => (
+            <button
+              key={item._id}
+              type="button"
+              onClick={() => openNotification(item)}
+              className={`w-full rounded-xl border px-3 py-2 text-left ${item.isRead ? 'border-border bg-bg-secondary/30' : 'border-primary/30 bg-primary/10'}`}
+            >
+              <p className="text-sm font-semibold text-text-primary">{item.title}</p>
+              <p className="text-xs text-text-secondary">{item.message}</p>
+              {item.createdAt && <p className="mt-1 text-[11px] text-text-muted">{new Date(item.createdAt).toLocaleString()}</p>}
+            </button>
+          )) : <p className="text-sm text-text-muted">No notifications yet.</p>}
+        </div>
       </Card>
 
       <Card hover={false} className="space-y-4">

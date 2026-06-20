@@ -19,6 +19,7 @@ function IncubationReadinessPanel({ project, milestones = [] }) {
   const evidenceCount = project?.validation?.workspace?.evidence?.length || 0
   const completedMilestones = milestones.filter((milestone) => milestone.status === 'completed').length
   const milestoneText = milestones.length ? `${completedMilestones}/${milestones.length} completed` : 'No milestones yet'
+  const visibility = project?.visibility || 'private'
 
   return (
     <Card hover={false} className="innovation-surface">
@@ -45,6 +46,9 @@ function IncubationReadinessPanel({ project, milestones = [] }) {
           </div>
           <ReadinessRing value={readiness} size={84} />
         </div>
+        <p className="rounded-lg border border-border bg-bg-secondary/50 px-3 py-2 text-xs text-text-secondary">
+          This project is <strong className="text-text-primary">{visibility}</strong>. To change visibility, open project Settings → Edit Team & Visibility.
+        </p>
       </div>
     </Card>
   )

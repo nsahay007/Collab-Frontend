@@ -24,7 +24,7 @@ const Settings = lazy(() => import('./pages/Settings'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const AdminProjects = lazy(() => import('./pages/AdminProjects'))
 const AdminHackathons = lazy(() => import('./pages/AdminHackathons'))
-const AdminUserLookup = lazy(() => import('./pages/AdminUserLookup'))
+const AdminLogs = lazy(() => import('./pages/AdminLogs'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
@@ -95,7 +95,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-        <Route path="/admin/user-lookup" element={<ProtectedRoute><Layout><AdminUserLookup /></Layout></ProtectedRoute>} />
+        <Route path="/admin/logs" element={<ProtectedRoute><Layout><AdminLogs /></Layout></ProtectedRoute>} />
         <Route path="/admin/projects" element={<ProtectedRoute><Layout><AdminProjects /></Layout></ProtectedRoute>} />
         <Route path="/admin/hackathons" element={<ProtectedRoute><Layout><AdminHackathons /></Layout></ProtectedRoute>} />
         <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />

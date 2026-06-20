@@ -6,7 +6,7 @@ import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import { CardSkeleton } from '../components/common/Skeleton'
 import useAuth from '../hooks/useAuth'
-import { fetchDiscoverProjects } from '../features/projects/projectAPI'
+import { applyToProjectTeam, fetchDiscoverProjects } from '../features/projects/projectAPI'
 import { staggerContainer, staggerItem } from '../utils/motion'
 import {
   getLifecycleLabel,
@@ -224,13 +224,33 @@ export default function VentureDiscovery() {
 }
 
 function DiscoverCard({ project, viewerId, onOpen }) {
+  const [role, setRole] = useState('')
+  const [status, setStatus] = useState('')
+  const [applying, setApplying] = useState(false)
+  const apply = async (event) => {
+    event.stopPropagation()
+    setApplying(true)
+    setStatus('')
+    try {
+      await applyToProjectTeam(project._id, role)
+      setStatus('Application sent to the team lead.')
+    } catch (err) {
+      setStatus(err?.response?.data?.message || 'Could not apply right now.')
+    } finally {
+      setApplying(false)
+    }
+  }
+
   return (
     <motion.div variants={staggerItem} layout className="w-full min-w-0">
-      <motion.button
-        type="button"
+      <motion.div
         onClick={onOpen}
-        className="text-left w-full min-w-0 block"
-        aria-label={`Open ${project.title || 'startup'} details`}
+        className="text-left w-full min-w-0 block cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') onOpen()
+        }}
       >
         <motion.div layoutId={`venture-${project._id}`} className="w-full min-w-0">
           <Card className="h-full transition-shadow hover:shadow-glow-blue overflow-hidden" hover={false}>
@@ -246,9 +266,26 @@ function DiscoverCard({ project, viewerId, onOpen }) {
                 )}
               </div>
             </div>
+            {project.lookingForTeammates && (
+              <div className="mt-4 rounded-xl border border-primary/20 bg-primary/10 p-3" onClick={(event) => event.stopPropagation()}>
+                <p className="text-xs font-semibold text-primary">Find your teammate is open</p>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={role}
+                    onChange={(event) => setRole(event.target.value)}
+                    placeholder="Role you want to apply for"
+                    className="pipeline-input min-w-0 flex-1 text-sm"
+                  />
+                  <Button size="sm" onClick={apply} disabled={applying || !role.trim()}>
+                    {applying ? 'Applying…' : 'Apply'}
+                  </Button>
+                </div>
+                {status && <p className="mt-2 text-xs text-text-secondary">{status}</p>}
+              </div>
+            )}
           </Card>
         </motion.div>
-      </motion.button>
+      </motion.div>
     </motion.div>
   )
 }

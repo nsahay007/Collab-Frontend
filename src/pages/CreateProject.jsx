@@ -48,7 +48,8 @@ export default function CreateProject() {
     startupGoals: '',
     featurePlan: '',
     milestones: [emptyMilestone()],
-    executionTimeline: ''
+    executionTimeline: '',
+    lookingForTeammates: false
   })
 
   const activeMembers = useMemo(() => (
@@ -229,7 +230,8 @@ export default function CreateProject() {
         rolesNeeded: roles,
         skillsRequired: [],
         numberOfTeammates: Math.min(10, Math.max(1, activeMembers.length + 1)),
-        visibility: 'global',
+        visibility: 'private',
+        lookingForTeammates: form.lookingForTeammates,
         executionPlan: buildExecutionPlan(),
         techProduct: form.category === 'Tech & Product'
           ? {
@@ -314,6 +316,8 @@ export default function CreateProject() {
         {step === 1 && (
           <TeamStep
             members={form.teamMembers}
+            lookingForTeammates={form.lookingForTeammates}
+            updateField={updateField}
             updateMember={updateMember}
             resolveMember={resolveMember}
             addMember={addMember}
@@ -401,16 +405,25 @@ function ConceptStep({ form, updateField }) {
   )
 }
 
-function TeamStep({ members, updateMember, resolveMember, addMember, removeMember }) {
+function TeamStep({ members, lookingForTeammates, updateField, updateMember, resolveMember, addMember, removeMember }) {
   return (
     <div className="space-y-5">
       <SectionIntro
         title="Step 2: Existing team"
-        text="Add your current student team. Finding new members is coming soon, but this launch flow is built for teams that already have people."
+        text="Add your current student team. If you want outside builders to apply later, turn on teammate applications."
       />
-      <div className="rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-primary">
-        Find Team Members is coming soon. For now, create the workspace with your existing team and clarify responsibilities.
-      </div>
+      <label className="flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-primary">
+        <input
+          type="checkbox"
+          checked={lookingForTeammates}
+          onChange={(event) => updateField('lookingForTeammates', event.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
+        />
+        <span>
+          <span className="block font-semibold">Find your teammate</span>
+          <span className="block text-xs opacity-80">Interested users can apply for a role; the team lead can accept or reject them.</span>
+        </span>
+      </label>
       <div className="space-y-3">
         {members.map((member, index) => (
           <div key={index} className="grid gap-3 rounded-xl border border-border bg-bg-secondary/40 p-3 md:grid-cols-[1.1fr_1fr_1fr_auto]">

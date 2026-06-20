@@ -28,7 +28,8 @@ export const createProject = async (payload = {}) => {
     businessStartup: cleanCategoryPayload(payload.businessStartup),
     designCreative: cleanCategoryPayload(payload.designCreative),
     marketingContent: cleanCategoryPayload(payload.marketingContent),
-    servicesOperations: cleanCategoryPayload(payload.servicesOperations)
+    servicesOperations: cleanCategoryPayload(payload.servicesOperations),
+    lookingForTeammates: payload.lookingForTeammates
   })
   return response.data
 }
@@ -106,8 +107,21 @@ export const updateProjectRequirements = async (projectId, payload = {}) => {
     rolesNeeded: payload.rolesNeeded !== undefined ? sanitizeList(payload.rolesNeeded) : undefined,
     skillsRequired: payload.skillsRequired !== undefined ? sanitizeList(payload.skillsRequired) : undefined,
     numberOfTeammates: payload.numberOfTeammates,
-    visibility: payload.visibility
+    visibility: payload.visibility,
+    lookingForTeammates: payload.lookingForTeammates
   })
+  return response.data
+}
+
+export const applyToProjectTeam = async (projectId, role) => {
+  const response = await axios.post(`/projects/${projectId}/apply-teammate`, {
+    role: sanitizeText(role || '')
+  })
+  return response.data
+}
+
+export const respondToTeamApplication = async (projectId, applicationId, action) => {
+  const response = await axios.post(`/projects/${projectId}/team-applications/${applicationId}/respond`, { action })
   return response.data
 }
 

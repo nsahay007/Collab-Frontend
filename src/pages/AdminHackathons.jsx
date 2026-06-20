@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
@@ -231,7 +232,10 @@ export default function AdminHackathons() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold">Hackathon Management</h1><p className="text-text-secondary">Complete admin control panel.</p></div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div><h1 className="text-3xl font-bold">Hackathon Management</h1><p className="text-text-secondary">Complete admin control panel.</p></div>
+        <Link to="/admin/logs"><Button variant="secondary" size="sm">Security & Audit Logs</Button></Link>
+      </div>
       {status && <p className="text-sm text-text-secondary">{status}</p>}
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
         <Card hover={false}>
