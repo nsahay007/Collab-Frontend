@@ -52,6 +52,25 @@ export const downloadCertificates = async (projectId) => {
   return response.data
 }
 
+export const downloadCreationRecord = async (projectId) => {
+  const response = await axios.get(`/projects/${projectId}/creation-record.pdf`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
+export const downloadVentureProvenanceReport = async (projectId) => {
+  const response = await axios.get(`/projects/${projectId}/provenance-report.pdf`, {
+    responseType: 'blob'
+  })
+  return response.data
+}
+
+export const fetchProjectAccessHistory = async (projectId) => {
+  const response = await axios.get(`/projects/${projectId}/access-history`)
+  return response.data
+}
+
 export const fetchDiscoverProjects = async ({
   lifecycleStage = 'all',
   category,

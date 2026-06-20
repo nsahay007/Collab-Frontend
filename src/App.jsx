@@ -24,12 +24,14 @@ const Settings = lazy(() => import('./pages/Settings'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const AdminProjects = lazy(() => import('./pages/AdminProjects'))
 const AdminHackathons = lazy(() => import('./pages/AdminHackathons'))
+const AdminUserLookup = lazy(() => import('./pages/AdminUserLookup'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Legal = lazy(() => import('./pages/Legal'))
 const LegalDoc = lazy(() => import('./pages/LegalDoc'))
+const Security = lazy(() => import('./pages/Security'))
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -93,6 +95,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/admin/user-lookup" element={<ProtectedRoute><Layout><AdminUserLookup /></Layout></ProtectedRoute>} />
         <Route path="/admin/projects" element={<ProtectedRoute><Layout><AdminProjects /></Layout></ProtectedRoute>} />
         <Route path="/admin/hackathons" element={<ProtectedRoute><Layout><AdminHackathons /></Layout></ProtectedRoute>} />
         <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
@@ -101,6 +104,7 @@ function AppRoutes() {
         <Route path="/reset" element={<PublicRoute><Layout><ResetPassword /></Layout></PublicRoute>} />
         <Route path="/legal" element={<Layout><Legal /></Layout>} />
         <Route path="/legal/:slug" element={<Layout><LegalDoc /></Layout>} />
+        <Route path="/security" element={<Layout><Security /></Layout>} />
         <Route
           path="*"
           element={(

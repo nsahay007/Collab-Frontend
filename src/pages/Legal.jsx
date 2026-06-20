@@ -23,6 +23,11 @@ const docs = [
     description: 'How Collab secures accounts and venture data.'
   },
   {
+    path: '/security',
+    title: 'Trust & Transparency',
+    description: 'A founder-friendly overview of ownership, workspace privacy, and file protection.'
+  },
+  {
     slug: 'ecosystem-guidelines',
     title: 'Ecosystem Guidelines',
     description: 'Professional standards for collaboration.'
@@ -46,7 +51,7 @@ export default function Legal() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {docs.map((doc) => (
-          <Link key={doc.slug} to={`/legal/${doc.slug}`} className="group">
+          <Link key={doc.slug || doc.path} to={doc.path || `/legal/${doc.slug}`} className="group">
             <div className="rounded-2xl border border-border bg-bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
               <h2 className="text-lg font-semibold text-text-primary group-hover:text-primary">
                 {doc.title}

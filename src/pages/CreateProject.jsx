@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
+import FounderOwnershipNotice from '../components/trust/FounderOwnershipNotice'
 import { addTeamMember, createMilestone, createProject } from '../features/projects/projectAPI'
 import { lookupUserById } from '../features/user/userAPI'
 
@@ -280,6 +281,8 @@ export default function CreateProject() {
           Collab is for student teams that already exist. Add the concept, team, and first execution plan so the workspace can guide you toward incubation readiness.
         </p>
       </div>
+
+      <FounderOwnershipNotice />
 
       <Card hover={false}>
         <div className="grid gap-2 sm:grid-cols-4">

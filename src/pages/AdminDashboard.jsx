@@ -13,6 +13,7 @@ import {
   updateUserByAdmin,
   deleteUserByAdmin
 } from '../features/user/userAPI'
+import { getAdminProjectRecords } from '../features/admin/adminProjectAPI'
 import useAuth from '../hooks/useAuth'
 
 function UserRow({ user, onEdit, onView, highlighted = false }) {
@@ -86,6 +87,12 @@ export default function AdminDashboard() {
   const [userActionStatus, setUserActionStatus] = useState(null)
   const [userActionLoading, setUserActionLoading] = useState(false)
   const [highlightedUserId, setHighlightedUserId] = useState('')
+  const [lookupQuery, setLookupQuery] = useState('')
+  const [lookupUser, setLookupUser] = useState(null)
+  const [lookupProjects, setLookupProjects] = useState([])
+  const [lookupLoading, setLookupLoading] = useState(false)
+  const [lookupError, setLookupError] = useState('')
+  const [userSearch, setUserSearch] = useState('')
 
   const fetchUsers = async () => {
     try {
@@ -355,12 +362,55 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleLookupUser = async () => {
+    const query = lookupQuery.trim().toLowerCase()
+    if (!query) return
+    setLookupLoading(true)
+    setLookupError('')
+    try {
+      const matched = users.find((item) => (
+        String(item._id || item.id || '').toLowerCase() === query
+        || String(item._id || item.id || '').toLowerCase().endsWith(query)
+        || String(item.email || '').toLowerCase().includes(query)
+        || String(item.name || '').toLowerCase().includes(query)
+      ))
+      if (!matched) throw new Error('No matching user found in loaded admin users.')
+      const [detailsResponse, projectsResponse] = await Promise.all([
+        getUserById(matched._id || matched.id),
+        getAdminProjectRecords()
+      ])
+      const details = detailsResponse?.user || detailsResponse?.data?.user || matched
+      const projects = projectsResponse?.projects || projectsResponse?.data?.projects || []
+      const uid = String(details._id || details.id || matched._id || matched.id)
+      setLookupUser(details)
+      setLookupProjects(projects.filter((project) => {
+        const ownerId = String(project.owner?._id || project.owner || '')
+        const members = project.teamMembers || []
+        return ownerId === uid || members.some((member) => String(member?._id || member) === uid)
+      }))
+    } catch (err) {
+      setLookupUser(null)
+      setLookupProjects([])
+      setLookupError(err?.response?.data?.message || err.message || 'Lookup failed')
+    } finally {
+      setLookupLoading(false)
+    }
+  }
+
   const statCards = [
     { label: 'Total Users', value: stats.totalUsers.toString() },
     { label: 'Active Ventures', value: stats.activeProjects.toString() },
     { label: 'Validations Run', value: stats.validationsRun.toString() },
     { label: `New Signups (${stats.signupWindowDays}d)`, value: stats.newSignups.toString() }
   ]
+  const normalizedUserSearch = userSearch.trim().toLowerCase()
+  const visibleUsers = normalizedUserSearch
+    ? users.filter((item) => (
+      String(item._id || item.id || '').toLowerCase().includes(normalizedUserSearch)
+      || String(item.email || '').toLowerCase().includes(normalizedUserSearch)
+      || String(item.name || '').toLowerCase().includes(normalizedUserSearch)
+    ))
+    : users
 
   if (loading) {
     return <div>Loading users...</div>
@@ -390,6 +440,9 @@ export default function AdminDashboard() {
         <Link to="/admin/hackathons" className="inline-flex mt-4 ml-3">
           <Button variant="secondary" size="sm">Open Hackathon Management</Button>
         </Link>
+        <Link to="/admin/user-lookup" className="inline-flex mt-4 ml-3">
+          <Button variant="secondary" size="sm">Open User Lookup</Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -404,6 +457,59 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      <Card className="space-y-4">
+        <div>
+          <h2 className="text-xl font-bold text-text-primary">User Lookup Center</h2>
+          <p className="text-sm text-text-secondary">Search by User ID, email, or name to inspect profile, memberships, ventures, and generated startup documents.</p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input
+            value={lookupQuery}
+            onChange={(event) => setLookupQuery(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter') handleLookupUser() }}
+            placeholder="User ID, email, or name"
+            className="flex-1 rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+          />
+          <Button onClick={handleLookupUser} disabled={lookupLoading}>{lookupLoading ? 'Searching...' : 'Search User'}</Button>
+        </div>
+        {lookupError && <p className="text-sm text-error">{lookupError}</p>}
+        {lookupUser && (
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-xl border border-border bg-bg-secondary/40 p-4">
+              <p className="text-xs uppercase text-text-muted">User profile</p>
+              <h3 className="mt-1 font-semibold text-text-primary">{lookupUser.name}</h3>
+              <p className="text-sm text-text-secondary">{lookupUser.email}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge variant={lookupUser.role === 'admin' ? 'primary' : 'default'}>{lookupUser.role || 'user'}</Badge>
+                <Badge variant={lookupUser.emailVerified ? 'success' : 'default'}>{lookupUser.emailVerified ? 'Verified' : 'Unverified'}</Badge>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border bg-bg-secondary/40 p-4">
+              <p className="text-xs uppercase text-text-muted">Project memberships & venture documents</p>
+              <div className="mt-3 space-y-2">
+                {lookupProjects.length ? lookupProjects.map((project) => {
+                  const isOwner = String(project.owner?._id || project.owner || '') === String(lookupUser._id || lookupUser.id)
+                  return (
+                    <div key={project._id || project.id} className="rounded-lg border border-border bg-bg-card px-3 py-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-text-primary">{project.title}</p>
+                          <p className="text-xs text-text-muted">{project.category || 'Venture'} · {project.lifecycleStage || 'idea'}</p>
+                        </div>
+                        <Badge variant={isOwner ? 'primary' : 'secondary'}>{isOwner ? 'Owner' : 'Member'}</Badge>
+                      </div>
+                      <p className="mt-2 text-xs text-text-secondary">
+                        Generated documents: startup package, certificates, creation record, and provenance report are available from the venture workspace/package when generated.
+                      </p>
+                    </div>
+                  )
+                }) : <p className="text-sm text-text-muted">No venture memberships found.</p>}
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+
       <Card>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-text-primary">User Management</h2>
@@ -414,6 +520,12 @@ export default function AdminDashboard() {
             <Button variant="primary" onClick={() => openUserModal('create')}>Add User</Button>
           </div>
         </div>
+        <input
+          value={userSearch}
+          onChange={(event) => setUserSearch(event.target.value)}
+          placeholder="Search users by ID, email, or name"
+          className="mb-4 w-full rounded-lg border border-border bg-bg-card px-3 py-2 text-text-primary"
+        />
 
         {error && <div className="text-red-600 mb-4">{error}</div>}
 
@@ -429,7 +541,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {visibleUsers.map((user) => (
                 <UserRow
                   key={user._id}
                   user={user}
@@ -440,6 +552,9 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+          {visibleUsers.length === 0 && (
+            <p className="py-6 text-center text-sm text-text-muted">No users match this search.</p>
+          )}
         </div>
       </Card>
 

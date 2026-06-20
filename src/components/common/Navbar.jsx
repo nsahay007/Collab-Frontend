@@ -257,6 +257,9 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex items-center gap-2">
+                  <Link to="/security" className="hidden sm:block">
+                    <Button variant="ghost" size="sm">Security</Button>
+                  </Link>
                   <Link to="/login">
                     <Button variant="ghost" size="sm">Login</Button>
                   </Link>

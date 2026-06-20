@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
+import FounderOwnershipNotice from '../components/trust/FounderOwnershipNotice'
 import { downloadCertificates, downloadStartupPackage, fetchProject } from '../features/projects/projectAPI'
 
 const saveBlob = (blob, filename) => {
@@ -90,6 +91,8 @@ export default function FinalStartupPackage() {
           </div>
         </div>
       </Card>
+
+      <FounderOwnershipNotice />
 
       <Card hover={false}>
         <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Download Package</p>

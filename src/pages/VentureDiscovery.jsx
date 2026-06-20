@@ -110,7 +110,7 @@ export default function VentureDiscovery() {
             <div>
               <h1 className="text-3xl font-bold text-text-primary tracking-tight">Startup showcase</h1>
               <p className="text-text-secondary mt-2 max-w-2xl">
-                Explore execution-focused ventures on Collab. Expand a card to see goals, progress cues, and what the team needs next.
+                Explore public startup previews on Collab. Discover only shows startup names and one-line descriptions.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -224,13 +224,6 @@ export default function VentureDiscovery() {
 }
 
 function DiscoverCard({ project, viewerId, onOpen }) {
-  const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
-  const visibility = project.visibility || 'private'
-  const ownerId = project.owner?._id || project.owner
-  const isOwner = viewerId && ownerId && String(ownerId) === String(viewerId)
-  const categoryBadge = pickCategoryBadge(project.category)
-  const tags = (project.tags || []).slice(0, 4)
-
   return (
     <motion.div variants={staggerItem} layout className="w-full min-w-0">
       <motion.button
@@ -252,42 +245,7 @@ function DiscoverCard({ project, viewerId, onOpen }) {
                   </p>
                 )}
               </div>
-              <div className="shrink-0 flex flex-col items-end gap-1.5">
-                <Badge variant={getLifecycleVariant(stage)}>{getLifecycleLabel(stage)}</Badge>
-                <Badge variant={categoryBadge.variant}>{categoryBadge.label}</Badge>
-              </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-text-muted overflow-hidden">
-              {project.owner?.name && (
-                <span className="truncate max-w-[150px]">
-                  Founder: <span className="text-text-secondary">{project.owner.name}</span>
-                </span>
-              )}
-              <span className="inline-flex items-center gap-2 shrink-0">
-                <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
-                <Badge variant={visibilityVariant(visibility)} className="!px-2 !py-0.5 !text-[10px]">
-                  {VISIBILITY_LABELS[visibility] || visibility}
-                </Badge>
-              </span>
-              {isOwner && (
-                <span className="inline-flex items-center gap-2 shrink-0">
-                  <span className="h-1 w-1 rounded-full bg-border" aria-hidden />
-                  <Badge variant="innovation" className="!px-2 !py-0.5 !text-[10px]">Your workspace</Badge>
-                </span>
-              )}
-            </div>
-            {tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5 overflow-hidden">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-md bg-bg-secondary border border-border px-2 py-0.5 text-xs text-text-secondary truncate max-w-[120px]"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </Card>
         </motion.div>
       </motion.button>
@@ -336,17 +294,6 @@ function FounderContactSection({ owner, isProjectOwner }) {
 }
 
 function ExpandedVentureModal({ project, viewerId, onClose }) {
-  const stage = normalizeLifecycleStage(project.lifecycleStage || project.status || project.phase)
-  const visibility = project.visibility || 'private'
-  const ownerId = project.owner?._id || project.owner
-  const isOwner = viewerId && ownerId && String(ownerId) === String(viewerId)
-
-  const roles = Array.isArray(project.rolesNeeded) ? project.rolesNeeded : []
-  const skills = Array.isArray(project.skillsRequired) ? project.skillsRequired : []
-  const readiness = typeof project.readinessScore === 'number' ? project.readinessScore : null
-  const momentum = project.momentumStatus || ''
-  const categoryBadge = pickCategoryBadge(project.category)
-
   return (
     <>
       <motion.button
@@ -376,87 +323,16 @@ function ExpandedVentureModal({ project, viewerId, onClose }) {
             <Card hover={false} elevated className="border-border">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup details</p>
+                  <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Startup preview</p>
                   <h2 className="text-2xl font-bold text-text-primary tracking-tight">{project.title || 'Untitled venture'}</h2>
                   {project.shortPitch && (
                     <p className="mt-2 text-text-secondary">{project.shortPitch}</p>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                  <Badge variant={getLifecycleVariant(stage)}>{getLifecycleLabel(stage)}</Badge>
-                  <Badge variant={categoryBadge.variant}>{categoryBadge.label}</Badge>
-                  <Badge variant={visibilityVariant(visibility)}>{VISIBILITY_LABELS[visibility] || visibility}</Badge>
-                  {isOwner && <Badge variant="innovation">Your workspace</Badge>}
-                </div>
               </div>
-
-              <div className="mt-6 grid gap-6 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-5">
-                  {project.description && (
-                    <section>
-                      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Overview</p>
-                      <p className="text-sm text-text-secondary whitespace-pre-line">{project.description}</p>
-                    </section>
-                  )}
-
-                  {project.executionPlan && (
-                    <section>
-                      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Execution plan</p>
-                      <p className="text-sm text-text-secondary whitespace-pre-line line-clamp-6">{project.executionPlan}</p>
-                    </section>
-                  )}
-                </div>
-
-                <aside className="space-y-5">
-                  <FounderContactSection owner={project.owner} isProjectOwner={isOwner} />
-
-                  <section className="rounded-2xl border border-border bg-bg-elevated p-4">
-                    <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Progress</p>
-                    <div className="space-y-2 text-sm">
-                      {readiness !== null && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-text-secondary">Readiness</span>
-                          <span className="text-text-primary font-semibold">{Math.round(readiness)}%</span>
-                        </div>
-                      )}
-                      {momentum && (
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-text-secondary">Momentum</span>
-                          <span className="text-text-primary font-medium text-right">{momentum.replace(/_/g, ' ')}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-text-secondary">Stage</span>
-                        <span className="text-text-primary font-medium">{getLifecycleLabel(stage)}</span>
-                      </div>
-                    </div>
-                  </section>
-
-                  {(roles.length > 0 || skills.length > 0) && (
-                    <section className="rounded-2xl border border-border bg-bg-elevated p-4">
-                      <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Team needed</p>
-                      {roles.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {roles.slice(0, 8).map((role) => (
-                            <Badge key={role} variant="secondary">{role}</Badge>
-                          ))}
-                        </div>
-                      )}
-                      {skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {skills.slice(0, 10).map((skill) => (
-                            <Badge key={skill} variant="default">{skill}</Badge>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  )}
-
-                  <Button variant="secondary" className="w-full" onClick={onClose}>
-                    Back to showcase
-                  </Button>
-                </aside>
-              </div>
+              <Button variant="secondary" className="mt-6 w-full" onClick={onClose}>
+                Back to showcase
+              </Button>
             </Card>
           </motion.div>
         </div>

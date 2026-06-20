@@ -18,6 +18,8 @@ import { useFeedPosts } from '../feed/useFeedPosts'
 import { useMotionToast } from '../../components/common/MotionToast'
 import { fetchProject } from '../projects/projectAPI'
 import { ActivityPulse, ContextCluster, InsightPanel, NarrativeSection, VentureNode } from '../../components/ecosystem/EcosystemPrimitives'
+import FounderOwnershipNotice from '../../components/trust/FounderOwnershipNotice'
+import { VentureJourneyTimeline, WorkspaceTrustCard } from '../../components/trust/WorkspaceTrustPanel'
 
 function ErrorState({ message, onRetry }) {
   return (
@@ -356,6 +358,18 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
           </div>
         </div>
       </header>
+
+      <div className="mb-6">
+        <FounderOwnershipNotice compact />
+      </div>
+
+      <div className="mb-6">
+        <WorkspaceTrustCard project={project} />
+      </div>
+
+      <div className="mb-6">
+        <VentureJourneyTimeline project={project} milestones={milestones} logs={logs} />
+      </div>
 
       <div className="build-page-grid">
         <aside className="build-left-rail">
