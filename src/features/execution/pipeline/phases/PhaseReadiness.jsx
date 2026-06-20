@@ -30,11 +30,12 @@ export default function PhaseReadiness({ phase, project, onSaved, showToast }) {
   useEffect(() => {
     const meta = loadSprintMeta(projectId)
     const stage = normalizeLifecycleStage(project.lifecycleStage || project.status)
+    const readiness = project.pipeline?.readiness || {}
     setForm({
       stage: STAGE_OPTIONS.some((s) => s.id === stage) ? stage : 'idea',
       roles: project.rolesNeeded || [],
       roleInput: '',
-      collaboratorNotes: meta.collaboratorNotes || '',
+      collaboratorNotes: readiness.notes || meta.collaboratorNotes || '',
     })
   }, [project, projectId])
 

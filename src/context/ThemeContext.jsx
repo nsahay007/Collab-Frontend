@@ -11,10 +11,6 @@ export const useTheme = () => {
 }
 
 const getInitialDark = () => {
-  if (typeof window === 'undefined') return true
-  const saved = localStorage.getItem('theme')
-  if (saved === 'dark') return true
-  if (saved === 'light') return false
   return true
 }
 
@@ -28,7 +24,6 @@ export const ThemeProvider = ({ children }) => {
     } else {
       root.classList.remove('dark')
     }
-    localStorage.setItem('theme', isDark ? 'dark' : 'light')
   }, [isDark])
 
   const toggleTheme = () => {

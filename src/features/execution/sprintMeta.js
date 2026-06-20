@@ -1,19 +1,9 @@
-const storageKey = (projectId) => `collab-sprint-v2-${projectId}`
-
 export function loadSprintMeta(projectId) {
-  if (!projectId) return {}
-  try {
-    const raw = localStorage.getItem(storageKey(projectId))
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
+  return {}
 }
 
 export function saveSprintMeta(projectId, patch) {
-  if (!projectId) return
-  const current = loadSprintMeta(projectId)
-  localStorage.setItem(storageKey(projectId), JSON.stringify({ ...current, ...patch }))
+  return null
 }
 
 export function getProblemFromProject(project) {
@@ -40,9 +30,6 @@ export function getDescriptorWords(project, meta) {
   const pipelineWords = project?.pipeline?.foundation?.descriptorWords
   if (Array.isArray(pipelineWords) && pipelineWords.length) {
     return pipelineWords.slice(0, 3)
-  }
-  if (Array.isArray(meta?.descriptorWords) && meta.descriptorWords.length) {
-    return meta.descriptorWords.slice(0, 3)
   }
   return ['', '', '']
 }

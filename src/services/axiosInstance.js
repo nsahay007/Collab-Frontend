@@ -15,7 +15,6 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('user')
       const path = window.location.pathname
       const authPages = ['/', '/login', '/register', '/verify-email', '/forgot', '/reset', '/legal']
       const isPublicProofRoute = /^\/project\/[^/]+\/proof$/.test(path)

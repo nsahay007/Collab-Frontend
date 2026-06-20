@@ -98,6 +98,11 @@ export function SavePhaseBar({ saving, onSave, label = 'Save phase answers' }) {
   )
 }
 
+export const isValidShareLink = (value) => {
+  const trimmed = String(value || '').trim()
+  return !trimmed || /^https?:\/\/[^\s]+\.[^\s]+/.test(trimmed)
+}
+
 export function ProofBlock({ title, why, proofNeeded, children, complete }) {
   return (
     <section className={`pipeline-proof-block ${complete ? 'pipeline-proof-block--done' : ''}`}>
@@ -118,6 +123,8 @@ export function ProofBlock({ title, why, proofNeeded, children, complete }) {
 
 export function LinkProofRow({ label, value, onChange, placeholder }) {
   const id = useId()
+  const trimmed = value.trim()
+  const hasInvalidUrl = trimmed && !isValidShareLink(trimmed)
   return (
     <div className="mb-3">
       <FieldLabel htmlFor={id} hint="Paste a shareable link">{label}</FieldLabel>
@@ -127,8 +134,13 @@ export function LinkProofRow({ label, value, onChange, placeholder }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pipeline-input w-full mt-1.5"
+        pattern="https?://.+"
+        aria-invalid={hasInvalidUrl}
+        className={`pipeline-input w-full mt-1.5 ${hasInvalidUrl ? 'border-error focus:border-error focus:ring-error/20' : ''}`}
       />
+      {hasInvalidUrl && (
+        <p className="mt-1 text-xs text-error">Enter a valid link starting with https:// or http://</p>
+      )}
     </div>
   )
 }

@@ -5,13 +5,12 @@ import {
   TextArea,
   LinkProofRow,
   FileProofZone,
-  SavePhaseBar,
+  isValidShareLink,
 } from '../PipelinePrimitives'
 import Button from '../../../../components/common/Button'
 import Badge from '../../../../components/common/Badge'
 import { updateMilestone, uploadProjectFile } from '../../../projects/projectAPI'
 import { updateProjectDetails } from '../../../projects/projectAPI'
-import { loadSprintMeta, saveSprintMeta } from '../../sprintMeta'
 
 export default function PhaseMvp({
   phase,
@@ -23,14 +22,13 @@ export default function PhaseMvp({
   showToast,
 }) {
   const projectId = project._id || project.id
-  const meta = loadSprintMeta(projectId)
   const mvpPipeline = project.pipeline?.mvp || {}
   const [saving, setSaving] = useState(false)
-  const [roadmap, setRoadmap] = useState(project.executionPlan || mvpPipeline.roadmap || meta.roadmap || '')
+  const [roadmap, setRoadmap] = useState(mvpPipeline.roadmap || '')
   const [mvpLinks, setMvpLinks] = useState({
-    figma: mvpPipeline.figmaLinks?.[0] || meta.mvpFigma || '',
-    github: mvpPipeline.githubLinks?.[0] || meta.mvpGithub || '',
-    demo: project.validation?.demoLink || mvpPipeline.demoLinks?.[0] || meta.mvpDemo || '',
+    figma: mvpPipeline.figmaLinks?.[0] || '',
+    github: mvpPipeline.githubLinks?.[0] || '',
+    demo: project.validation?.demoLink || mvpPipeline.demoLinks?.[0] || '',
   })
   const [updatingId, setUpdatingId] = useState('')
 
@@ -54,7 +52,6 @@ export default function PhaseMvp({
           }
         }
       })
-      saveSprintMeta(projectId, { roadmap, ...mvpLinks })
       showToast?.('Execution plan saved', 'success')
       onSaved?.()
     } catch (err) {
@@ -108,7 +105,7 @@ export default function PhaseMvp({
       <PhaseHero phase={phase} progress={phase.progress} themeClass="pipeline-theme-mvp" />
 
       <QuestionCard
-        number="§"
+        number={1}
         title="Roadmap planning"
         why="Break execution into milestones your team can ship sprint by sprint."
         complete={roadmap.trim().length > 40}
@@ -129,7 +126,7 @@ export default function PhaseMvp({
 
       <section className="pipeline-mvp-execution-grid space-y-6">
         <QuestionCard
-          number="§"
+          number={2}
           title="Execution checklist"
           why="This checklist comes only from the milestones created during venture setup. Mark what your team has achieved."
           complete={milestones.length > 0}
@@ -144,7 +141,7 @@ export default function PhaseMvp({
         </QuestionCard>
 
         <QuestionCard
-          number="§"
+          number={3}
           title="MVP & prototype showcase"
           why="Proof of build: demos, repos, and design files."
           complete={Boolean(mvpLinks.demo || mvpLinks.github || mvpLinks.figma)}
@@ -162,7 +159,10 @@ export default function PhaseMvp({
               size="sm"
               variant="secondary"
               onClick={async () => {
-                saveSprintMeta(projectId, { ...mvpLinks, mvpFigma: mvpLinks.figma, mvpGithub: mvpLinks.github, mvpDemo: mvpLinks.demo })
+                if (![mvpLinks.figma, mvpLinks.github, mvpLinks.demo].every(isValidShareLink)) {
+                  showToast?.('Please enter valid links starting with https:// or http://', 'error')
+                  return
+                }
                 try {
                   await updateProjectDetails(projectId, {
                     pipeline: {

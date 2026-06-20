@@ -55,7 +55,6 @@ export async function savePurposePhase(projectId, data) {
 
   await updateProjectDetails(projectId, {
     description,
-    executionPlan: data.impact ? `Vision & impact:\n${data.impact}` : undefined,
     pipeline: {
       purpose: {
         founderInspiration: data.inspiration,
@@ -66,7 +65,6 @@ export async function savePurposePhase(projectId, data) {
   await updateValidationWorkspace(projectId, {
     problemStatement: data.problem,
     targetUsers: data.audience,
-    surprisingInsights: data.impact,
   })
   saveSprintMeta(projectId, {
     founderInspiration: data.inspiration,

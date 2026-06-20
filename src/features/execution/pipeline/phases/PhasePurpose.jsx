@@ -20,11 +20,12 @@ export default function PhasePurpose({ phase, project, onSaved, showToast }) {
 
   useEffect(() => {
     const meta = loadSprintMeta(projectId)
+    const purpose = project.pipeline?.purpose || {}
     setForm({
-      inspiration: meta.founderInspiration || '',
+      inspiration: purpose.founderInspiration || meta.founderInspiration || '',
       problem: getProblemFromProject(project),
       audience: getAudienceFromProject(project),
-      impact: meta.impact || '',
+      impact: purpose.impactStatement || meta.impact || '',
     })
   }, [project, projectId])
 

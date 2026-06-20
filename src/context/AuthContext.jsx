@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let isMounted = true
-    localStorage.removeItem('user')
     const bootstrap = async () => {
       try {
         const response = await axios.get('/users/me')
@@ -41,7 +40,6 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     setUser(null)
-    localStorage.removeItem('user')
     try {
       await axios.post('/auth/logout')
     } catch (err) {

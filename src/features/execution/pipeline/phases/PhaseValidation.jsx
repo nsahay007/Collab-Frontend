@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import {
   PhaseHero,
-  ProofBlock,
+  QuestionCard,
   LinkProofRow,
   TextArea,
   FileProofZone,
   SavePhaseBar,
+  isValidShareLink,
 } from '../PipelinePrimitives'
 import { saveValidationPhase, uploadValidationFile } from '../../sprintSave'
 import { loadSprintMeta } from '../../sprintMeta'
@@ -26,10 +27,12 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
     const meta = loadSprintMeta(projectId)
     const blocks = meta.validationBlocks || {}
     const v = project.validation?.workspace || {}
+    const evidence = Array.isArray(v.evidence) ? v.evidence : []
+    const findEvidence = (kind) => evidence.find((item) => item.kind === kind || new RegExp(kind, 'i').test(item.title || '')) || {}
     setForm({
-      surveys: blocks.surveys || emptyBlock(),
-      interviews: blocks.interviews || { link: '', notes: v.whoSpokenTo || '' },
-      feedback: blocks.feedback || { link: '', notes: v.repeatedProblems || '' },
+      surveys: blocks.surveys || { link: findEvidence('survey').link || '', notes: findEvidence('survey').summary || '' },
+      interviews: blocks.interviews || { link: findEvidence('interview').link || '', notes: findEvidence('interview').summary || v.whoSpokenTo || '' },
+      feedback: blocks.feedback || { link: findEvidence('feedback').link || '', notes: findEvidence('feedback').summary || v.repeatedProblems || '' },
     })
   }, [project, projectId])
 
@@ -52,6 +55,10 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
   }
 
   const handleSave = async () => {
+    if (![form.surveys.link, form.interviews.link, form.feedback.link].every(isValidShareLink)) {
+      showToast?.('Please enter valid links starting with https:// or http://', 'error')
+      return
+    }
     setSaving(true)
     try {
       await saveValidationPhase(projectId, form)
@@ -73,10 +80,10 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
         This phase is <strong className="text-text-primary">evidence-driven</strong>. Upload proof that real users experience the problem you are solving.
       </p>
 
-      <ProofBlock
+      <QuestionCard
+        number={1}
         title="Surveys conducted"
         why="Surveys show patterns at scale — programs want to see structured demand signals."
-        proofNeeded="Google Form link, screenshot exports, PDF summary, or CSV responses."
         complete={blockDone(form.surveys)}
       >
         <LinkProofRow
@@ -97,12 +104,12 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
           accept="image/*,.pdf,.csv"
           onFile={(f) => handleFile('surveys', f)}
         />
-      </ProofBlock>
+      </QuestionCard>
 
-      <ProofBlock
+      <QuestionCard
+        number={2}
         title="User interviews"
         why="Interviews reveal depth that surveys cannot — qualitative proof matters."
-        proofNeeded="Interview notes, recording links, or written summaries."
         complete={blockDone(form.interviews)}
       >
         <LinkProofRow
@@ -119,12 +126,12 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
           placeholder="Who did you speak to? What did they repeat?"
         />
         <FileProofZone hint="Upload interview notes" accept=".pdf,.doc,.docx,image/*" onFile={(f) => handleFile('interviews', f)} />
-      </ProofBlock>
+      </QuestionCard>
 
-      <ProofBlock
+      <QuestionCard
+        number={3}
         title="Feedback & insights"
         why="Synthesized insights prove you listened and learned from the market."
-        proofNeeded="Screenshots, insight summaries, or uploaded feedback artifacts."
         complete={blockDone(form.feedback)}
       >
         <LinkProofRow
@@ -141,7 +148,7 @@ export default function PhaseValidation({ phase, project, onSaved, showToast }) 
           placeholder="What surprised you? What would users pay for?"
         />
         <FileProofZone hint="Upload screenshots or reports" accept="image/*,.pdf" onFile={(f) => handleFile('feedback', f)} />
-      </ProofBlock>
+      </QuestionCard>
 
       <SavePhaseBar saving={saving} onSave={handleSave} label="Submit validation proof" />
     </div>

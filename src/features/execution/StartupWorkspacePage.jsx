@@ -180,9 +180,11 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
   const activePhase = phases.find((p) => p.id === resolvedActivePhaseId) || phases[0]
   const isBuildView = viewMode === 'build'
 
-  const loadWorkspace = useCallback(async () => {
-    setLoading(true)
-    setError('')
+  const loadWorkspace = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true)
+      setError('')
+    }
 
     try {
       const profileResponse = await api.get('/users/me')
@@ -232,15 +234,23 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
       )
       setLogs(logsResponse.status === 'fulfilled' ? logsResponse.value?.data?.logs || [] : [])
     } catch (err) {
-      setError(err?.response?.data?.message || 'Could not load your execution sprint.')
+      if (!silent) setError(err?.response?.data?.message || 'Could not load your execution sprint.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [fixedProjectId])
 
   useEffect(() => {
     loadWorkspace()
   }, [loadWorkspace])
+
+  useEffect(() => {
+    if (!fixedProjectId) return undefined
+    const interval = setInterval(() => {
+      loadWorkspace({ silent: true })
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [fixedProjectId, loadWorkspace])
 
   useEffect(() => {
     if (sprint?.activePhaseId) {

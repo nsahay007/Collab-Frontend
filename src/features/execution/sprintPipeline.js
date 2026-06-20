@@ -68,6 +68,7 @@ const hasText = (value, min = 8) => typeof value === 'string' && value.trim().le
 export function getPhaseProgress(phaseId, project, context = {}) {
   if (!project) return 0
   const meta = loadSprintMeta(project._id || project.id)
+  const pipeline = project.pipeline || {}
   const { milestones = [] } = context
   const v = project.validation?.workspace || {}
   const evidence = v.evidence || []
@@ -77,24 +78,24 @@ export function getPhaseProgress(phaseId, project, context = {}) {
       let n = 0
       if (hasText(project.title, 2)) n++
       if (hasText(project.shortPitch, 12)) n++
-      if (hasText(meta.tagline, 3)) n++
+      if (hasText(pipeline.foundation?.tagline || meta.tagline, 3)) n++
       if (getDescriptorWords(project, meta).filter(Boolean).length >= 2) n++
       if (project.category) n++
       return Math.round((n / 5) * 100)
     },
     purpose: () => {
       let n = 0
-      if (hasText(meta.founderInspiration, 20)) n++
+      if (hasText(pipeline.purpose?.founderInspiration || meta.founderInspiration, 20)) n++
       if (hasText(getProblemFromProject(project), 30)) n++
       if (hasText(getAudienceFromProject(project), 15)) n++
-      if (hasText(meta.impact, 20)) n++
+      if (hasText(pipeline.purpose?.impactStatement || meta.impact, 20)) n++
       return Math.round((n / 4) * 100)
     },
     readiness: () => {
       let n = 0
       if (normalizeLifecycleStage(project.lifecycleStage)) n++
       if ((project.rolesNeeded || []).length > 0) n++
-      if (hasText(meta.collaboratorNotes, 10) || hasText(project.executionPlan, 30)) n++
+      if (hasText(pipeline.readiness?.notes || meta.collaboratorNotes, 10) || hasText(project.executionPlan, 30)) n++
       return Math.round((n / 3) * 100)
     },
     validation: () => {
@@ -106,18 +107,18 @@ export function getPhaseProgress(phaseId, project, context = {}) {
       return Math.round((n / 3) * 100)
     },
     execution: () => {
-      const roadmapScore = hasText(project.executionPlan, 40) || hasText(meta.roadmap, 40) ? 25 : 0
+      const roadmapScore = hasText(pipeline.mvp?.roadmap || project.executionPlan, 40) || hasText(meta.roadmap, 40) ? 25 : 0
       const milestoneScore = milestones.length
         ? Math.round((milestones.filter((m) => m.status === 'completed').length / milestones.length) * 50)
         : 0
-      const assetScore = meta.mvpDemo || meta.mvpGithub || meta.mvpFigma || (project.files || []).length ? 25 : 0
+      const assetScore = pipeline.mvp?.demoLinks?.length || pipeline.mvp?.githubLinks?.length || pipeline.mvp?.figmaLinks?.length || meta.mvpDemo || meta.mvpGithub || meta.mvpFigma || (project.files || []).length ? 25 : 0
       return Math.min(100, roadmapScore + milestoneScore + assetScore)
     },
     incubation: () => {
       let n = 0
-      if (hasText(meta.pitchDeckLink, 6)) n++
-      if (hasText(meta.demoVideoLink, 6) || hasText(project.validation?.demoLink, 6)) n++
-      if (hasText(meta.overviewNotes, 30)) n++
+      if (hasText(pipeline.incubation?.pitchDeckLinks?.[0] || meta.pitchDeckLink, 6)) n++
+      if (hasText(pipeline.incubation?.demoVideoLinks?.[0] || meta.demoVideoLink, 6) || hasText(project.validation?.demoLink, 6)) n++
+      if (hasText(pipeline.incubation?.startupOverview || pipeline.incubation?.executiveSummary || meta.overviewNotes, 30)) n++
       if (Number(project.readinessScore || 0) >= 50 || (milestones.length > 0 && milestones.every((m) => m.status === 'completed'))) n++
       return Math.round((n / 4) * 100)
     },

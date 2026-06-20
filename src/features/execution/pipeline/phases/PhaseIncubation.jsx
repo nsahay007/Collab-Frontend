@@ -7,6 +7,7 @@ import {
   TextArea,
   FileProofZone,
   SavePhaseBar,
+  isValidShareLink,
 } from '../PipelinePrimitives'
 import ReadinessRing from '../../../../components/common/ReadinessRing'
 import Badge from '../../../../components/common/Badge'
@@ -60,6 +61,10 @@ export default function PhaseIncubation({ phase, project, phases, onSaved, showT
   }
 
   const handleSave = async () => {
+    if (![form.pitchDeckLink, form.demoVideoLink].every(isValidShareLink)) {
+      showToast?.('Please enter valid links starting with https:// or http://', 'error')
+      return
+    }
     if (!hasPitchAsset) {
       showToast?.('Add a pitch deck link or upload a deck first.', 'error')
       return
