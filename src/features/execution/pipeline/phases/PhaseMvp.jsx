@@ -85,7 +85,7 @@ export default function PhaseMvp({
         }
       } else {
         try {
-          await onRemoveMilestonePost?.({ projectId, milestoneId })
+          await onRemoveMilestonePost?.({ projectId, milestoneId, milestoneTitle: milestone.title })
         } catch {
           showToast?.('Milestone unchecked, but activity removal failed', 'error')
         }

@@ -162,12 +162,12 @@ export function useFeedPosts() {
   )
 
   const deleteMilestonePost = useCallback(
-    async ({ projectId, milestoneId }) => {
-      await axios.delete('/feed/posts/milestone-activity', { data: { projectId, milestoneId } })
+    async ({ projectId, milestoneId, milestoneTitle }) => {
+      await axios.delete('/feed/posts/milestone-activity', { data: { projectId, milestoneId, milestoneTitle } })
       const next = loadFeedPosts().filter((post) => (
         !(post.type === 'milestone'
-          && post.source?.projectId === projectId
-          && post.source?.milestoneId === milestoneId)
+          && ((post.source?.projectId === projectId && post.source?.milestoneId === milestoneId)
+            || post.content === `Achieved milestone: ${milestoneTitle}`))
       ))
       persist(next)
     },
