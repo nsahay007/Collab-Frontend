@@ -81,7 +81,7 @@ function AppRoutes() {
   return (
     <Suspense fallback={<AuthSkeleton />}>
       <Routes>
-        <Route path="/" element={<Layout><Landing /></Layout>} />
+        <Route path="/" element={<PublicRoute><Layout><Landing /></Layout></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><Layout><Login /></Layout></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Layout><Register /></Layout></PublicRoute>} />
         <Route path="/feed" element={<ProtectedRoute><Layout><Feed /></Layout></ProtectedRoute>} />
