@@ -1,48 +1,44 @@
-# Collab Terms of Service
+# Collab Terms & Conditions
 
-**Effective Date:** April 1, 2026
+**Last Updated:** July 15, 2026
 
-These Terms of Service ("Terms") govern your use of the Collab platform ("Collab", "we", "us", "our"). By accessing or using Collab, you agree to these Terms.
+## 1. Introduction
+These Terms & Conditions govern access to and use of Collab, a pre-incubation startup ecosystem for students, builders, teams, and early-stage founders. By using Collab, you agree to these Terms.
 
-## 1. Eligibility
-You must be at least 13 years old to use Collab. By using the platform, you represent and warrant that you meet this requirement.
+## 2. Eligibility
+You must be at least 16 years old to use Collab. If you are under 18, you must have permission from a parent or legal guardian where applicable.
 
-## 2. Account Registration
-You agree to provide accurate information during registration and keep your account details up to date. You are responsible for maintaining the confidentiality of your login credentials.
+## 3. User Accounts
+You are responsible for providing accurate account information, protecting your login credentials, and all activity under your account. You must notify Collab if you suspect unauthorized access.
 
-## 3. User Content & Ownership
-You retain full ownership of all venture concepts, ventures, files, and content you submit to Collab ("User Content").
+## 4. Platform Purpose
+Collab helps users discover opportunities, create startup workspaces, build teams, track startup progress, prepare venture documentation, and participate in startup ecosystem programs.
 
-By uploading or sharing User Content, you grant Collab a limited, non-exclusive, worldwide, royalty-free license to host, display, and distribute your content **solely** to provide the platform’s collaboration features.
+## 5. Intellectual Property & Ownership
+Users retain full ownership of their startup ideas, business concepts, documents, code, designs, presentations, files, validation evidence, pitch decks, and intellectual property. Collab does not claim ownership of user venture content.
 
-Collab **does not** claim ownership of your venture concepts or venture content.
+You grant Collab a limited, non-exclusive, revocable license to host, store, process, display, and transmit your content only as necessary to operate the platform and provide requested features.
 
-## 4. Collaboration & Privacy Controls
-You control venture visibility (college-only, private, or public) where applicable. Access to contact details is limited based on role and permissions within the team.
+## 6. Acceptable Use
+You must not use Collab for malware, fraud, impersonation, plagiarism, copyright infringement, harassment, spam, reverse engineering, unauthorized access, scraping, platform abuse, or illegal activity.
 
-## 5. Acceptable Use
-You agree not to:
-- steal, plagiarize, or misrepresent others’ work
-- upload harmful or illegal content
-- attempt unauthorized access to data or accounts
-- harass or abuse other users
+## 7. Privacy
+Use of Collab is also governed by our Privacy Policy. You are responsible for choosing appropriate project visibility settings and sharing sensitive venture information carefully.
 
-Violations may result in suspension or termination.
+## 8. Platform Availability
+Collab aims to provide reliable service, but access may be interrupted due to maintenance, updates, outages, or events beyond our control.
 
-## 6. Intellectual Property Infringement
-If you believe your IP has been infringed, contact us at **support@joincollab.org**. We will investigate and take appropriate action, including content removal or account suspension.
+## 9. Suspension & Termination
+Collab may suspend or terminate accounts, restrict features, or remove content if users violate these Terms, harm others, abuse the platform, or if required by law.
 
-## 7. Termination
-We may suspend or terminate accounts that violate these Terms, or if required by law.
+## 10. Limitation of Liability
+Collab does not guarantee startup success, funding, incubation admission, investment, revenue, or business outcomes. To the maximum extent permitted by law, Collab is not liable for indirect, incidental, consequential, or special damages arising from platform use.
 
-## 8. Disclaimers
-Collab is provided “as is.” We do not guarantee venture success, funding, or outcomes.
+## 11. Changes to Terms
+We may update these Terms from time to time. Continued use of Collab after updates means you accept the revised Terms.
 
-## 9. Limitation of Liability
-To the maximum extent permitted by law, Collab is not liable for indirect, incidental, or consequential damages arising from platform use.
+## 12. Governing Law
+These Terms are governed by the laws of the Republic of India. Courts located in Gautam Buddha Nagar, Uttar Pradesh, India will have exclusive jurisdiction.
 
-## 10. Changes to Terms
-We may update these Terms. Continued use after changes means you accept the revised Terms.
-
-## 11. Contact
-For questions, contact **support@joincollab.org**.
+## 13. Contact
+For questions, use the Contact page or email **support@joincollab.org**.

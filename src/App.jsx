@@ -9,6 +9,8 @@ import { AuthSkeleton } from './components/common/Skeleton'
 import useAuth from './hooks/useAuth'
 import Navbar from './components/common/Navbar'
 import Button from './components/common/Button'
+import SEO from './components/common/SEO'
+import Footer from './components/common/Footer'
 const Landing = lazy(() => import('./pages/Landing'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -32,6 +34,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Legal = lazy(() => import('./pages/Legal'))
 const LegalDoc = lazy(() => import('./pages/LegalDoc'))
 const Security = lazy(() => import('./pages/Security'))
+const StaticPage = lazy(() => import('./pages/StaticPage'))
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -64,15 +67,18 @@ function PublicRoute({ children }) {
 
 function Layout({ children }) {
   const location = useLocation()
+  const hideFooter = /^\/project\/[^/]+\/?$/.test(location.pathname)
 
   return (
     <div className="relative min-h-screen bg-bg-main text-text-primary">
+      <SEO />
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative min-h-[50vh]">
         <RouteErrorBoundary resetKey={location.pathname}>
           <PageTransition>{children}</PageTransition>
         </RouteErrorBoundary>
       </main>
+      {!hideFooter && <Footer />}
     </div>
   )
 }
@@ -105,6 +111,17 @@ function AppRoutes() {
         <Route path="/legal" element={<Layout><Legal /></Layout>} />
         <Route path="/legal/:slug" element={<Layout><LegalDoc /></Layout>} />
         <Route path="/security" element={<Layout><Security /></Layout>} />
+        <Route path="/about" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/contact" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/faq" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/help" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/support" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/report-bug" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/feedback" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/privacy" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/cookies" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/community-guidelines" element={<Layout><StaticPage /></Layout>} />
+        <Route path="/disclaimer" element={<Layout><StaticPage /></Layout>} />
         <Route
           path="*"
           element={(

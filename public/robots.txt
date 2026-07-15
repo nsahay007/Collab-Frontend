@@ -1,3 +1,18 @@
 User-agent: *
+Allow: /
 Disallow: /admin
+Disallow: /build
+Disallow: /create
+Disallow: /discover
+Disallow: /feed
+Disallow: /profile
+Disallow: /project
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /forgot
+Disallow: /reset
+Disallow: /verify
 Disallow: /api
+
+Sitemap: https://www.joincollab.org/sitemap.xml

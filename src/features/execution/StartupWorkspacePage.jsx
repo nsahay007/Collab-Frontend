@@ -383,12 +383,14 @@ export default function StartupWorkspacePage({ projectId: fixedProjectId, viewMo
                 disabled={!phase.unlocked}
                 onClick={() => setActivePhaseId(phase.id)}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
-                  phase.id === resolvedActivePhaseId
+                  !phase.unlocked
+                    ? 'bg-bg-secondary/40 text-text-muted border-dashed border-border opacity-60'
+                    : phase.id === resolvedActivePhaseId
                     ? 'bg-primary text-white border-primary'
                     : 'bg-bg-elevated text-text-secondary border-border'
                 }`}
               >
-                {phase.number}. {phase.title}
+                {!phase.unlocked ? 'Locked · ' : ''}{phase.number}. {phase.title}
               </button>
             ))}
           </div>

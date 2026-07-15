@@ -25,15 +25,15 @@ function SectionTitle({ kicker, title, body }) {
 
 function HeroConstellation() {
   const nodes = [
-    ['Idea', 'left-[14%] top-[22%]'], ['Builder', 'left-[56%] top-[12%]'], ['Team', 'left-[76%] top-[36%]'],
-    ['Opportunity', 'left-[24%] top-[58%]'], ['Venture', 'left-[52%] top-[48%]'], ['Incubation', 'left-[66%] top-[72%]']
+    ['Idea', 18, 24], ['Builder', 57, 18], ['Team', 78, 38],
+    ['Opportunity', 24, 64], ['Venture', 52, 50], ['Incubation', 68, 76]
   ]
   return (
     <div className="landing-constellation" onMouseMove={tiltOrbit} onMouseLeave={resetOrbit}>
       <div className="landing-orbit landing-orbit-a" />
       <div className="landing-orbit landing-orbit-b" />
-      {nodes.map(([label, pos], index) => (
-        <div key={label} className={`landing-node ${pos}`} style={{ animationDelay: `${index * -0.8}s` }}>
+      {nodes.map(([label, x, y], index) => (
+        <div key={label} className="landing-node" style={{ '--x': `${x}%`, '--y': `${y}%`, animationDelay: `${index * -0.8}s` }}>
           <span>{label}</span>
         </div>
       ))}
@@ -56,7 +56,6 @@ function Metric({ value, label }) {
 
 export default function Landing() {
   const [stats, setStats] = useState({ activeUsers: null, totalProjects: null })
-  const year = new Date().getFullYear()
 
   useEffect(() => {
     let mounted = true
@@ -168,11 +167,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
-      <footer className="px-4 pb-10 text-center text-xs text-text-muted sm:px-6">
-        <BrandLogo size="sm" className="mx-auto mb-4 opacity-90" />
-        <span>© {year} Collab. All rights reserved.</span>
-      </footer>
     </div>
   )
 }

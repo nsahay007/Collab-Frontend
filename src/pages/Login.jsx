@@ -77,10 +77,11 @@ export default function Login() {
         }
       })
       googleButtonRef.current.innerHTML = ''
+      const googleWidth = Math.min(360, Math.max(280, googleButtonRef.current.clientWidth || 320))
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: 'outline',
         size: 'large',
-        width: 360,
+        width: googleWidth,
         text: 'continue_with',
         shape: 'pill'
       })
@@ -249,8 +250,8 @@ export default function Login() {
                 <span className="text-xs uppercase tracking-wide text-text-muted">or continue with</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
-              <div className="flex justify-center">
-                <div ref={googleButtonRef} />
+              <div className="flex justify-center overflow-hidden">
+                <div ref={googleButtonRef} className="w-full max-w-[360px] overflow-hidden" />
               </div>
               {!googleReady && (
                 <p className="text-xs text-text-muted text-center">Loading Google sign-in...</p>

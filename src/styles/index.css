@@ -1283,6 +1283,7 @@ img, video, table {
   background-size: 42px 42px, 42px 42px, auto;
   box-shadow: var(--shadow-elevated);
   transition: transform 180ms ease;
+  isolation: isolate;
 }
 
 .landing-constellation::before,
@@ -1317,6 +1318,8 @@ img, video, table {
 .landing-node {
   position: absolute;
   z-index: 2;
+  left: var(--x);
+  top: var(--y);
   transform: translate(-50%, -50%);
   animation: landing-pulse 4s ease-in-out infinite;
 }
@@ -1360,12 +1363,16 @@ img, video, table {
 
 .landing-fragment {
   min-height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
   border-radius: 1.6rem;
   background: color-mix(in srgb, var(--bg-card) 76%, transparent);
   padding: 1.25rem;
   color: var(--text-primary);
   font-weight: 900;
+  text-align: center;
   box-shadow: var(--shadow);
 }
 
@@ -1533,6 +1540,24 @@ img, video, table {
 }
 
 @media (max-width: 900px) {
+  .landing-constellation {
+    min-height: clamp(26rem, 112vw, 34rem);
+    border-radius: 2rem;
+  }
+
+  .landing-core {
+    width: min(13rem, 58vw);
+    padding: 1rem;
+  }
+
+  .landing-node span {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.72rem;
+    max-width: 7.5rem;
+    text-align: center;
+    white-space: normal;
+  }
+
   .landing-journey {
     grid-template-columns: 1fr;
   }
@@ -1566,6 +1591,49 @@ img, video, table {
     grid-column: 1 / -1;
     order: -1;
   }
+}
+
+@media (max-width: 640px) {
+  .feed-page {
+    margin: -1.5rem -0.5rem 0;
+  }
+
+  .feed-header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .feed-column {
+    max-width: min(100%, 38rem);
+  }
+
+  .feed-post {
+    padding: 1rem 0.85rem 1.25rem;
+    overflow-wrap: anywhere;
+  }
+
+  .feed-actions {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+}
+
+.footer-link {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.footer-link:hover {
+  color: var(--primary);
+  transform: translateX(2px);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

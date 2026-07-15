@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.joincollab.org/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.joincollab.org/security</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.joincollab.org/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.joincollab.org/contact</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.joincollab.org/faq</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.joincollab.org/help</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/support</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/report-bug</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.joincollab.org/feedback</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.joincollab.org/privacy</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.joincollab.org/cookies</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/community-guidelines</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/disclaimer</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/legal</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.joincollab.org/legal/terms-of-service</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/legal/privacy-policy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/legal/ip-ownership-policy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/legal/security-policy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/legal/ecosystem-guidelines</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.joincollab.org/legal/dispute-resolution</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>
