@@ -11,31 +11,46 @@ import Navbar from './components/common/Navbar'
 import Button from './components/common/Button'
 import SEO from './components/common/SEO'
 import Footer from './components/common/Footer'
-const Landing = lazy(() => import('./pages/Landing'))
-const Login = lazy(() => import('./pages/Login'))
-const Register = lazy(() => import('./pages/Register'))
-const Feed = lazy(() => import('./pages/Feed'))
-const Build = lazy(() => import('./pages/Build'))
-const Discover = lazy(() => import('./pages/Discover'))
-const Opportunities = lazy(() => import('./pages/Opportunities'))
-const CreateProject = lazy(() => import('./pages/CreateProject'))
-const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
-const FinalStartupPackage = lazy(() => import('./pages/FinalStartupPackage'))
-const ProjectPackage = lazy(() => import('./pages/ProjectPackage'))
-const Profile = lazy(() => import('./pages/Profile'))
-const Settings = lazy(() => import('./pages/Settings'))
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
-const AdminProjects = lazy(() => import('./pages/AdminProjects'))
-const AdminHackathons = lazy(() => import('./pages/AdminHackathons'))
-const AdminLogs = lazy(() => import('./pages/AdminLogs'))
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
-const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate'))
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
-const ResetPassword = lazy(() => import('./pages/ResetPassword'))
-const Legal = lazy(() => import('./pages/Legal'))
-const LegalDoc = lazy(() => import('./pages/LegalDoc'))
-const Security = lazy(() => import('./pages/Security'))
-const StaticPage = lazy(() => import('./pages/StaticPage'))
+
+const lazyWithRefresh = (factory) => lazy(async () => {
+  try {
+    return await factory()
+  } catch (error) {
+    const message = String(error?.message || error || '')
+    const isChunkError = /Failed to fetch dynamically imported module|Loading chunk|Importing a module script failed/i.test(message)
+    if (isChunkError && !sessionStorage.getItem('collab:chunk-refresh')) {
+      sessionStorage.setItem('collab:chunk-refresh', '1')
+      window.location.reload()
+    }
+    throw error
+  }
+})
+
+const Landing = lazyWithRefresh(() => import('./pages/Landing'))
+const Login = lazyWithRefresh(() => import('./pages/Login'))
+const Register = lazyWithRefresh(() => import('./pages/Register'))
+const Feed = lazyWithRefresh(() => import('./pages/Feed'))
+const Build = lazyWithRefresh(() => import('./pages/Build'))
+const Discover = lazyWithRefresh(() => import('./pages/Discover'))
+const Opportunities = lazyWithRefresh(() => import('./pages/Opportunities'))
+const CreateProject = lazyWithRefresh(() => import('./pages/CreateProject'))
+const ProjectDetail = lazyWithRefresh(() => import('./pages/ProjectDetail'))
+const FinalStartupPackage = lazyWithRefresh(() => import('./pages/FinalStartupPackage'))
+const ProjectPackage = lazyWithRefresh(() => import('./pages/ProjectPackage'))
+const Profile = lazyWithRefresh(() => import('./pages/Profile'))
+const Settings = lazyWithRefresh(() => import('./pages/Settings'))
+const AdminDashboard = lazyWithRefresh(() => import('./pages/AdminDashboard'))
+const AdminProjects = lazyWithRefresh(() => import('./pages/AdminProjects'))
+const AdminHackathons = lazyWithRefresh(() => import('./pages/AdminHackathons'))
+const AdminLogs = lazyWithRefresh(() => import('./pages/AdminLogs'))
+const VerifyEmail = lazyWithRefresh(() => import('./pages/VerifyEmail'))
+const VerifyCertificate = lazyWithRefresh(() => import('./pages/VerifyCertificate'))
+const ForgotPassword = lazyWithRefresh(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazyWithRefresh(() => import('./pages/ResetPassword'))
+const Legal = lazyWithRefresh(() => import('./pages/Legal'))
+const LegalDoc = lazyWithRefresh(() => import('./pages/LegalDoc'))
+const Security = lazyWithRefresh(() => import('./pages/Security'))
+const StaticPage = lazyWithRefresh(() => import('./pages/StaticPage'))
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
