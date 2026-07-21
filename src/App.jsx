@@ -21,6 +21,7 @@ const Opportunities = lazy(() => import('./pages/Opportunities'))
 const CreateProject = lazy(() => import('./pages/CreateProject'))
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
 const FinalStartupPackage = lazy(() => import('./pages/FinalStartupPackage'))
+const ProjectPackage = lazy(() => import('./pages/ProjectPackage'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
@@ -98,6 +99,7 @@ function AppRoutes() {
         <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
         <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
         <Route path="/project/:id/package" element={<ProtectedRoute><Layout><FinalStartupPackage /></Layout></ProtectedRoute>} />
+        <Route path="/project/:id/project-package" element={<ProtectedRoute><Layout><ProjectPackage /></Layout></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />

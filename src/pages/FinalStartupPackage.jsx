@@ -4,7 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import FounderOwnershipNotice from '../components/trust/FounderOwnershipNotice'
-import { downloadCertificates, downloadStartupPackage, fetchProject } from '../features/projects/projectAPI'
+import { downloadCertificates, fetchProject } from '../features/projects/projectAPI'
 
 const saveBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob)
@@ -47,13 +47,8 @@ export default function FinalStartupPackage() {
     setDownloadState(type)
     try {
       const safeTitle = (project?.title || 'startup').replace(/[^a-z0-9-_]+/gi, '_')
-      if (type === 'package') {
-        const blob = await downloadStartupPackage(id)
-        saveBlob(blob, `${safeTitle}_startup_package.zip`)
-      } else {
-        const blob = await downloadCertificates(id)
-        saveBlob(blob, `${safeTitle}_certificates.zip`)
-      }
+      const blob = await downloadCertificates(id)
+      saveBlob(blob, `${safeTitle}_certificates.zip`)
     } catch (err) {
       setError(err?.response?.data?.message || 'Download failed. Please try again.')
     } finally {
@@ -95,20 +90,15 @@ export default function FinalStartupPackage() {
       <FounderOwnershipNotice />
 
       <Card hover={false}>
-        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Download Package</p>
+        <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Project Package</p>
         <h2 className="text-xl font-semibold text-text-primary">Final startup documents</h2>
         <p className="mt-2 text-sm text-text-secondary">
-          Export your incubation documents separately from team certificates.
+          Preview and refine your startup documents before exporting them.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={Boolean(downloadState)}
-            onClick={() => handleDownload('package')}
-          >
-            {downloadState === 'package' ? 'Preparing Package...' : 'Download Startup Package'}
-          </Button>
+          <Link to={`/project/${id}/project-package`}>
+            <Button type="button" variant="secondary" className="w-full">View Project Package</Button>
+          </Link>
           <Button
             type="button"
             variant="secondary"
