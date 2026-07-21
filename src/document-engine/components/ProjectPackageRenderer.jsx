@@ -1,7 +1,7 @@
 import React from 'react'
 import '../styles/projectPackage.css'
 
-const hasValue = (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null && String(value).trim() !== ''
+export const hasValue = (value) => Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null && String(value).trim() !== ''
 
 const smartSize = (value, min, max) => {
   const len = Array.isArray(value) ? value.join(' ').length : String(value || '').length
@@ -11,10 +11,10 @@ const smartSize = (value, min, max) => {
   return max
 }
 
-function EditableValue({ item, value, onChange }) {
+function EditableValue({ item, value, onChange, readOnly = false }) {
   if (!hasValue(value)) return null
   const fontSize = smartSize(value, item.minFont, item.maxFont)
-  if (!item.editable) return <div className="pp-value" style={{ fontSize }}>{String(value)}</div>
+  if (!item.editable || readOnly) return <div className="pp-value" style={{ fontSize }}>{String(value)}</div>
   return (
     <div
       className="pp-value pp-editable"
@@ -28,8 +28,8 @@ function EditableValue({ item, value, onChange }) {
   )
 }
 
-function FieldBox({ item, data, onChange }) {
-  const value = data[item.key]
+function FieldBox({ item, data, onChange, value: forcedValue, continued = false }) {
+  const value = forcedValue ?? data[item.key]
   if (!hasValue(value)) return null
   if (item.type === 'chips') {
     return <div className="pp-box"><span>{item.label}</span><div className="pp-chips">{value.map((chip) => <b key={chip}>{chip}</b>)}</div></div>
@@ -46,19 +46,53 @@ function FieldBox({ item, data, onChange }) {
   if (item.type === 'card') {
     return <div className="pp-box pp-linkcard"><span>{item.label}</span><EditableValue item={item} value={value} onChange={onChange} /></div>
   }
-  return <div className="pp-box"><span>{item.label}</span><EditableValue item={item} value={value} onChange={onChange} /></div>
+  return <div className="pp-box"><span>{continued ? `${item.label} continued` : item.label}</span><EditableValue item={item} value={value} onChange={onChange} readOnly={continued} /></div>
 }
 
-function PageShell({ doc, children }) {
+function PageShell({ doc, children, page = 1 }) {
   return (
     <section className="pp-page">
       <header className="pp-head"><span>COLLAB PRE-INCUBATION PLATFORM</span><span>STARTUP</span></header>
-      <h2>{doc.number}. {doc.title}</h2>
+      <h2>{doc.number}. {doc.title}{page > 1 ? ` / PAGE ${page}` : ''}</h2>
       <div className="pp-line" />
       <div className="pp-content">{children}</div>
-      <footer className="pp-foot"><span>Prepared via Collab Pre-Incubation Pipeline</span><span>CONFIDENTIAL</span></footer>
+      <footer className="pp-foot"><span>Prepared via Collab Pre-Incubation Pipeline</span><span>PAGE {page} · CONFIDENTIAL</span></footer>
     </section>
   )
+}
+
+const splitText = (text, size = 1200) => {
+  const value = String(text || '')
+  if (value.length <= size) return [value]
+  const chunks = []
+  let rest = value
+  while (rest.length) {
+    let cut = rest.length > size ? rest.lastIndexOf(' ', size) : rest.length
+    if (cut < size * 0.55) cut = Math.min(size, rest.length)
+    chunks.push(rest.slice(0, cut).trim())
+    rest = rest.slice(cut).trim()
+  }
+  return chunks
+}
+
+const paginateFields = (fields, data) => {
+  const pages = [[]]
+  let used = 0
+  fields.forEach((item) => {
+    const value = data[item.key]
+    if (!hasValue(value)) return
+    const parts = typeof value === 'string' && value.length > 1200 ? splitText(value) : [value]
+    parts.forEach((part, index) => {
+      const cost = Array.isArray(part) ? 500 + part.length * 80 : 320 + String(part).length
+      if (used + cost > 2600 && pages[pages.length - 1].length) {
+        pages.push([])
+        used = 0
+      }
+      pages[pages.length - 1].push({ item, value: part, continued: index > 0 })
+      used += cost
+    })
+  })
+  return pages
 }
 
 function TeamDocument({ doc, data }) {
@@ -74,6 +108,15 @@ export default function ProjectPackageRenderer({ document, data, onChange }) {
   if (document.type === 'team') return <TeamDocument doc={document} data={data} />
   if (document.type === 'summary') return <SummaryDocument doc={document} />
   const fields = (document.fields || []).filter((item) => hasValue(data[item.key]))
+  if (document.id !== 'identity' && !document.declaration) {
+    return paginateFields(fields, data).map((pageFields, index) => (
+      <PageShell key={`${document.id}-${index}`} doc={document} page={index + 1}>
+        <div className="pp-stack">
+          {pageFields.map(({ item, value, continued }) => <FieldBox key={`${item.key}-${continued}-${String(value).slice(0, 12)}`} item={item} data={data} value={value} continued={continued} onChange={onChange} />)}
+        </div>
+      </PageShell>
+    ))
+  }
   return (
     <PageShell doc={document}>
       {document.id === 'identity' && document.metric && hasValue(data.readinessScore) && (

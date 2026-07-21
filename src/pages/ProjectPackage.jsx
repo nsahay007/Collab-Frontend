@@ -6,12 +6,15 @@ import { projectPackageMockData } from '../document-engine/sample-data/projectPa
 import { fieldsByDocument, packageDocuments } from '../document-engine/templates/projectPackageTemplates'
 import ProjectPackageRenderer from '../document-engine/components/ProjectPackageRenderer'
 import { clearDocumentDraft, loadPackageDraft, savePackageDraft } from '../document-engine/utils/packageDraft'
+import { buildDocFiles, documentHtml, downloadBlob, makeZip } from '../document-engine/utils/packageExport'
+import { downloadStartupPackage } from '../features/projects/projectAPI'
 
 export default function ProjectPackage() {
   const { id } = useParams()
   const [activeId, setActiveId] = useState(packageDocuments[0].id)
   const [draft, setDraft] = useState(() => loadPackageDraft(id))
   const [saved, setSaved] = useState('Saved locally')
+  const [busy, setBusy] = useState('')
   const activeDoc = packageDocuments.find((doc) => doc.id === activeId) || packageDocuments[0]
   const data = useMemo(() => ({ ...projectPackageMockData, ...draft }), [draft])
 
@@ -33,6 +36,20 @@ export default function ProjectPackage() {
     setDraft({})
     savePackageDraft(id, {})
     setSaved('Entire package reset')
+  }
+  const downloadCurrentDoc = () => {
+    downloadBlob(new Blob([documentHtml(activeDoc, data)], { type: 'application/msword' }), `${activeDoc.title.replace(/[^a-z0-9-_]+/gi, '_')}.doc`)
+  }
+  const downloadDocZip = () => {
+    downloadBlob(makeZip(buildDocFiles(data)), 'collab_project_package_docs.zip')
+  }
+  const downloadPdfZip = async () => {
+    setBusy('pdf')
+    try {
+      downloadBlob(await downloadStartupPackage(id), 'collab_project_package_pdfs.zip')
+    } finally {
+      setBusy('')
+    }
   }
 
   return (
@@ -63,6 +80,9 @@ export default function ProjectPackage() {
             <Button size="sm" variant="secondary" onClick={resetCurrent}>Reset Current Document</Button>
             <Button size="sm" variant="secondary" onClick={resetAll}>Reset Entire Package</Button>
             <Button size="sm" variant="secondary" onClick={() => window.print()}>Download Current PDF</Button>
+            <Button size="sm" variant="secondary" onClick={downloadCurrentDoc}>Download Current DOC</Button>
+            <Button size="sm" variant="secondary" onClick={downloadPdfZip} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Preparing ZIP...' : 'Download Full PDF ZIP'}</Button>
+            <Button size="sm" variant="secondary" onClick={downloadDocZip}>Download Full DOC ZIP</Button>
             <Link to={`/project/${id}`}><Button size="sm" variant="ghost">Back to Workspace</Button></Link>
           </Card>
           <div className="pp-shell pp-print-target">
