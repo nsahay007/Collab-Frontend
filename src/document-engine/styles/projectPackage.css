@@ -1,9 +1,9 @@
-.pp-page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#101827;border:1px solid #d7dce5;border-radius:3px;padding:12mm 11mm 16mm;box-shadow:0 24px 70px rgba(15,23,42,.18);font-family:"IBM Plex Sans","Inter",monospace;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pp-page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#101827;border:1px solid #d7dce5;border-radius:3px;padding:12mm 11mm 7mm;box-shadow:0 24px 70px rgba(15,23,42,.18);font-family:"IBM Plex Sans","Inter",monospace;position:relative;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .pp-head,.pp-foot{display:flex;justify-content:space-between;color:#335b9a;font-size:7px;letter-spacing:2px;font-weight:700;text-transform:uppercase}
-.pp-foot{position:absolute;left:12mm;right:12mm;bottom:7mm;color:#46556b;font-size:6px}
+.pp-foot{margin-top:auto;color:#46556b;font-size:6px}
 .pp-page h2{margin:10mm 0 5mm;font-size:17px;letter-spacing:7px;text-transform:uppercase;font-weight:700;color:#1d2a44}
 .pp-line{height:2px;background:linear-gradient(90deg,#1157b8,#a950ff);margin-bottom:7mm}
-.pp-content{padding-bottom:14mm}
+.pp-content{flex:1;padding-bottom:6mm}
 .pp-stack{display:grid;gap:4mm}
 .pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
 .pp-identity-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:4mm;margin-bottom:4mm}

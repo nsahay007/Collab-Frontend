@@ -6,8 +6,7 @@ import { projectPackageMockData } from '../document-engine/sample-data/projectPa
 import { fieldsByDocument, packageDocuments } from '../document-engine/templates/projectPackageTemplates'
 import ProjectPackageRenderer from '../document-engine/components/ProjectPackageRenderer'
 import { clearDocumentDraft, loadPackageDraft, savePackageDraft } from '../document-engine/utils/packageDraft'
-import { buildDocFiles, documentHtml, downloadBlob, makeZip } from '../document-engine/utils/packageExport'
-import { downloadStartupPackage } from '../features/projects/projectAPI'
+import { buildDocFiles, buildPdfFiles, documentHtml, downloadBlob, makeZip } from '../document-engine/utils/packageExport'
 
 export default function ProjectPackage() {
   const { id } = useParams()
@@ -46,7 +45,7 @@ export default function ProjectPackage() {
   const downloadPdfZip = async () => {
     setBusy('pdf')
     try {
-      downloadBlob(await downloadStartupPackage(id), 'collab_project_package_pdfs.zip')
+      downloadBlob(makeZip(buildPdfFiles(data)), 'collab_project_package_pdfs.zip')
     } finally {
       setBusy('')
     }
