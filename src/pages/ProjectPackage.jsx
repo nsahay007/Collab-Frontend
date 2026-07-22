@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import { projectPackageMockData } from '../document-engine/sample-data/projectPackageMockData'
@@ -77,7 +77,6 @@ export default function ProjectPackage() {
             <Button size="sm" variant="secondary" onClick={resetAll}>Reset Entire Package</Button>
             <Button size="sm" variant="secondary" onClick={downloadPdfZip} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Preparing ZIP...' : 'Download Full PDF ZIP'}</Button>
             <Button size="sm" variant="secondary" onClick={downloadDocZip}>Download Full DOC ZIP</Button>
-            <Link to={`/project/${id}`}><Button size="sm" variant="ghost">Back to Workspace</Button></Link>
           </Card>
           <div className="pp-shell pp-print-target">
             <ProjectPackageRenderer document={activeDoc} data={data} onChange={updateField} />
