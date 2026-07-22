@@ -54,13 +54,63 @@ const renderValue = (value) => {
   return `<p>${esc(value)}</p>`
 }
 
+const splitText = (text, size = 1200) => {
+  const value = String(text || '')
+  if (value.length <= size) return [value]
+  const chunks = []
+  let rest = value
+  while (rest.length) {
+    let cut = rest.length > size ? rest.lastIndexOf(' ', size) : rest.length
+    if (cut < size * 0.55) cut = Math.min(size, rest.length)
+    chunks.push(rest.slice(0, cut).trim())
+    rest = rest.slice(cut).trim()
+  }
+  return chunks
+}
+
+const paginateItems = (items) => {
+  const pages = [[]]
+  let used = 0
+  items.forEach((item) => {
+    const text = item.html.replace(/<[^>]+>/g, ' ')
+    const cost = 300 + text.length
+    if (used + cost > 2500 && pages[pages.length - 1].length) {
+      pages.push([])
+      used = 0
+    }
+    pages[pages.length - 1].push(item.html)
+    used += cost
+  })
+  return pages
+}
+
+const fieldItems = (doc, data) => (doc.fields || []).flatMap((item) => {
+  const value = data[item.key]
+  if (!hasValue(value)) return []
+  if (typeof value === 'string' && value.length > 1200) {
+    return splitText(value).map((part, index) => ({
+      html: `<section><label>${esc(item.label)}${index ? ' continued' : ''}</label>${renderValue(part)}</section>`
+    }))
+  }
+  return [{ html: `<section><label>${esc(item.label)}</label>${renderValue(value)}</section>` }]
+})
+
+const teamItems = (data) => [{
+  html: `<table><tr><th>Role</th><th>Name</th><th>Email</th><th>User ID</th></tr>${(data.team || []).map((m) => `<tr><td>${esc(m.role)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.userId)}</td></tr>`).join('')}</table>`
+}]
+
+const summaryItems = () => [{
+  html: '<section class="summary"><h3>Purpose</h3><p>A complete overview of your startup journey.</p><h3>Use</h3><p>Share with mentors, investors, and incubators.</p><h3>Integrity</h3><p>Information represents the current submitted status.</p></section>'
+}]
+
 export const documentHtml = (doc, data) => {
-  const body = doc.type === 'summary'
-    ? '<section><h3>Purpose</h3><p>A complete overview of your startup journey.</p><h3>Use</h3><p>Share with mentors, investors, and incubators.</p><h3>Integrity</h3><p>Information represents the current submitted status.</p></section>'
-    : doc.type === 'team'
-      ? `<table><tr><th>Role</th><th>Name</th><th>Email</th><th>User ID</th></tr>${(data.team || []).map((m) => `<tr><td>${esc(m.role)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.userId)}</td></tr>`).join('')}</table>`
-      : (doc.fields || []).filter((item) => hasValue(data[item.key])).map((item) => `<section><label>${esc(item.label)}</label>${renderValue(data[item.key])}</section>`).join('')
-  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:0}body{font-family:Arial,sans-serif;color:#101827}.page{width:210mm;min-height:297mm;box-sizing:border-box;padding:14mm 12mm 10mm;page-break-after:always}.head,.foot{display:flex;justify-content:space-between;color:#335b9a;font-size:7px;letter-spacing:2px;font-weight:bold}.foot{margin-top:12mm}h1{font-size:17px;letter-spacing:6px;text-transform:uppercase;color:#1d2a44;border-bottom:2px solid #6d5cff;padding-bottom:5mm}section{border:1px solid #d7dce5;border-radius:5px;padding:4mm;margin:4mm 0;break-inside:avoid}label{display:block;color:#5b6678;font-size:7px;letter-spacing:1px;text-transform:uppercase;font-weight:bold}p,li,td{font-size:10px;line-height:1.55}table{width:100%;border-collapse:collapse;margin-top:8mm}th{background:#0757bd;color:#fff;text-align:left}td,th{border:1px solid #cfd6e4;padding:4mm}</style></head><body><div class="page"><div class="head"><span>COLLAB PRE-INCUBATION PLATFORM</span><span>STARTUP</span></div><h1>${doc.number}. ${esc(doc.title)}</h1>${body}${doc.declaration && hasValue(data.declarationText) ? `<section><label>Declaration text</label>${renderValue(data.declarationText)}</section>` : ''}<div class="foot"><span>Prepared via Collab Pre-Incubation Pipeline</span><span>CONFIDENTIAL</span></div></div></body></html>`
+  const baseItems = doc.type === 'summary' ? summaryItems() : doc.type === 'team' ? teamItems(data) : fieldItems(doc, data)
+  const declaration = doc.declaration && hasValue(data.declarationText)
+    ? [{ html: `<section><label>Declaration text</label>${renderValue(data.declarationText)}</section>` }]
+    : []
+  const pages = paginateItems([...baseItems, ...declaration])
+  const pageHtml = pages.map((items, index) => `<div class="page"><div class="head"><span>COLLAB PRE-INCUBATION PLATFORM</span><span>STARTUP</span></div><h1>${doc.number}. ${esc(doc.title)}${index ? ` / PAGE ${index + 1}` : ''}</h1><main>${items.join('')}</main><div class="foot"><span>Prepared via Collab Pre-Incubation Pipeline</span><span>PAGE ${index + 1} - CONFIDENTIAL</span></div></div>`).join('')
+  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:0}html,body{margin:0;padding:0;background:#fff;color:#101827;font-family:Arial,sans-serif}.page{width:210mm;height:297mm;box-sizing:border-box;padding:12mm 11mm 16mm;page-break-after:always;position:relative;background:#fff;overflow:hidden}.head,.foot{display:flex;justify-content:space-between;color:#335b9a;font-size:7px;letter-spacing:2px;font-weight:bold;text-transform:uppercase}.foot{position:absolute;left:11mm;right:11mm;bottom:7mm;color:#46556b;font-size:6px}h1{font-size:17px;letter-spacing:6px;text-transform:uppercase;color:#1d2a44;border-bottom:2px solid #6d5cff;padding-bottom:5mm;margin:10mm 0 5mm}main{padding-bottom:14mm}section{border:1px solid #d7dce5;border-radius:5px;padding:3.5mm;margin:3.5mm 0;page-break-inside:avoid}label{display:block;color:#5b6678;font-size:7px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;margin-bottom:2mm}p,li,td{font-size:10.5px;line-height:1.55}ul{margin:2mm 0 0 5mm;padding:0}table{width:100%;border-collapse:collapse;margin-top:8mm;font-size:9.5px}th{background:#0757bd;color:#fff;text-align:left}td,th{border:1px solid #cfd6e4;padding:4mm;vertical-align:middle}.summary{background:#f7f8ff;border:0;padding:10mm 18mm}.summary h3{font-size:14px;margin:0 0 2mm}</style></head><body>${pageHtml}</body></html>`
 }
 
 export const buildDocFiles = (data) => packageDocuments.map((doc) => ({

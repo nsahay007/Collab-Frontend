@@ -38,10 +38,10 @@ function FieldBox({ item, data, onChange, value: forcedValue, continued = false 
     return <div className="pp-box"><span>{item.label}</span><div className="pp-filegrid">{value.map((file) => <div className="pp-file" key={file}>File: {file}</div>)}</div></div>
   }
   if (item.type === 'checklist') {
-    return <div className="pp-box"><span>{item.label}</span>{value.map((entry) => <div className="pp-check" key={entry}>✓ {entry}</div>)}</div>
+    return <div className="pp-box"><span>{item.label}</span>{value.map((entry) => <div className="pp-check" key={entry}>Done: {entry}</div>)}</div>
   }
   if (item.type === 'teamlist') {
-    return <div className="pp-box"><span>{item.label}</span>{value.map((member) => <div className="pp-check" key={`${member.name}-${member.email}`}>{member.name} · {member.role}</div>)}</div>
+    return <div className="pp-box"><span>{item.label}</span>{value.map((member) => <div className="pp-check" key={`${member.name}-${member.email}`}>{member.name} - {member.role}</div>)}</div>
   }
   if (item.type === 'card') {
     return <div className="pp-box pp-linkcard"><span>{item.label}</span><EditableValue item={item} value={value} onChange={onChange} /></div>
@@ -56,7 +56,7 @@ function PageShell({ doc, children, page = 1 }) {
       <h2>{doc.number}. {doc.title}{page > 1 ? ` / PAGE ${page}` : ''}</h2>
       <div className="pp-line" />
       <div className="pp-content">{children}</div>
-      <footer className="pp-foot"><span>Prepared via Collab Pre-Incubation Pipeline</span><span>PAGE {page} · CONFIDENTIAL</span></footer>
+      <footer className="pp-foot"><span>Prepared via Collab Pre-Incubation Pipeline</span><span>PAGE {page} - CONFIDENTIAL</span></footer>
     </section>
   )
 }
