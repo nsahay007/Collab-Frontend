@@ -49,10 +49,10 @@ function FieldBox({ item, data, onChange, value: forcedValue, continued = false 
   return <div className="pp-box"><span>{continued ? `${item.label} continued` : item.label}</span><EditableValue item={item} value={value} onChange={onChange} readOnly={continued} /></div>
 }
 
-function PageShell({ doc, children, page = 1 }) {
+function PageShell({ doc, children, page = 1, startupName = 'STARTUP' }) {
   return (
     <section className="pp-page">
-      <header className="pp-head"><span>COLLAB PRE-INCUBATION PLATFORM</span><span>STARTUP</span></header>
+      <header className="pp-head"><span>COLLAB PRE-INCUBATION PLATFORM</span><span>{startupName || 'STARTUP'}</span></header>
       <h2>{doc.number}. {doc.title}{page > 1 ? ` / PAGE ${page}` : ''}</h2>
       <div className="pp-line" />
       <div className="pp-content">{children}</div>
@@ -97,20 +97,20 @@ const paginateFields = (fields, data) => {
 
 function TeamDocument({ doc, data }) {
   const rows = data.team || []
-  return <PageShell doc={doc}><table className="pp-table"><thead><tr><th>Role</th><th>Name</th><th>Email</th><th>User ID</th></tr></thead><tbody>{rows.map((row) => <tr key={`${row.email}-${row.userId}`}><td>{row.role}</td><td>{row.name}</td><td>{row.email}</td><td>{row.userId}</td></tr>)}</tbody></table><div className="pp-note">Note: Add multiple team members as needed.</div></PageShell>
+  return <PageShell doc={doc} startupName={data.startupName}><table className="pp-table"><thead><tr><th>Role</th><th>Name</th><th>Email</th><th>User ID</th></tr></thead><tbody>{rows.map((row) => <tr key={`${row.email}-${row.userId}`}><td>{row.role}</td><td>{row.name}</td><td>{row.email}</td><td>{row.userId}</td></tr>)}</tbody></table><div className="pp-note">Note: Add multiple team members as needed.</div></PageShell>
 }
 
-function SummaryDocument({ doc }) {
-  return <PageShell doc={doc}><div className="pp-summary"><h3>Purpose</h3><p>A complete overview of your startup’s journey, from idea to validation and beyond.</p><h3>Use</h3><p>Share with mentors, investors, and incubators to showcase your progress.</p><h3>Integrity</h3><p>All information is submitted in good faith and represents the current status.</p></div><div className="pp-note pp-summary-note">Keep this information updated to reflect your latest progress.</div></PageShell>
+function SummaryDocument({ doc, data }) {
+  return <PageShell doc={doc} startupName={data.startupName}><div className="pp-summary"><h3>Purpose</h3><p>A complete overview of your startup’s journey, from idea to validation and beyond.</p><h3>Use</h3><p>Share with mentors, investors, and incubators to showcase your progress.</p><h3>Integrity</h3><p>All information is submitted in good faith and represents the current status.</p></div><div className="pp-note pp-summary-note">Keep this information updated to reflect your latest progress.</div></PageShell>
 }
 
 export default function ProjectPackageRenderer({ document, data, onChange }) {
   if (document.type === 'team') return <TeamDocument doc={document} data={data} />
-  if (document.type === 'summary') return <SummaryDocument doc={document} />
+  if (document.type === 'summary') return <SummaryDocument doc={document} data={data} />
   const fields = (document.fields || []).filter((item) => hasValue(data[item.key]))
   if (document.id !== 'identity' && !document.declaration) {
     return paginateFields(fields, data).map((pageFields, index) => (
-      <PageShell key={`${document.id}-${index}`} doc={document} page={index + 1}>
+      <PageShell key={`${document.id}-${index}`} doc={document} page={index + 1} startupName={data.startupName}>
         <div className="pp-stack">
           {pageFields.map(({ item, value, continued }) => <FieldBox key={`${item.key}-${continued}-${String(value).slice(0, 12)}`} item={item} data={data} value={value} continued={continued} onChange={onChange} />)}
         </div>
@@ -118,7 +118,7 @@ export default function ProjectPackageRenderer({ document, data, onChange }) {
     ))
   }
   return (
-    <PageShell doc={document}>
+    <PageShell doc={document} startupName={data.startupName}>
       {document.id === 'identity' && document.metric && hasValue(data.readinessScore) && (
         <div className="pp-identity-grid">
           <div>{fields.slice(0, 4).map((item) => <FieldBox key={item.key} item={item} data={data} onChange={onChange} />)}</div>

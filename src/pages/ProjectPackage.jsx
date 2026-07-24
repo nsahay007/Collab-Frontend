@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
@@ -7,15 +7,74 @@ import { fieldsByDocument, packageDocuments } from '../document-engine/templates
 import ProjectPackageRenderer from '../document-engine/components/ProjectPackageRenderer'
 import { clearDocumentDraft, loadPackageDraft, savePackageDraft } from '../document-engine/utils/packageDraft'
 import { buildDocFiles, buildPdfFiles, downloadBlob, makeZip } from '../document-engine/utils/packageExport'
+import { fetchProject } from '../features/projects/projectAPI'
+
+const dateText = (value) => value ? new Date(value).toLocaleDateString('en-IN') : ''
+const userId = (user) => user?._id || user?.id || user?.userId || ''
+const mapProjectPackageData = (project = {}) => {
+  const owner = project.owner || {}
+  const members = project.teamMembers || []
+  const team = [
+    owner && (owner.name || owner.email) ? { role: 'Founder', name: owner.name || 'Founder', email: owner.email || '', userId: userId(owner) } : null,
+    ...members.map((member) => ({ role: 'Team Member', name: member.name || 'Team member', email: member.email || '', userId: userId(member) }))
+  ].filter(Boolean)
+  const evidence = project.validation?.workspace?.evidence || []
+  const files = [...(project.files || []), ...(project.validation?.sharedFiles || [])]
+  return {
+    startupName: project.title || '',
+    tagline: project.pipeline?.foundation?.tagline || project.shortPitch || '',
+    category: project.category || '',
+    readinessScore: String(project.readinessScore ?? ''),
+    currentStage: project.lifecycleStage || '',
+    founderName: owner.name || '',
+    founderEmail: owner.email || '',
+    descriptorWords: project.pipeline?.foundation?.descriptorWords || [],
+    teamMemberCount: String(team.length || ''),
+    dateCreated: dateText(project.createdAt),
+    problemStatement: project.validation?.workspace?.problemStatement || project.description || '',
+    targetUsers: project.validation?.workspace?.targetUsers || '',
+    whyThisMatters: project.shortPitch || '',
+    founderInspiration: project.pipeline?.purpose?.founderInspiration || '',
+    impactStatement: project.pipeline?.purpose?.impactStatement || '',
+    team,
+    collegeInstitution: project.college?.name || '',
+    dateGenerated: dateText(new Date()),
+    surveyNotes: project.validation?.workspace?.whoSpokenTo || '',
+    feedbackNotes: project.validation?.workspace?.feedbackChanges || project.validation?.demoNotes || '',
+    repeatedProblems: project.validation?.workspace?.repeatedProblems || '',
+    surprisingInsights: project.validation?.workspace?.surprisingInsights || '',
+    validationEvidence: evidence.map((item) => item.title).filter(Boolean),
+    mvpRoadmap: project.pipeline?.mvp?.roadmap || '',
+    demoLink: (project.pipeline?.mvp?.demoLinks || [project.validation?.demoLink]).filter(Boolean).join(', '),
+    githubLink: (project.pipeline?.mvp?.githubLinks || []).join(', '),
+    figmaDesignLink: (project.pipeline?.mvp?.figmaLinks || []).join(', '),
+    uploadedPrototypeFiles: files.map((file) => file.originalName).filter(Boolean),
+    mvpSummary: project.pipeline?.incubation?.startupOverview || project.pipeline?.incubation?.executiveSummary || '',
+    currentProductStatus: project.lifecycleStage || '',
+    startupInformation: project.pipeline?.incubation?.startupOverview || project.description || '',
+    founderInformation: [owner.name, owner.email].filter(Boolean).join(' - '),
+    validationStatistics: `${evidence.length} validation evidence item${evidence.length === 1 ? '' : 's'}`,
+    uploadedEvidenceCount: String(files.length || evidence.length || 0),
+  }
+}
 
 export default function ProjectPackage() {
   const { id } = useParams()
   const [activeId, setActiveId] = useState(packageDocuments[0].id)
   const [draft, setDraft] = useState(() => loadPackageDraft(id))
+  const [projectData, setProjectData] = useState({})
   const [saved, setSaved] = useState('Saved locally')
   const [busy, setBusy] = useState('')
   const activeDoc = packageDocuments.find((doc) => doc.id === activeId) || packageDocuments[0]
-  const data = useMemo(() => ({ ...projectPackageMockData, ...draft }), [draft])
+  const data = useMemo(() => ({ ...projectPackageMockData, ...projectData, ...draft }), [projectData, draft])
+
+  useEffect(() => {
+    let active = true
+    fetchProject(id).then((project) => {
+      if (active) setProjectData(mapProjectPackageData(project))
+    }).catch(() => {})
+    return () => { active = false }
+  }, [id])
 
   const updateField = (key, value) => {
     setDraft((current) => ({ ...current, [key]: value }))
