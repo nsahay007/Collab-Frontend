@@ -6,7 +6,7 @@ import { projectPackageMockData } from '../document-engine/sample-data/projectPa
 import { fieldsByDocument, packageDocuments } from '../document-engine/templates/projectPackageTemplates'
 import ProjectPackageRenderer from '../document-engine/components/ProjectPackageRenderer'
 import { clearDocumentDraft, loadPackageDraft, savePackageDraft } from '../document-engine/utils/packageDraft'
-import { buildDocFiles, buildPdfFiles, downloadBlob, makeZip } from '../document-engine/utils/packageExport'
+import { buildPdfFiles, downloadBlob, makeZip } from '../document-engine/utils/packageExport'
 import { fetchProject } from '../features/projects/projectAPI'
 
 const dateText = (value) => value ? new Date(value).toLocaleDateString('en-IN') : ''
@@ -65,6 +65,7 @@ export default function ProjectPackage() {
   const [projectData, setProjectData] = useState({})
   const [saved, setSaved] = useState('Saved locally')
   const [busy, setBusy] = useState('')
+  const [resetOpen, setResetOpen] = useState(false)
   const activeDoc = packageDocuments.find((doc) => doc.id === activeId) || packageDocuments[0]
   const data = useMemo(() => ({ ...projectPackageMockData, ...projectData, ...draft }), [projectData, draft])
 
@@ -85,18 +86,19 @@ export default function ProjectPackage() {
     setSaved('Saved locally')
   }
   const resetCurrent = () => {
+    if (!window.confirm('Reset edits for the current document?')) return
     const next = clearDocumentDraft(draft, fieldsByDocument[activeId] || [])
     setDraft(next)
     savePackageDraft(id, next)
     setSaved('Current document reset')
+    setResetOpen(false)
   }
   const resetAll = () => {
+    if (!window.confirm('Reset the entire project package? This will remove all package edits.')) return
     setDraft({})
     savePackageDraft(id, {})
     setSaved('Entire package reset')
-  }
-  const downloadDocZip = () => {
-    downloadBlob(makeZip(buildDocFiles(data)), 'collab_project_package_docs.zip')
+    setResetOpen(false)
   }
   const downloadPdfZip = async () => {
     setBusy('pdf')
@@ -132,10 +134,16 @@ export default function ProjectPackage() {
         <div className="space-y-4">
           <Card hover={false} className="flex flex-wrap gap-2">
             <Button size="sm" onClick={save}>Save Changes</Button>
-            <Button size="sm" variant="secondary" onClick={resetCurrent}>Reset Current Document</Button>
-            <Button size="sm" variant="secondary" onClick={resetAll}>Reset Entire Package</Button>
+            <div className="relative">
+              <Button size="sm" variant="secondary" onClick={() => setResetOpen((value) => !value)}>Reset</Button>
+              {resetOpen && (
+                <div className="absolute left-0 top-11 z-20 w-56 rounded-xl border border-border bg-bg-card p-2 shadow-elevated">
+                  <button type="button" onClick={resetCurrent} className="w-full rounded-lg px-3 py-2 text-left text-sm text-text-secondary hover:bg-primary/10 hover:text-primary">Reset current document</button>
+                  <button type="button" onClick={resetAll} className="w-full rounded-lg px-3 py-2 text-left text-sm text-error hover:bg-error/10">Reset entire package</button>
+                </div>
+              )}
+            </div>
             <Button size="sm" variant="secondary" onClick={downloadPdfZip} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Preparing ZIP...' : 'Download Full PDF ZIP'}</Button>
-            <Button size="sm" variant="secondary" onClick={downloadDocZip}>Download Full DOC ZIP</Button>
           </Card>
           <div className="pp-shell pp-print-target">
             <ProjectPackageRenderer document={activeDoc} data={data} onChange={updateField} />
