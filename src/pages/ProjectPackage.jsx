@@ -132,9 +132,10 @@ export default function ProjectPackage() {
         </Card>
 
         <div className="space-y-4">
-          <Card hover={false} className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={save}>Save Changes</Button>
-            <div className="relative">
+          <Card hover={false} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Button size="sm" onClick={save} className="w-full sm:w-auto">Save Changes</Button>
+              <div className="relative">
               <Button size="sm" variant="secondary" onClick={() => setResetOpen((value) => !value)}>Reset</Button>
               {resetOpen && (
                 <div className="absolute left-0 top-11 z-20 w-56 rounded-xl border border-border bg-bg-card p-2 shadow-elevated">
@@ -142,8 +143,9 @@ export default function ProjectPackage() {
                   <button type="button" onClick={resetAll} className="w-full rounded-lg px-3 py-2 text-left text-sm text-error hover:bg-error/10">Reset entire package</button>
                 </div>
               )}
+              </div>
             </div>
-            <Button size="sm" variant="secondary" onClick={downloadPdfZip} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Preparing ZIP...' : 'Download Full PDF ZIP'}</Button>
+            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={downloadPdfZip} disabled={busy === 'pdf'}>{busy === 'pdf' ? 'Preparing ZIP...' : 'Download Full PDF ZIP'}</Button>
           </Card>
           <div className="pp-shell pp-print-target">
             <ProjectPackageRenderer document={activeDoc} data={data} onChange={updateField} />
