@@ -11,12 +11,12 @@ const pages = {
     title: 'About Collab',
     intro: 'Collab is India’s pre-incubation startup ecosystem for student founders.',
     sections: [
-      ['Mission', 'Help students turn ideas into incubation-ready startups through guided execution, teams, opportunities, and venture documentation.'],
+      ['Mission', 'Help students turn ideas into incubation-ready startups through guided execution, teams, events, and venture documentation.'],
       ['Vision', 'A future where every student with a startup idea can find support, structure, and momentum without friction.'],
       ['Why Collab Exists', 'Student founders are scattered across groups, events, and informal networks. Collab brings the journey into one focused ecosystem.'],
-      ['The Problem', 'Early teams often lack structure, documentation, validation habits, and access to the right opportunities.'],
-      ['The Solution', 'Collab gives teams a startup workspace, guided pipeline, opportunities, Builder’s League programs, and progress visibility.'],
-      ['Builder’s League', 'Builder’s League is Collab’s opportunity-led onboarding pathway for students to participate, learn, and build momentum.'],
+      ['The Problem', 'Early teams often lack structure, documentation, validation habits, and access to the right events.'],
+      ['The Solution', 'Collab gives teams a startup workspace, guided pipeline, events, Builder’s League programs, and progress visibility.'],
+      ['Builder’s League', 'Builder’s League is Collab’s event-led pathway for students to participate, learn, and build momentum.'],
       ['Future Vision', 'Collab will continue expanding support for founders, teams, institutions, mentors, and startup programs.']
     ]
   },
@@ -91,8 +91,8 @@ const faqs = [
   ['Who can join?', 'Students, founders, builders, designers, developers, researchers, and innovators.'],
   ['Who owns my startup?', 'You and your team retain ownership of your startup ideas, documents, code, designs, and IP.'],
   ['Can I build with friends?', 'Yes. Collab is designed for existing student teams and venture workspaces.'],
-  ['Can I participate individually?', 'Yes, individual builders can use opportunities and apply to teammate-seeking ventures.'],
-  ['What is Builder’s League?', 'A Collab program/opportunity pathway for builders to participate and gain momentum.'],
+  ['Can I participate individually?', 'Yes, individual builders can join eligible events and apply to teammate-seeking ventures.'],
+  ['What is Builder’s League?', 'A Collab event pathway for builders to participate and gain momentum.'],
   ['How do I report a bug?', 'Use /report-bug or email support@joincollab.org.'],
   ['How do I delete my account?', 'Use account settings or contact support if you need help.'],
   ['How do I contact the team?', 'Use /contact or email support@joincollab.org.'],

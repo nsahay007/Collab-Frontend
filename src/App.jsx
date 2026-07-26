@@ -32,17 +32,15 @@ const Register = lazyWithRefresh(() => import('./pages/Register'))
 const Feed = lazyWithRefresh(() => import('./pages/Feed'))
 const Build = lazyWithRefresh(() => import('./pages/Build'))
 const Discover = lazyWithRefresh(() => import('./pages/Discover'))
-const Opportunities = lazyWithRefresh(() => import('./pages/Opportunities'))
+const Events = lazyWithRefresh(() => import('./pages/Events'))
+const EventDetail = lazyWithRefresh(() => import('./pages/EventDetail'))
+const HackathonDashboard = lazyWithRefresh(() => import('./pages/HackathonDashboard'))
 const CreateProject = lazyWithRefresh(() => import('./pages/CreateProject'))
 const ProjectDetail = lazyWithRefresh(() => import('./pages/ProjectDetail'))
 const FinalStartupPackage = lazyWithRefresh(() => import('./pages/FinalStartupPackage'))
 const ProjectPackage = lazyWithRefresh(() => import('./pages/ProjectPackage'))
 const Profile = lazyWithRefresh(() => import('./pages/Profile'))
 const Settings = lazyWithRefresh(() => import('./pages/Settings'))
-const AdminDashboard = lazyWithRefresh(() => import('./pages/AdminDashboard'))
-const AdminProjects = lazyWithRefresh(() => import('./pages/AdminProjects'))
-const AdminHackathons = lazyWithRefresh(() => import('./pages/AdminHackathons'))
-const AdminLogs = lazyWithRefresh(() => import('./pages/AdminLogs'))
 const VerifyEmail = lazyWithRefresh(() => import('./pages/VerifyEmail'))
 const VerifyCertificate = lazyWithRefresh(() => import('./pages/VerifyCertificate'))
 const ForgotPassword = lazyWithRefresh(() => import('./pages/ForgotPassword'))
@@ -110,17 +108,15 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Navigate to="/build" replace />} />
         <Route path="/build" element={<ProtectedRoute><Layout><Build /></Layout></ProtectedRoute>} />
         <Route path="/discover" element={<ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>} />
-        <Route path="/opportunities" element={<ProtectedRoute><Layout><Opportunities /></Layout></ProtectedRoute>} />
+        <Route path="/events" element={<Layout><Events /></Layout>} />
+        <Route path="/events/:id" element={<Layout><EventDetail /></Layout>} />
+        <Route path="/hackathons/:slug/dashboard" element={<ProtectedRoute><Layout><HackathonDashboard /></Layout></ProtectedRoute>} />
         <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
         <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
         <Route path="/project/:id/package" element={<ProtectedRoute><Layout><FinalStartupPackage /></Layout></ProtectedRoute>} />
         <Route path="/project/:id/project-package" element={<ProtectedRoute><Layout><ProjectPackage /></Layout></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>} />
-        <Route path="/admin/logs" element={<ProtectedRoute><Layout><AdminLogs /></Layout></ProtectedRoute>} />
-        <Route path="/admin/projects" element={<ProtectedRoute><Layout><AdminProjects /></Layout></ProtectedRoute>} />
-        <Route path="/admin/hackathons" element={<ProtectedRoute><Layout><AdminHackathons /></Layout></ProtectedRoute>} />
         <Route path="/verify-email" element={<PublicRoute><Layout><VerifyEmail /></Layout></PublicRoute>} />
         <Route path="/verify/:certificateId" element={<Layout><VerifyCertificate /></Layout>} />
         <Route path="/forgot" element={<PublicRoute><Layout><ForgotPassword /></Layout></PublicRoute>} />

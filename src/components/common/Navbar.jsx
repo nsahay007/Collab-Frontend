@@ -13,7 +13,7 @@ const AUTH_NAV = [
   { to: '/build', label: 'Universe', match: ['/build', '/create', '/project'], emphasis: true },
   { to: '/discover', label: 'Discover', match: ['/discover'] },
   { to: '/feed', label: 'Activities', match: ['/feed', '/dashboard'] },
-  { to: '/opportunities', label: 'Opportunities', match: ['/opportunities'] },
+  { to: '/events', label: 'Events', match: ['/events', '/hackathons'] },
 ]
 
 function IconButton({ children, label, onClick, className = '', badge }) {

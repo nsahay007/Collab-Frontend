@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 
 const SITE = 'https://www.joincollab.org'
 const DEFAULT_TITLE = 'COLLAB | India\'s Pre-Incubation Startup Ecosystem'
-const DEFAULT_DESC = 'COLLAB helps student founders build teams, discover opportunities, create ventures, and become incubation-ready.'
+const DEFAULT_DESC = 'COLLAB helps student founders build teams, discover builder events, create ventures, and become incubation-ready.'
 
 const legalTitles = {
   'terms-of-service': ['Terms of Service | COLLAB', 'Rules and conditions for using COLLAB.'],

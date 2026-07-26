@@ -12,7 +12,7 @@ You must be at least 16 years old to use Collab. If you are under 18, you must h
 You are responsible for providing accurate account information, protecting your login credentials, and all activity under your account. You must notify Collab if you suspect unauthorized access.
 
 ## 4. Platform Purpose
-Collab helps users discover opportunities, create startup workspaces, build teams, track startup progress, prepare venture documentation, and participate in startup ecosystem programs.
+Collab helps users discover builder events, create startup workspaces, build teams, track startup progress, prepare venture documentation, and participate in startup ecosystem programs.
 
 ## 5. Intellectual Property & Ownership
 Users retain full ownership of their startup ideas, business concepts, documents, code, designs, presentations, files, validation evidence, pitch decks, and intellectual property. Collab does not claim ownership of user venture content.

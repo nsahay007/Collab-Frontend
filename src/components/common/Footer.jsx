@@ -11,7 +11,7 @@ const socials = [
 ].filter(([, href]) => Boolean(href))
 
 const groups = [
-  ['Platform', [['Discover', '/discover'], ['Build', '/build'], ['Builder’s League', '/opportunities'], ['Opportunities', '/opportunities'], ['Workspace', '/build']]],
+  ['Platform', [['Discover', '/discover'], ['Build', '/build'], ['Events', '/events'], ['Workspace', '/build']]],
   ['Company', [['About', '/about'], ['Contact Us', '/contact'], ['FAQs', '/faq'], ['Blog', null]]],
   ['Legal', [['Terms & Conditions', '/legal/terms-of-service'], ['Privacy Policy', '/privacy'], ['Cookie Policy', '/cookies'], ['Community Guidelines', '/community-guidelines'], ['Disclaimer', '/disclaimer']]],
   ['Resources', [['Help Center', '/help'], ['Support', '/support'], ['Report a Bug', '/report-bug'], ['Feedback', '/feedback'], ['Status', null]]]

@@ -6,8 +6,8 @@ import BrandLogo from '../components/common/BrandLogo'
 import api from '../services/api'
 
 const chaos = ['WhatsApp groups', 'Discord threads', 'LinkedIn posts', 'College circles', 'Random communities']
-const journey = ['Idea', 'Co-founder', 'Team', 'Opportunity', 'Prototype', 'Incubation', 'Startup']
-const signals = ['Team formed', 'Venture created', 'Opportunity opened', 'Milestone shipped', 'Mentor found', 'Incubation packet prepared']
+const journey = ['Idea', 'Co-founder', 'Team', 'Event', 'Prototype', 'Incubation', 'Startup']
+const signals = ['Team formed', 'Venture created', 'Event opened', 'Milestone shipped', 'Mentor found', 'Incubation packet prepared']
 const roles = ['Builders', 'Founders', 'Developers', 'Designers', 'Researchers', 'Students', 'Innovators']
 
 const tiltOrbit = (event) => { const box = event.currentTarget.getBoundingClientRect(); const x = event.clientX - box.left - box.width / 2; const y = event.clientY - box.top - box.height / 2; event.currentTarget.style.setProperty('--rx', String((-y / box.height) * 8) + 'deg'); event.currentTarget.style.setProperty('--ry', String((x / box.width) * 10) + 'deg'); event.currentTarget.style.setProperty('--mx', String(x * 0.03) + 'px'); event.currentTarget.style.setProperty('--my', String(y * 0.03) + 'px'); }
@@ -26,7 +26,7 @@ function SectionTitle({ kicker, title, body }) {
 function HeroConstellation() {
   const nodes = [
     ['Idea', 18, 24], ['Builder', 57, 18], ['Team', 78, 38],
-    ['Opportunity', 24, 64], ['Venture', 52, 50], ['Incubation', 68, 76]
+    ['Event', 24, 64], ['Venture', 52, 50], ['Incubation', 68, 76]
   ]
   return (
     <div className="landing-constellation" onMouseMove={tiltOrbit} onMouseLeave={resetOrbit}>
@@ -83,11 +83,11 @@ export default function Landing() {
               Where ideas find people, momentum, and a way forward.
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-text-secondary">
-              COLLAB is a living startup ecosystem for innovators to discover opportunities, form teams, join programs, create ventures, and turn raw ambition into real companies.
+              COLLAB is a living startup ecosystem for innovators to discover builder events, form teams, create ventures, and turn raw ambition into real companies.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link to="/register"><Button variant="primary" className="px-8 py-3">Enter the ecosystem</Button></Link>
-              <Link to="/opportunities"><Button variant="secondary" className="px-8 py-3">Explore opportunities</Button></Link>
+              <Link to="/events"><Button variant="secondary" className="px-8 py-3">Explore events</Button></Link>
             </div>
           </motion.div>
           <HeroConstellation />
@@ -95,7 +95,7 @@ export default function Landing() {
       </section>
 
       <section className="px-4 py-20 sm:px-6">
-        <SectionTitle kicker="The scattered beginning" title="Innovation should not depend on finding the right group chat." body="Today, builders are spread across noisy channels. COLLAB becomes the connecting layer where people, opportunities, and startup progress finally meet." />
+        <SectionTitle kicker="The scattered beginning" title="Innovation should not depend on finding the right group chat." body="Today, builders are spread across noisy channels. COLLAB becomes the connecting layer where people, events, and startup progress finally meet." />
         <div className="mx-auto mt-12 grid max-w-5xl gap-4 md:grid-cols-5">
           {chaos.map((item, index) => (
             <motion.div key={item} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} viewport={{ once: true }} className="landing-fragment">
@@ -120,7 +120,7 @@ export default function Landing() {
       </section>
 
       <section className="px-4 py-20 sm:px-6">
-        <SectionTitle kicker="Living ecosystem" title="A platform that feels active before you even join." body="Teams forming, ventures launching, opportunities opening, and milestones moving. COLLAB should feel like a place where progress is already happening." />
+        <SectionTitle kicker="Living ecosystem" title="A platform that feels active before you even join." body="Teams forming, ventures launching, events opening, and milestones moving. COLLAB should feel like a place where progress is already happening." />
         <div className="landing-signal-wrap mx-auto mt-12 max-w-6xl">
           {[0, 1, 2].map((row) => (
             <div key={row} className="landing-signal-row" style={{ animationDelay: `${row * -5}s` }}>
@@ -144,7 +144,7 @@ export default function Landing() {
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             <Metric value={n(stats.activeUsers)} label="active student builders" />
             <Metric value={n(stats.totalProjects)} label="startup workspaces" />
-            <Metric value="Open" label="startup programs and opportunities" />
+            <Metric value="Open" label="builder events and competitions" />
           </div>
         </div>
       </section>
@@ -152,7 +152,7 @@ export default function Landing() {
       <section className="px-4 py-24 sm:px-6">
         <div className="landing-vision mx-auto max-w-6xl">
           <p>COLLAB is infrastructure for student innovation.</p>
-          <h2>Every student with an idea should be one connection away from teammates, opportunities, mentors, and startup support.</h2>
+          <h2>Every student with an idea should be one connection away from teammates, events, mentors, and startup support.</h2>
         </div>
       </section>
 
