@@ -34,7 +34,6 @@ const Build = lazyWithRefresh(() => import('./pages/Build'))
 const Discover = lazyWithRefresh(() => import('./pages/Discover'))
 const Events = lazyWithRefresh(() => import('./pages/Events'))
 const EventDetail = lazyWithRefresh(() => import('./pages/EventDetail'))
-const HackathonDashboard = lazyWithRefresh(() => import('./pages/HackathonDashboard'))
 const CreateProject = lazyWithRefresh(() => import('./pages/CreateProject'))
 const ProjectDetail = lazyWithRefresh(() => import('./pages/ProjectDetail'))
 const FinalStartupPackage = lazyWithRefresh(() => import('./pages/FinalStartupPackage'))
@@ -110,7 +109,6 @@ function AppRoutes() {
         <Route path="/discover" element={<ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>} />
         <Route path="/events" element={<Layout><Events /></Layout>} />
         <Route path="/events/:id" element={<Layout><EventDetail /></Layout>} />
-        <Route path="/hackathons/:slug/dashboard" element={<ProtectedRoute><Layout><HackathonDashboard /></Layout></ProtectedRoute>} />
         <Route path="/create" element={<ProtectedRoute><Layout><CreateProject /></Layout></ProtectedRoute>} />
         <Route path="/project/:id" element={<ProtectedRoute><Layout><ProjectDetail /></Layout></ProtectedRoute>} />
         <Route path="/project/:id/package" element={<ProtectedRoute><Layout><FinalStartupPackage /></Layout></ProtectedRoute>} />
